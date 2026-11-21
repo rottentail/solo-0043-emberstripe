@@ -1,0 +1,5275 @@
+{
+  "task_source_schema_version": 1,
+  "cc_feedback_profile": "cc-feedback-2611",
+  "project_domain": "游戏、图形与多媒体",
+  "project_subdirection": "音视频处理",
+  "supported_task_types": [
+    "功能开发",
+    "功能优化",
+    "代码重构",
+    "依赖升级与迁移",
+    "质量保障",
+    "项目维护",
+    "技术讨论",
+    "问题排查与诊断",
+    "部署运维",
+    "泛Agent需求"
+  ],
+  "type_coverage": {
+    "功能开发": {
+      "status": "supported",
+      "reason": "条带灰度、坐标和冻结交付各有已验证的独立出入口，可支撑新的恢复能力",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go",
+        "internal/register/register.go",
+        "internal/readout/readout.go",
+        "internal/parcel/parcel.go"
+      ]
+    },
+    "功能优化": {
+      "status": "supported",
+      "reason": "现有取样、画格诊断、对照和归档在真实缺页及挑选标定的工作流上有可迭代的行为",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/readout/readout.go",
+        "internal/station/station.go",
+        "internal/view/view.go",
+        "internal/parcel/parcel.go"
+      ]
+    },
+    "代码重构": {
+      "status": "supported",
+      "reason": "画格映射、样本计算与序列化互相协作，存在保持现有输出的职责提取方向",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/readout/readout.go",
+        "internal/station/station.go",
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ]
+    },
+    "依赖升级与迁移": {
+      "status": "supported",
+      "reason": "既有灰度 PNG 读取和固定 PCM WAVE 交接允许验证 TIFF 输入和 EBU Broadcast Wave v2 格式转换",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ]
+    },
+    "质量保障": {
+      "status": "supported",
+      "reason": "公开样例中有独立可计算的像素及覆盖，同时可核对归档字节和跨接口结果",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/register/register.go",
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ]
+    },
+    "项目维护": {
+      "status": "supported",
+      "reason": "补扫与标定换版会影响不同声槽行和已冻结的索引，可形成具体维护手册和交接步骤",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go",
+        "internal/register/register.go",
+        "internal/parcel/parcel.go"
+      ]
+    },
+    "技术讨论": {
+      "status": "supported",
+      "reason": "行级映射和灰度积分的准确率受材料及时间语义影响，存在不同设备和修复场景的选择",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ]
+    },
+    "问题排查与诊断": {
+      "status": "supported",
+      "reason": "缺画面与缺声音、不可读与实际零值、曝光异常和坐标错位都有可区分的来源信号",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go",
+        "internal/readout/readout.go",
+        "internal/gauge/gauge.go"
+      ]
+    },
+    "部署运维": {
+      "status": "supported",
+      "reason": "解码常驻像素、并发上限、分区发布以及工作站二进制为实际运行边界，可验证可听结果和归档可靠性",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/httpapi/httpapi.go",
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ]
+    },
+    "泛Agent需求": {
+      "status": "supported",
+      "reason": "两份可生成的原生扫描卷及 API 输出可联用生成真实修复、听审和素材交接材料",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go",
+        "internal/register/register.go",
+        "internal/readout/readout.go",
+        "internal/parcel/parcel.go"
+      ]
+    },
+    "Bugfix": {
+      "status": "no_verified_defect",
+      "reason": "生产工作流及边界复走没有发现已确认的基线契约违例"
+    }
+  },
+  "prompt_contract": {
+    "schema_version": 1,
+    "mode": "integrated",
+    "baseline_tier": "deep-task-ready",
+    "generation_scope": {
+      "mode": "all_supported"
+    },
+    "minimum_active_prompts": {
+      "功能开发": 20,
+      "功能优化": 20,
+      "代码重构": 2,
+      "依赖升级与迁移": 2,
+      "质量保障": 2,
+      "项目维护": 2,
+      "技术讨论": 2,
+      "问题排查与诊断": 2,
+      "部署运维": 2,
+      "泛Agent需求": 10
+    },
+    "minimum_anchors": {
+      "功能开发": 25,
+      "功能优化": 25,
+      "代码重构": 15,
+      "依赖升级与迁移": 15,
+      "质量保障": 15,
+      "项目维护": 15,
+      "技术讨论": 15,
+      "问题排查与诊断": 15,
+      "部署运维": 15,
+      "泛Agent需求": 15
+    },
+    "capacity_floor": {
+      "modules": 8,
+      "workflows": 10,
+      "mechanisms": 8,
+      "entities": 8,
+      "state_machines": 5,
+      "extension_seams": 12,
+      "tension_points": 10
+    }
+  },
+  "entities": [
+    {
+      "id": "capture",
+      "label": "扫描卷",
+      "relations": [
+        "contains.sheet"
+      ],
+      "invariants": [
+        "原件摘要绑定卷描述和按编号排列的扫描页"
+      ]
+    },
+    {
+      "id": "sheet",
+      "label": "扫描条带",
+      "relations": [
+        "belongs_to.capture"
+      ],
+      "invariants": [
+        "同页匹配卷的高度和宽度"
+      ]
+    },
+    {
+      "id": "gauge",
+      "label": "声槽标定",
+      "relations": [
+        "reads.reference_patch"
+      ],
+      "invariants": [
+        "各声道反差合格方可用于解码"
+      ]
+    },
+    {
+      "id": "address",
+      "label": "声槽位置",
+      "relations": [
+        "maps.picture_coordinate"
+      ],
+      "invariants": [
+        "先验证卷边界再取得源页和行"
+      ]
+    },
+    {
+      "id": "coverage_run",
+      "label": "覆盖段",
+      "relations": [
+        "partitions.picture_window"
+      ],
+      "invariants": [
+        "相邻同类合并且覆盖请求窗"
+      ]
+    },
+    {
+      "id": "pcm",
+      "label": "交错立体声",
+      "relations": [
+        "interprets.sheet"
+      ],
+      "invariants": [
+        "缺失位置保留时钟并补零"
+      ]
+    },
+    {
+      "id": "sound_index",
+      "label": "画格索引",
+      "relations": [
+        "indexes.pcm"
+      ],
+      "invariants": [
+        "包内音频零样本指向窗首画格"
+      ]
+    },
+    {
+      "id": "parcel",
+      "label": "交付包",
+      "relations": [
+        "contains.sound_index"
+      ],
+      "invariants": [
+        "归档身份由确切字节决定"
+      ]
+    }
+  ],
+  "state_machines": [
+    {
+      "subject": "capture",
+      "states": [
+        "configuration",
+        "decoded",
+        "registered",
+        "rejected"
+      ],
+      "transitions": [
+        "configuration->decoded",
+        "configuration->rejected",
+        "decoded->registered"
+      ],
+      "invariants": [
+        "原件摘要绑定卷描述和按编号排列的扫描页"
+      ]
+    },
+    {
+      "subject": "gauge",
+      "states": [
+        "declared",
+        "usable",
+        "unavailable"
+      ],
+      "transitions": [
+        "declared->usable",
+        "declared->unavailable"
+      ],
+      "invariants": [
+        "各声道反差合格方可用于解码"
+      ]
+    },
+    {
+      "subject": "address",
+      "states": [
+        "requested",
+        "readable",
+        "missing_sheet",
+        "outside_capture"
+      ],
+      "transitions": [
+        "requested->readable",
+        "requested->missing_sheet",
+        "requested->outside_capture"
+      ],
+      "invariants": [
+        "先验证卷边界再取得源页和行"
+      ]
+    },
+    {
+      "subject": "pcm",
+      "states": [
+        "requested",
+        "rendered",
+        "encoded",
+        "rejected"
+      ],
+      "transitions": [
+        "requested->rendered",
+        "requested->rejected",
+        "rendered->encoded"
+      ],
+      "invariants": [
+        "缺失位置保留时钟并补零"
+      ]
+    },
+    {
+      "subject": "parcel",
+      "states": [
+        "constructed",
+        "checked",
+        "published",
+        "retrieved",
+        "invalid"
+      ],
+      "transitions": [
+        "constructed->checked",
+        "constructed->invalid",
+        "checked->published",
+        "published->retrieved",
+        "published->invalid"
+      ],
+      "invariants": [
+        "归档身份由确切字节决定"
+      ]
+    }
+  ],
+  "capability_families": [
+    {
+      "family": "扫描卷登记",
+      "occupied_by": [
+        "catalog",
+        "bit-depth",
+        "sheet-identity",
+        "rate"
+      ],
+      "available": true
+    },
+    {
+      "family": "测量声槽标定",
+      "occupied_by": [
+        "lane-reference",
+        "bad-contrast",
+        "missing-reference"
+      ],
+      "available": true
+    },
+    {
+      "family": "查询画格和源行",
+      "occupied_by": [
+        "positive-lead",
+        "negative-lead"
+      ],
+      "available": true
+    },
+    {
+      "family": "分解声音覆盖",
+      "occupied_by": [
+        "hole-edge",
+        "media-span"
+      ],
+      "available": true
+    },
+    {
+      "family": "定位一个 PCM 样本",
+      "occupied_by": [
+        "readable-zero",
+        "lane-area",
+        "clip"
+      ],
+      "available": true
+    },
+    {
+      "family": "按画格试听",
+      "occupied_by": [
+        "sample-clock"
+      ],
+      "available": true
+    },
+    {
+      "family": "比较标定试听差异",
+      "occupied_by": [
+        "profile-delta",
+        "delta-denominator"
+      ],
+      "available": true
+    },
+    {
+      "family": "生成画格诊断图",
+      "occupied_by": [
+        "empty-picture",
+        "visual-saturation"
+      ],
+      "available": true
+    },
+    {
+      "family": "冻结音频和画格索引",
+      "occupied_by": [
+        "picture-index",
+        "frozen-input",
+        "stable-id"
+      ],
+      "available": true
+    },
+    {
+      "family": "复核已交付声画包",
+      "occupied_by": [
+        "read-identity",
+        "sample-structure",
+        "coverage-contract"
+      ],
+      "available": true
+    }
+  ],
+  "extension_seams": [
+    {
+      "id": "catalog",
+      "anchor": "LoadCatalog / Names",
+      "entry": "GET /captures/{name}/header",
+      "distinct_outcome": "GET 列出卷名",
+      "mechanism": "snapshot_consistency"
+    },
+    {
+      "id": "bit-depth",
+      "anchor": "decode / Info",
+      "entry": "GET /captures/{name}/header",
+      "distinct_outcome": "header.depths",
+      "mechanism": "lineage"
+    },
+    {
+      "id": "sheet-identity",
+      "anchor": "load / Info",
+      "entry": "GET /captures/{name}/header",
+      "distinct_outcome": "header.sha256",
+      "mechanism": "lineage"
+    },
+    {
+      "id": "rate",
+      "anchor": "Rate / Info",
+      "entry": "GET /captures/{name}/header",
+      "distinct_outcome": "header.sample_rate",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "lane-reference",
+      "anchor": "load / Measure",
+      "entry": "GET /captures/{name}/calibration",
+      "distinct_outcome": "calibration.lanes",
+      "mechanism": "policy_rules"
+    },
+    {
+      "id": "bad-contrast",
+      "anchor": "Measure / Open",
+      "entry": "GET /captures/{name}/calibration",
+      "distinct_outcome": "flat 请求为 400",
+      "mechanism": "error_propagation"
+    },
+    {
+      "id": "missing-reference",
+      "anchor": "Measure / Trace",
+      "entry": "GET /captures/{name}/calibration",
+      "distinct_outcome": "absent 请求为 400",
+      "mechanism": "error_propagation"
+    },
+    {
+      "id": "positive-lead",
+      "anchor": "Locate / Mapping",
+      "entry": "GET /captures/{name}/register",
+      "distinct_outcome": "register.source",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "negative-lead",
+      "anchor": "Locate / Mapping",
+      "entry": "GET /captures/{name}/register",
+      "distinct_outcome": "register.status=outside_capture",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "hole-edge",
+      "anchor": "Coverage / Mapping",
+      "entry": "GET /captures/{name}/coverage",
+      "distinct_outcome": "coverage 三段",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "media-span",
+      "anchor": "Validate / Audition",
+      "entry": "GET /captures/{name}/coverage",
+      "distinct_outcome": "coverage 或 audition 400",
+      "mechanism": "capacity"
+    },
+    {
+      "id": "readable-zero",
+      "anchor": "Trace / Mapping",
+      "entry": "GET /captures/{name}/trace",
+      "distinct_outcome": "trace.status + sample",
+      "mechanism": "policy_rules"
+    },
+    {
+      "id": "lane-area",
+      "anchor": "Mean / Trace",
+      "entry": "GET /captures/{name}/trace",
+      "distinct_outcome": "trace.gray 和 sample",
+      "mechanism": "policy_rules"
+    },
+    {
+      "id": "clip",
+      "anchor": "Measure / Trace",
+      "entry": "GET /captures/{name}/trace",
+      "distinct_outcome": "trace.clipped",
+      "mechanism": "policy_rules"
+    },
+    {
+      "id": "sample-clock",
+      "anchor": "Extract / Encode",
+      "entry": "GET /captures/{name}/audition",
+      "distinct_outcome": "WAV 帧数与静音位置",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "profile-delta",
+      "anchor": "Compare / render",
+      "entry": "GET /captures/{name}/compare",
+      "distinct_outcome": "compare peak 与 RMS",
+      "mechanism": "policy_rules"
+    },
+    {
+      "id": "delta-denominator",
+      "anchor": "Coverage / Compare",
+      "entry": "GET /captures/{name}/compare",
+      "distinct_outcome": "compare compared_frames",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "empty-picture",
+      "anchor": "Overlay / Locate",
+      "entry": "GET /captures/{name}/overlay",
+      "distinct_outcome": "PNG 缺图中仍出现声音",
+      "mechanism": "snapshot_consistency"
+    },
+    {
+      "id": "visual-saturation",
+      "anchor": "Overlay / Trace",
+      "entry": "GET /captures/{name}/overlay",
+      "distinct_outcome": "PNG 声槽红色线",
+      "mechanism": "policy_rules"
+    },
+    {
+      "id": "picture-index",
+      "anchor": "Release / Publish",
+      "entry": "POST /captures/{name}/release",
+      "distinct_outcome": "register.json pictures",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "frozen-input",
+      "anchor": "Release / Publish",
+      "entry": "POST /captures/{name}/release",
+      "distinct_outcome": "包内源摘要和标定",
+      "mechanism": "export_freeze"
+    },
+    {
+      "id": "stable-id",
+      "anchor": "Publish / Encode",
+      "entry": "POST /captures/{name}/release",
+      "distinct_outcome": "Location 一致",
+      "mechanism": "idempotency"
+    },
+    {
+      "id": "read-identity",
+      "anchor": "Read / Verify / parcelError",
+      "entry": "GET /parcels/{id}/verify",
+      "distinct_outcome": "verify 409",
+      "mechanism": "lineage"
+    },
+    {
+      "id": "sample-structure",
+      "anchor": "Inspect / Verify",
+      "entry": "GET /parcels/{id}/verify",
+      "distinct_outcome": "verify wave 和 index",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "coverage-contract",
+      "anchor": "verifyClock / Coverage",
+      "entry": "GET /parcels/{id}/verify",
+      "distinct_outcome": "verify 恢复出完整覆盖",
+      "mechanism": "policy_rules"
+    }
+  ],
+  "tension_points": [
+    {
+      "workflow_id": "intake",
+      "description": "允许缺页且只接受符合声明的灰度条带",
+      "observable_failure": "错误尺寸被计入可读素材，或缺页阻止整个卷使用"
+    },
+    {
+      "workflow_id": "calibration",
+      "description": "卷有可用标定时应容许某一参考方案失效",
+      "observable_failure": "低反差或无源数据悄悄成为可用标定"
+    },
+    {
+      "workflow_id": "register",
+      "description": "声槽领先不保证画面与声槽落在同一页",
+      "observable_failure": "报告把缺页边界或负偏移截到错误画格"
+    },
+    {
+      "workflow_id": "coverage",
+      "description": "可听静音、缺页和卷外需要区分",
+      "observable_failure": "一个画格内的缺口被整格掩盖"
+    },
+    {
+      "workflow_id": "trace",
+      "description": "同一源行的声道标定各自独立",
+      "observable_failure": "均值转为幅度时误将左右参考交换"
+    },
+    {
+      "workflow_id": "audition",
+      "description": "输出须保留缺口时间与声道步幅",
+      "observable_failure": "跳过坏页导致后续声音整体提前"
+    },
+    {
+      "workflow_id": "compare",
+      "description": "缺口占位可保持时长但不能作为差分连续证据",
+      "observable_failure": "RMS 以全窗计数造成低估"
+    },
+    {
+      "workflow_id": "overlay",
+      "description": "画面有图与声音有样可分别成立",
+      "observable_failure": "缺页帧整图置空导致可读声音看不见"
+    },
+    {
+      "workflow_id": "release",
+      "description": "画格索引原点属于包内音频，覆盖属于源卷画格",
+      "observable_failure": "切片索引落到窗外或重复发布产生任意 ID"
+    },
+    {
+      "workflow_id": "verify",
+      "description": "单个音频摘要正确也不保证画格计数一致",
+      "observable_failure": "内容完整却把错误采样率用于对齐"
+    }
+  ],
+  "prompt_anchors": [
+    {
+      "id": "1-catalog",
+      "subject": "卷清单",
+      "state": "启动快照建立",
+      "invariant": "只含通过读取和几何验证的卷",
+      "observable": "GET 列出卷名",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "LoadCatalog",
+          "Names"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ],
+      "extension_seam_id": "catalog"
+    },
+    {
+      "id": "1-bit-depth",
+      "subject": "灰度位深",
+      "state": "8/16 位页并存",
+      "invariant": "每页保留原始位深",
+      "observable": "header.depths",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "decode",
+          "Info"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ],
+      "extension_seam_id": "bit-depth"
+    },
+    {
+      "id": "1-sheet-identity",
+      "subject": "源字节身份",
+      "state": "同编号素材内容不同",
+      "invariant": "源摘要绑定卷描述和原件字节",
+      "observable": "header.sha256",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "load",
+          "Info"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ],
+      "extension_seam_id": "sheet-identity"
+    },
+    {
+      "id": "1-rate",
+      "subject": "原生速率",
+      "state": "24×2000 与25×1920",
+      "invariant": "画格和行数共同决定秒速",
+      "observable": "header.sample_rate",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Rate",
+          "Info"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ],
+      "extension_seam_id": "rate"
+    },
+    {
+      "id": "1-lane-reference",
+      "subject": "同光照左右参照",
+      "state": "两个声槽暗亮值不同",
+      "invariant": "参考按原声道积分",
+      "observable": "calibration.lanes",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/gauge/gauge.go"
+        ],
+        "functions": [
+          "load",
+          "Measure"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ],
+      "extension_seam_id": "lane-reference"
+    },
+    {
+      "id": "1-bad-contrast",
+      "subject": "不可用参考",
+      "state": "参考端点差不足",
+      "invariant": "卷可加载但该方案拒绝使用",
+      "observable": "flat 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Open"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ],
+      "extension_seam_id": "bad-contrast"
+    },
+    {
+      "id": "1-missing-reference",
+      "subject": "参考页缺口",
+      "state": "参考矩形合法而源页缺失",
+      "invariant": "缺少参考无法解释声轨",
+      "observable": "absent 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ],
+      "extension_seam_id": "missing-reference"
+    },
+    {
+      "id": "1-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ],
+      "extension_seam_id": "positive-lead"
+    },
+    {
+      "id": "1-negative-lead",
+      "subject": "落后声槽",
+      "state": "卷前边界",
+      "invariant": "卷外无源坐标",
+      "observable": "register.status=outside_capture",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ],
+      "extension_seam_id": "negative-lead"
+    },
+    {
+      "id": "1-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ],
+      "extension_seam_id": "hole-edge"
+    },
+    {
+      "id": "1-media-span",
+      "subject": "请求的画格窗",
+      "state": "空窗或超过上限",
+      "invariant": "统一采用有限半开区间",
+      "observable": "coverage 或 audition 400",
+      "primary_mechanism": "capacity",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Validate",
+          "Audition"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ],
+      "extension_seam_id": "media-span"
+    },
+    {
+      "id": "1-readable-zero",
+      "subject": "样本可用性",
+      "state": "不可读时 PCM 可为零",
+      "invariant": "状态独立于数值",
+      "observable": "trace.status + sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Trace",
+          "Mapping"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ],
+      "extension_seam_id": "readable-zero"
+    },
+    {
+      "id": "1-lane-area",
+      "subject": "声槽通光积分",
+      "state": "左右亮区面积不同",
+      "invariant": "逐道像素均值与其标定相对应",
+      "observable": "trace.gray 和 sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Mean",
+          "Trace"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ],
+      "extension_seam_id": "lane-area"
+    },
+    {
+      "id": "1-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ],
+      "extension_seam_id": "clip"
+    },
+    {
+      "id": "1-sample-clock",
+      "subject": "定长双声道输出",
+      "state": "窗内穿过缺页",
+      "invariant": "每画格行恰好一个立体声采样帧",
+      "observable": "WAV 帧数与静音位置",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Extract",
+          "Encode"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "按画格试听",
+      "workflow_ids": [
+        "audition"
+      ],
+      "extension_seam_id": "sample-clock"
+    },
+    {
+      "id": "1-profile-delta",
+      "subject": "校准差分",
+      "state": "相同像素使用不同端点",
+      "invariant": "同一可读坐标对比",
+      "observable": "compare peak 与 RMS",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Compare",
+          "render"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ],
+      "extension_seam_id": "profile-delta"
+    },
+    {
+      "id": "1-delta-denominator",
+      "subject": "差分分母",
+      "state": "中间整页缺失",
+      "invariant": "分母仅含实际可读样本帧",
+      "observable": "compare compared_frames",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Compare"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ],
+      "extension_seam_id": "delta-denominator"
+    },
+    {
+      "id": "1-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ],
+      "extension_seam_id": "empty-picture"
+    },
+    {
+      "id": "1-visual-saturation",
+      "subject": "削顶可视化",
+      "state": "读数超过端点",
+      "invariant": "展现截幅诊断与正确时标",
+      "observable": "PNG 声槽红色线",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Trace"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ],
+      "extension_seam_id": "visual-saturation"
+    },
+    {
+      "id": "1-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ],
+      "extension_seam_id": "picture-index"
+    },
+    {
+      "id": "1-frozen-input",
+      "subject": "冻结输入说明",
+      "state": "后续重新登记原件",
+      "invariant": "存档继续描述发布时快照",
+      "observable": "包内源摘要和标定",
+      "primary_mechanism": "export_freeze",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ],
+      "extension_seam_id": "frozen-input"
+    },
+    {
+      "id": "1-stable-id",
+      "subject": "交付指纹",
+      "state": "同选项重复发布",
+      "invariant": "标识由媒体和索引字节决定",
+      "observable": "Location 一致",
+      "primary_mechanism": "idempotency",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Publish",
+          "Encode"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ],
+      "extension_seam_id": "stable-id"
+    },
+    {
+      "id": "1-read-identity",
+      "subject": "读取校验",
+      "state": "磁盘字节改变",
+      "invariant": "路径摘要必须匹配实际字节",
+      "observable": "verify 409",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/httpapi/httpapi.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/httpapi/httpapi.go"
+        ],
+        "functions": [
+          "Read",
+          "Verify",
+          "parcelError"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ],
+      "extension_seam_id": "read-identity"
+    },
+    {
+      "id": "1-sample-structure",
+      "subject": "样本封装",
+      "state": "播放头与索引声画时钟耦合",
+      "invariant": "速率、样本宽度、帧数一致",
+      "observable": "verify wave 和 index",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/wave/wave.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Inspect",
+          "Verify"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ],
+      "extension_seam_id": "sample-structure"
+    },
+    {
+      "id": "1-coverage-contract",
+      "subject": "冻结后的覆盖一致性",
+      "state": "覆盖中出现缺页或卷外",
+      "invariant": "严格划分输出窗且对应样本为零",
+      "observable": "verify 恢复出完整覆盖",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "verifyClock",
+          "Coverage"
+        ]
+      },
+      "task_type": "功能开发",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ],
+      "extension_seam_id": "coverage-contract"
+    },
+    {
+      "id": "2-catalog",
+      "subject": "卷清单",
+      "state": "启动快照建立",
+      "invariant": "只含通过读取和几何验证的卷",
+      "observable": "GET 列出卷名",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "LoadCatalog",
+          "Names"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "2-bit-depth",
+      "subject": "灰度位深",
+      "state": "8/16 位页并存",
+      "invariant": "每页保留原始位深",
+      "observable": "header.depths",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "decode",
+          "Info"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "2-sheet-identity",
+      "subject": "源字节身份",
+      "state": "同编号素材内容不同",
+      "invariant": "源摘要绑定卷描述和原件字节",
+      "observable": "header.sha256",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "load",
+          "Info"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "2-rate",
+      "subject": "原生速率",
+      "state": "24×2000 与25×1920",
+      "invariant": "画格和行数共同决定秒速",
+      "observable": "header.sample_rate",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Rate",
+          "Info"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "2-lane-reference",
+      "subject": "同光照左右参照",
+      "state": "两个声槽暗亮值不同",
+      "invariant": "参考按原声道积分",
+      "observable": "calibration.lanes",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/gauge/gauge.go"
+        ],
+        "functions": [
+          "load",
+          "Measure"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "2-bad-contrast",
+      "subject": "不可用参考",
+      "state": "参考端点差不足",
+      "invariant": "卷可加载但该方案拒绝使用",
+      "observable": "flat 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Open"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "2-missing-reference",
+      "subject": "参考页缺口",
+      "state": "参考矩形合法而源页缺失",
+      "invariant": "缺少参考无法解释声轨",
+      "observable": "absent 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "2-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "2-negative-lead",
+      "subject": "落后声槽",
+      "state": "卷前边界",
+      "invariant": "卷外无源坐标",
+      "observable": "register.status=outside_capture",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "2-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "2-media-span",
+      "subject": "请求的画格窗",
+      "state": "空窗或超过上限",
+      "invariant": "统一采用有限半开区间",
+      "observable": "coverage 或 audition 400",
+      "primary_mechanism": "capacity",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Validate",
+          "Audition"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "2-readable-zero",
+      "subject": "样本可用性",
+      "state": "不可读时 PCM 可为零",
+      "invariant": "状态独立于数值",
+      "observable": "trace.status + sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Trace",
+          "Mapping"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "2-lane-area",
+      "subject": "声槽通光积分",
+      "state": "左右亮区面积不同",
+      "invariant": "逐道像素均值与其标定相对应",
+      "observable": "trace.gray 和 sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Mean",
+          "Trace"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "2-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "2-sample-clock",
+      "subject": "定长双声道输出",
+      "state": "窗内穿过缺页",
+      "invariant": "每画格行恰好一个立体声采样帧",
+      "observable": "WAV 帧数与静音位置",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Extract",
+          "Encode"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "按画格试听",
+      "workflow_ids": [
+        "audition"
+      ]
+    },
+    {
+      "id": "2-profile-delta",
+      "subject": "校准差分",
+      "state": "相同像素使用不同端点",
+      "invariant": "同一可读坐标对比",
+      "observable": "compare peak 与 RMS",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Compare",
+          "render"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "2-delta-denominator",
+      "subject": "差分分母",
+      "state": "中间整页缺失",
+      "invariant": "分母仅含实际可读样本帧",
+      "observable": "compare compared_frames",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Compare"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "2-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "2-visual-saturation",
+      "subject": "削顶可视化",
+      "state": "读数超过端点",
+      "invariant": "展现截幅诊断与正确时标",
+      "observable": "PNG 声槽红色线",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Trace"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "2-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "2-frozen-input",
+      "subject": "冻结输入说明",
+      "state": "后续重新登记原件",
+      "invariant": "存档继续描述发布时快照",
+      "observable": "包内源摘要和标定",
+      "primary_mechanism": "export_freeze",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "2-stable-id",
+      "subject": "交付指纹",
+      "state": "同选项重复发布",
+      "invariant": "标识由媒体和索引字节决定",
+      "observable": "Location 一致",
+      "primary_mechanism": "idempotency",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Publish",
+          "Encode"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "2-read-identity",
+      "subject": "读取校验",
+      "state": "磁盘字节改变",
+      "invariant": "路径摘要必须匹配实际字节",
+      "observable": "verify 409",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/httpapi/httpapi.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/httpapi/httpapi.go"
+        ],
+        "functions": [
+          "Read",
+          "Verify",
+          "parcelError"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "2-sample-structure",
+      "subject": "样本封装",
+      "state": "播放头与索引声画时钟耦合",
+      "invariant": "速率、样本宽度、帧数一致",
+      "observable": "verify wave 和 index",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/wave/wave.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Inspect",
+          "Verify"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "2-coverage-contract",
+      "subject": "冻结后的覆盖一致性",
+      "state": "覆盖中出现缺页或卷外",
+      "invariant": "严格划分输出窗且对应样本为零",
+      "observable": "verify 恢复出完整覆盖",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "verifyClock",
+          "Coverage"
+        ]
+      },
+      "task_type": "功能优化",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "3-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "3-negative-lead",
+      "subject": "落后声槽",
+      "state": "卷前边界",
+      "invariant": "卷外无源坐标",
+      "observable": "register.status=outside_capture",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "3-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "3-media-span",
+      "subject": "请求的画格窗",
+      "state": "空窗或超过上限",
+      "invariant": "统一采用有限半开区间",
+      "observable": "coverage 或 audition 400",
+      "primary_mechanism": "capacity",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Validate",
+          "Audition"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "3-readable-zero",
+      "subject": "样本可用性",
+      "state": "不可读时 PCM 可为零",
+      "invariant": "状态独立于数值",
+      "observable": "trace.status + sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Trace",
+          "Mapping"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "3-lane-area",
+      "subject": "声槽通光积分",
+      "state": "左右亮区面积不同",
+      "invariant": "逐道像素均值与其标定相对应",
+      "observable": "trace.gray 和 sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Mean",
+          "Trace"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "3-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "3-sample-clock",
+      "subject": "定长双声道输出",
+      "state": "窗内穿过缺页",
+      "invariant": "每画格行恰好一个立体声采样帧",
+      "observable": "WAV 帧数与静音位置",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Extract",
+          "Encode"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "按画格试听",
+      "workflow_ids": [
+        "audition"
+      ]
+    },
+    {
+      "id": "3-profile-delta",
+      "subject": "校准差分",
+      "state": "相同像素使用不同端点",
+      "invariant": "同一可读坐标对比",
+      "observable": "compare peak 与 RMS",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Compare",
+          "render"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "3-delta-denominator",
+      "subject": "差分分母",
+      "state": "中间整页缺失",
+      "invariant": "分母仅含实际可读样本帧",
+      "observable": "compare compared_frames",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Compare"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "3-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "3-visual-saturation",
+      "subject": "削顶可视化",
+      "state": "读数超过端点",
+      "invariant": "展现截幅诊断与正确时标",
+      "observable": "PNG 声槽红色线",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Trace"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "3-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "3-sample-structure",
+      "subject": "样本封装",
+      "state": "播放头与索引声画时钟耦合",
+      "invariant": "速率、样本宽度、帧数一致",
+      "observable": "verify wave 和 index",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/wave/wave.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Inspect",
+          "Verify"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "3-coverage-contract",
+      "subject": "冻结后的覆盖一致性",
+      "state": "覆盖中出现缺页或卷外",
+      "invariant": "严格划分输出窗且对应样本为零",
+      "observable": "verify 恢复出完整覆盖",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "verifyClock",
+          "Coverage"
+        ]
+      },
+      "task_type": "代码重构",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "4-catalog",
+      "subject": "卷清单",
+      "state": "启动快照建立",
+      "invariant": "只含通过读取和几何验证的卷",
+      "observable": "GET 列出卷名",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "LoadCatalog",
+          "Names"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "4-bit-depth",
+      "subject": "灰度位深",
+      "state": "8/16 位页并存",
+      "invariant": "每页保留原始位深",
+      "observable": "header.depths",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "decode",
+          "Info"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "4-sheet-identity",
+      "subject": "源字节身份",
+      "state": "同编号素材内容不同",
+      "invariant": "源摘要绑定卷描述和原件字节",
+      "observable": "header.sha256",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "load",
+          "Info"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "4-rate",
+      "subject": "原生速率",
+      "state": "24×2000 与25×1920",
+      "invariant": "画格和行数共同决定秒速",
+      "observable": "header.sample_rate",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Rate",
+          "Info"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "4-lane-reference",
+      "subject": "同光照左右参照",
+      "state": "两个声槽暗亮值不同",
+      "invariant": "参考按原声道积分",
+      "observable": "calibration.lanes",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/gauge/gauge.go"
+        ],
+        "functions": [
+          "load",
+          "Measure"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "4-missing-reference",
+      "subject": "参考页缺口",
+      "state": "参考矩形合法而源页缺失",
+      "invariant": "缺少参考无法解释声轨",
+      "observable": "absent 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "4-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "4-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "4-sample-clock",
+      "subject": "定长双声道输出",
+      "state": "窗内穿过缺页",
+      "invariant": "每画格行恰好一个立体声采样帧",
+      "observable": "WAV 帧数与静音位置",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Extract",
+          "Encode"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "按画格试听",
+      "workflow_ids": [
+        "audition"
+      ]
+    },
+    {
+      "id": "4-profile-delta",
+      "subject": "校准差分",
+      "state": "相同像素使用不同端点",
+      "invariant": "同一可读坐标对比",
+      "observable": "compare peak 与 RMS",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Compare",
+          "render"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "4-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "4-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "4-frozen-input",
+      "subject": "冻结输入说明",
+      "state": "后续重新登记原件",
+      "invariant": "存档继续描述发布时快照",
+      "observable": "包内源摘要和标定",
+      "primary_mechanism": "export_freeze",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "4-stable-id",
+      "subject": "交付指纹",
+      "state": "同选项重复发布",
+      "invariant": "标识由媒体和索引字节决定",
+      "observable": "Location 一致",
+      "primary_mechanism": "idempotency",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Publish",
+          "Encode"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "4-sample-structure",
+      "subject": "样本封装",
+      "state": "播放头与索引声画时钟耦合",
+      "invariant": "速率、样本宽度、帧数一致",
+      "observable": "verify wave 和 index",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/wave/wave.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Inspect",
+          "Verify"
+        ]
+      },
+      "task_type": "依赖升级与迁移",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "5-lane-reference",
+      "subject": "同光照左右参照",
+      "state": "两个声槽暗亮值不同",
+      "invariant": "参考按原声道积分",
+      "observable": "calibration.lanes",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/gauge/gauge.go"
+        ],
+        "functions": [
+          "load",
+          "Measure"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "5-bad-contrast",
+      "subject": "不可用参考",
+      "state": "参考端点差不足",
+      "invariant": "卷可加载但该方案拒绝使用",
+      "observable": "flat 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Open"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "5-missing-reference",
+      "subject": "参考页缺口",
+      "state": "参考矩形合法而源页缺失",
+      "invariant": "缺少参考无法解释声轨",
+      "observable": "absent 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "5-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "5-negative-lead",
+      "subject": "落后声槽",
+      "state": "卷前边界",
+      "invariant": "卷外无源坐标",
+      "observable": "register.status=outside_capture",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "5-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "5-readable-zero",
+      "subject": "样本可用性",
+      "state": "不可读时 PCM 可为零",
+      "invariant": "状态独立于数值",
+      "observable": "trace.status + sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Trace",
+          "Mapping"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "5-lane-area",
+      "subject": "声槽通光积分",
+      "state": "左右亮区面积不同",
+      "invariant": "逐道像素均值与其标定相对应",
+      "observable": "trace.gray 和 sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Mean",
+          "Trace"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "5-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "5-sample-clock",
+      "subject": "定长双声道输出",
+      "state": "窗内穿过缺页",
+      "invariant": "每画格行恰好一个立体声采样帧",
+      "observable": "WAV 帧数与静音位置",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Extract",
+          "Encode"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "按画格试听",
+      "workflow_ids": [
+        "audition"
+      ]
+    },
+    {
+      "id": "5-delta-denominator",
+      "subject": "差分分母",
+      "state": "中间整页缺失",
+      "invariant": "分母仅含实际可读样本帧",
+      "observable": "compare compared_frames",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Compare"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "5-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "5-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "5-read-identity",
+      "subject": "读取校验",
+      "state": "磁盘字节改变",
+      "invariant": "路径摘要必须匹配实际字节",
+      "observable": "verify 409",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/httpapi/httpapi.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/httpapi/httpapi.go"
+        ],
+        "functions": [
+          "Read",
+          "Verify",
+          "parcelError"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "5-coverage-contract",
+      "subject": "冻结后的覆盖一致性",
+      "state": "覆盖中出现缺页或卷外",
+      "invariant": "严格划分输出窗且对应样本为零",
+      "observable": "verify 恢复出完整覆盖",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "verifyClock",
+          "Coverage"
+        ]
+      },
+      "task_type": "质量保障",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "6-catalog",
+      "subject": "卷清单",
+      "state": "启动快照建立",
+      "invariant": "只含通过读取和几何验证的卷",
+      "observable": "GET 列出卷名",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "LoadCatalog",
+          "Names"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "6-bit-depth",
+      "subject": "灰度位深",
+      "state": "8/16 位页并存",
+      "invariant": "每页保留原始位深",
+      "observable": "header.depths",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "decode",
+          "Info"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "6-sheet-identity",
+      "subject": "源字节身份",
+      "state": "同编号素材内容不同",
+      "invariant": "源摘要绑定卷描述和原件字节",
+      "observable": "header.sha256",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "load",
+          "Info"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "6-rate",
+      "subject": "原生速率",
+      "state": "24×2000 与25×1920",
+      "invariant": "画格和行数共同决定秒速",
+      "observable": "header.sample_rate",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Rate",
+          "Info"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "6-lane-reference",
+      "subject": "同光照左右参照",
+      "state": "两个声槽暗亮值不同",
+      "invariant": "参考按原声道积分",
+      "observable": "calibration.lanes",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/gauge/gauge.go"
+        ],
+        "functions": [
+          "load",
+          "Measure"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "6-bad-contrast",
+      "subject": "不可用参考",
+      "state": "参考端点差不足",
+      "invariant": "卷可加载但该方案拒绝使用",
+      "observable": "flat 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Open"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "6-missing-reference",
+      "subject": "参考页缺口",
+      "state": "参考矩形合法而源页缺失",
+      "invariant": "缺少参考无法解释声轨",
+      "observable": "absent 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "6-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "6-negative-lead",
+      "subject": "落后声槽",
+      "state": "卷前边界",
+      "invariant": "卷外无源坐标",
+      "observable": "register.status=outside_capture",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "6-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "6-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "6-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "6-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "6-frozen-input",
+      "subject": "冻结输入说明",
+      "state": "后续重新登记原件",
+      "invariant": "存档继续描述发布时快照",
+      "observable": "包内源摘要和标定",
+      "primary_mechanism": "export_freeze",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "6-read-identity",
+      "subject": "读取校验",
+      "state": "磁盘字节改变",
+      "invariant": "路径摘要必须匹配实际字节",
+      "observable": "verify 409",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/httpapi/httpapi.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/httpapi/httpapi.go"
+        ],
+        "functions": [
+          "Read",
+          "Verify",
+          "parcelError"
+        ]
+      },
+      "task_type": "项目维护",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "7-bit-depth",
+      "subject": "灰度位深",
+      "state": "8/16 位页并存",
+      "invariant": "每页保留原始位深",
+      "observable": "header.depths",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "decode",
+          "Info"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "7-rate",
+      "subject": "原生速率",
+      "state": "24×2000 与25×1920",
+      "invariant": "画格和行数共同决定秒速",
+      "observable": "header.sample_rate",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Rate",
+          "Info"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "7-lane-reference",
+      "subject": "同光照左右参照",
+      "state": "两个声槽暗亮值不同",
+      "invariant": "参考按原声道积分",
+      "observable": "calibration.lanes",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/gauge/gauge.go"
+        ],
+        "functions": [
+          "load",
+          "Measure"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "7-bad-contrast",
+      "subject": "不可用参考",
+      "state": "参考端点差不足",
+      "invariant": "卷可加载但该方案拒绝使用",
+      "observable": "flat 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Open"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "7-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "7-negative-lead",
+      "subject": "落后声槽",
+      "state": "卷前边界",
+      "invariant": "卷外无源坐标",
+      "observable": "register.status=outside_capture",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "7-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "7-lane-area",
+      "subject": "声槽通光积分",
+      "state": "左右亮区面积不同",
+      "invariant": "逐道像素均值与其标定相对应",
+      "observable": "trace.gray 和 sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Mean",
+          "Trace"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "7-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "7-sample-clock",
+      "subject": "定长双声道输出",
+      "state": "窗内穿过缺页",
+      "invariant": "每画格行恰好一个立体声采样帧",
+      "observable": "WAV 帧数与静音位置",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Extract",
+          "Encode"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "按画格试听",
+      "workflow_ids": [
+        "audition"
+      ]
+    },
+    {
+      "id": "7-profile-delta",
+      "subject": "校准差分",
+      "state": "相同像素使用不同端点",
+      "invariant": "同一可读坐标对比",
+      "observable": "compare peak 与 RMS",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Compare",
+          "render"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "7-delta-denominator",
+      "subject": "差分分母",
+      "state": "中间整页缺失",
+      "invariant": "分母仅含实际可读样本帧",
+      "observable": "compare compared_frames",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Compare"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "7-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "7-frozen-input",
+      "subject": "冻结输入说明",
+      "state": "后续重新登记原件",
+      "invariant": "存档继续描述发布时快照",
+      "observable": "包内源摘要和标定",
+      "primary_mechanism": "export_freeze",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "7-coverage-contract",
+      "subject": "冻结后的覆盖一致性",
+      "state": "覆盖中出现缺页或卷外",
+      "invariant": "严格划分输出窗且对应样本为零",
+      "observable": "verify 恢复出完整覆盖",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "verifyClock",
+          "Coverage"
+        ]
+      },
+      "task_type": "技术讨论",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "8-bit-depth",
+      "subject": "灰度位深",
+      "state": "8/16 位页并存",
+      "invariant": "每页保留原始位深",
+      "observable": "header.depths",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "decode",
+          "Info"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "8-rate",
+      "subject": "原生速率",
+      "state": "24×2000 与25×1920",
+      "invariant": "画格和行数共同决定秒速",
+      "observable": "header.sample_rate",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Rate",
+          "Info"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "8-lane-reference",
+      "subject": "同光照左右参照",
+      "state": "两个声槽暗亮值不同",
+      "invariant": "参考按原声道积分",
+      "observable": "calibration.lanes",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/gauge/gauge.go"
+        ],
+        "functions": [
+          "load",
+          "Measure"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "8-bad-contrast",
+      "subject": "不可用参考",
+      "state": "参考端点差不足",
+      "invariant": "卷可加载但该方案拒绝使用",
+      "observable": "flat 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Open"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "8-missing-reference",
+      "subject": "参考页缺口",
+      "state": "参考矩形合法而源页缺失",
+      "invariant": "缺少参考无法解释声轨",
+      "observable": "absent 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "8-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "8-negative-lead",
+      "subject": "落后声槽",
+      "state": "卷前边界",
+      "invariant": "卷外无源坐标",
+      "observable": "register.status=outside_capture",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "8-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "8-readable-zero",
+      "subject": "样本可用性",
+      "state": "不可读时 PCM 可为零",
+      "invariant": "状态独立于数值",
+      "observable": "trace.status + sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Trace",
+          "Mapping"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "8-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "8-profile-delta",
+      "subject": "校准差分",
+      "state": "相同像素使用不同端点",
+      "invariant": "同一可读坐标对比",
+      "observable": "compare peak 与 RMS",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Compare",
+          "render"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "8-delta-denominator",
+      "subject": "差分分母",
+      "state": "中间整页缺失",
+      "invariant": "分母仅含实际可读样本帧",
+      "observable": "compare compared_frames",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Compare"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "8-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "8-visual-saturation",
+      "subject": "削顶可视化",
+      "state": "读数超过端点",
+      "invariant": "展现截幅诊断与正确时标",
+      "observable": "PNG 声槽红色线",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Trace"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "8-coverage-contract",
+      "subject": "冻结后的覆盖一致性",
+      "state": "覆盖中出现缺页或卷外",
+      "invariant": "严格划分输出窗且对应样本为零",
+      "observable": "verify 恢复出完整覆盖",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "verifyClock",
+          "Coverage"
+        ]
+      },
+      "task_type": "问题排查与诊断",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "9-catalog",
+      "subject": "卷清单",
+      "state": "启动快照建立",
+      "invariant": "只含通过读取和几何验证的卷",
+      "observable": "GET 列出卷名",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "LoadCatalog",
+          "Names"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "9-bit-depth",
+      "subject": "灰度位深",
+      "state": "8/16 位页并存",
+      "invariant": "每页保留原始位深",
+      "observable": "header.depths",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "decode",
+          "Info"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "9-sheet-identity",
+      "subject": "源字节身份",
+      "state": "同编号素材内容不同",
+      "invariant": "源摘要绑定卷描述和原件字节",
+      "observable": "header.sha256",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "load",
+          "Info"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "9-rate",
+      "subject": "原生速率",
+      "state": "24×2000 与25×1920",
+      "invariant": "画格和行数共同决定秒速",
+      "observable": "header.sample_rate",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Rate",
+          "Info"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "9-missing-reference",
+      "subject": "参考页缺口",
+      "state": "参考矩形合法而源页缺失",
+      "invariant": "缺少参考无法解释声轨",
+      "observable": "absent 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "9-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "9-media-span",
+      "subject": "请求的画格窗",
+      "state": "空窗或超过上限",
+      "invariant": "统一采用有限半开区间",
+      "observable": "coverage 或 audition 400",
+      "primary_mechanism": "capacity",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Validate",
+          "Audition"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "9-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "9-sample-clock",
+      "subject": "定长双声道输出",
+      "state": "窗内穿过缺页",
+      "invariant": "每画格行恰好一个立体声采样帧",
+      "observable": "WAV 帧数与静音位置",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Extract",
+          "Encode"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "按画格试听",
+      "workflow_ids": [
+        "audition"
+      ]
+    },
+    {
+      "id": "9-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "9-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "9-frozen-input",
+      "subject": "冻结输入说明",
+      "state": "后续重新登记原件",
+      "invariant": "存档继续描述发布时快照",
+      "observable": "包内源摘要和标定",
+      "primary_mechanism": "export_freeze",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "9-stable-id",
+      "subject": "交付指纹",
+      "state": "同选项重复发布",
+      "invariant": "标识由媒体和索引字节决定",
+      "observable": "Location 一致",
+      "primary_mechanism": "idempotency",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/wave/wave.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/wave/wave.go"
+        ],
+        "functions": [
+          "Publish",
+          "Encode"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "9-read-identity",
+      "subject": "读取校验",
+      "state": "磁盘字节改变",
+      "invariant": "路径摘要必须匹配实际字节",
+      "observable": "verify 409",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/parcel/parcel.go",
+        "internal/httpapi/httpapi.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/parcel/parcel.go",
+          "internal/httpapi/httpapi.go"
+        ],
+        "functions": [
+          "Read",
+          "Verify",
+          "parcelError"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "9-sample-structure",
+      "subject": "样本封装",
+      "state": "播放头与索引声画时钟耦合",
+      "invariant": "速率、样本宽度、帧数一致",
+      "observable": "verify wave 和 index",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/wave/wave.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/wave/wave.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Inspect",
+          "Verify"
+        ]
+      },
+      "task_type": "部署运维",
+      "capability_family": "复核已交付声画包",
+      "workflow_ids": [
+        "verify"
+      ]
+    },
+    {
+      "id": "10-bit-depth",
+      "subject": "灰度位深",
+      "state": "8/16 位页并存",
+      "invariant": "每页保留原始位深",
+      "observable": "header.depths",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "decode",
+          "Info"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "10-sheet-identity",
+      "subject": "源字节身份",
+      "state": "同编号素材内容不同",
+      "invariant": "源摘要绑定卷描述和原件字节",
+      "observable": "header.sha256",
+      "primary_mechanism": "lineage",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "load",
+          "Info"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "10-rate",
+      "subject": "原生速率",
+      "state": "24×2000 与25×1920",
+      "invariant": "画格和行数共同决定秒速",
+      "observable": "header.sample_rate",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Rate",
+          "Info"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "扫描卷登记",
+      "workflow_ids": [
+        "intake"
+      ]
+    },
+    {
+      "id": "10-lane-reference",
+      "subject": "同光照左右参照",
+      "state": "两个声槽暗亮值不同",
+      "invariant": "参考按原声道积分",
+      "observable": "calibration.lanes",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/capture/capture.go",
+        "internal/gauge/gauge.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/capture/capture.go",
+          "internal/gauge/gauge.go"
+        ],
+        "functions": [
+          "load",
+          "Measure"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "10-bad-contrast",
+      "subject": "不可用参考",
+      "state": "参考端点差不足",
+      "invariant": "卷可加载但该方案拒绝使用",
+      "observable": "flat 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Open"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "10-missing-reference",
+      "subject": "参考页缺口",
+      "state": "参考矩形合法而源页缺失",
+      "invariant": "缺少参考无法解释声轨",
+      "observable": "absent 请求为 400",
+      "primary_mechanism": "error_propagation",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "测量声槽标定",
+      "workflow_ids": [
+        "calibration"
+      ]
+    },
+    {
+      "id": "10-positive-lead",
+      "subject": "领先声槽",
+      "state": "进入下一源页",
+      "invariant": "行级偏移保留余数",
+      "observable": "register.source",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "10-negative-lead",
+      "subject": "落后声槽",
+      "state": "卷前边界",
+      "invariant": "卷外无源坐标",
+      "observable": "register.status=outside_capture",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Locate",
+          "Mapping"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "查询画格和源行",
+      "workflow_ids": [
+        "register"
+      ]
+    },
+    {
+      "id": "10-hole-edge",
+      "subject": "声槽空洞",
+      "state": "缺页边界落在格内",
+      "invariant": "可读区和缺口按实际行切分",
+      "observable": "coverage 三段",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/register/register.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/register/register.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Coverage",
+          "Mapping"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "分解声音覆盖",
+      "workflow_ids": [
+        "coverage"
+      ]
+    },
+    {
+      "id": "10-readable-zero",
+      "subject": "样本可用性",
+      "state": "不可读时 PCM 可为零",
+      "invariant": "状态独立于数值",
+      "observable": "trace.status + sample",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Trace",
+          "Mapping"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "10-clip",
+      "subject": "曝光削顶",
+      "state": "声槽值超出自身参考",
+      "invariant": "保留旗标并限制幅值",
+      "observable": "trace.clipped",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/gauge/gauge.go",
+        "internal/readout/readout.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/gauge/gauge.go",
+          "internal/readout/readout.go"
+        ],
+        "functions": [
+          "Measure",
+          "Trace"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "定位一个 PCM 样本",
+      "workflow_ids": [
+        "trace"
+      ]
+    },
+    {
+      "id": "10-profile-delta",
+      "subject": "校准差分",
+      "state": "相同像素使用不同端点",
+      "invariant": "同一可读坐标对比",
+      "observable": "compare peak 与 RMS",
+      "primary_mechanism": "policy_rules",
+      "source_anchors": [
+        "internal/readout/readout.go",
+        "internal/station/station.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/readout/readout.go",
+          "internal/station/station.go"
+        ],
+        "functions": [
+          "Compare",
+          "render"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "比较标定试听差异",
+      "workflow_ids": [
+        "compare"
+      ]
+    },
+    {
+      "id": "10-empty-picture",
+      "subject": "画面缺失但声槽存在",
+      "state": "画格自身缺页尾部还有偏移后的声音",
+      "invariant": "图的两个输入各自有效",
+      "observable": "PNG 缺图中仍出现声音",
+      "primary_mechanism": "snapshot_consistency",
+      "source_anchors": [
+        "internal/view/view.go",
+        "internal/register/register.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/view/view.go",
+          "internal/register/register.go"
+        ],
+        "functions": [
+          "Overlay",
+          "Locate"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "生成画格诊断图",
+      "workflow_ids": [
+        "overlay"
+      ]
+    },
+    {
+      "id": "10-picture-index",
+      "subject": "包内画格位置",
+      "state": "截取的起点不是第零格",
+      "invariant": "局部样本位置从零开始",
+      "observable": "register.json pictures",
+      "primary_mechanism": "time_semantics",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    },
+    {
+      "id": "10-frozen-input",
+      "subject": "冻结输入说明",
+      "state": "后续重新登记原件",
+      "invariant": "存档继续描述发布时快照",
+      "observable": "包内源摘要和标定",
+      "primary_mechanism": "export_freeze",
+      "source_anchors": [
+        "internal/station/station.go",
+        "internal/parcel/parcel.go"
+      ],
+      "existing_touch_points": {
+        "files": [
+          "internal/station/station.go",
+          "internal/parcel/parcel.go"
+        ],
+        "functions": [
+          "Release",
+          "Publish"
+        ]
+      },
+      "task_type": "泛Agent需求",
+      "capability_family": "冻结音频和画格索引",
+      "workflow_ids": [
+        "release"
+      ]
+    }
+  ]
+}

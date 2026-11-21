@@ -1,0 +1,263 @@
+{
+  "name": "Emberstripe",
+  "description": "胶片灰度条带光学声轨数字化 HTTP 服务",
+  "project_shape": "backend",
+  "modules": [
+    {
+      "id": "capture",
+      "path": "internal/capture/capture.go",
+      "responsibility": "卷格式、条带灰度、位深、输入摘要和快照"
+    },
+    {
+      "id": "gauge",
+      "path": "internal/gauge/gauge.go",
+      "responsibility": "计算和验证暗亮双声道标定"
+    },
+    {
+      "id": "register",
+      "path": "internal/register/register.go",
+      "responsibility": "画格窗、原生时钟、源地址与覆盖范围"
+    },
+    {
+      "id": "readout",
+      "path": "internal/readout/readout.go",
+      "responsibility": "灰度积分、削顶与立体声采样差分"
+    },
+    {
+      "id": "wave",
+      "path": "internal/wave/wave.go",
+      "responsibility": "WAVE PCM 字节格式及头部检查"
+    },
+    {
+      "id": "view",
+      "path": "internal/view/view.go",
+      "responsibility": "画面灰度与取样诊断的同位置布局"
+    },
+    {
+      "id": "parcel",
+      "path": "internal/parcel/parcel.go",
+      "responsibility": "冻结包、磁盘读写和声画格式核验"
+    },
+    {
+      "id": "station",
+      "path": "internal/station/station.go",
+      "responsibility": "协调卷目录、取样与归档工作流"
+    },
+    {
+      "id": "httpapi",
+      "path": "internal/httpapi/httpapi.go",
+      "responsibility": "请求参数、状态、响应编码和并发槽位"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "intake",
+      "name": "扫描卷登记",
+      "entry": "GET /captures/{name}/header",
+      "success": "来源摘要、原生位深和页号均可读",
+      "failure": "未知卷 404",
+      "verification": "python3 examples/walkthrough.py intake",
+      "steps": [
+        "启动加载扫描页与卷描述",
+        "按已登记快照公开页清单和时钟"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "capture",
+        "register"
+      ]
+    },
+    {
+      "id": "calibration",
+      "name": "测量声槽标定",
+      "entry": "GET /captures/{name}/calibration",
+      "success": "按声道报告暗亮端点",
+      "failure": "平场或参考缺失 400",
+      "verification": "python3 examples/walkthrough.py calibration",
+      "steps": [
+        "依配置定位参考页及参考行",
+        "在两个声槽独立积分并校验反差"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "capture",
+        "gauge"
+      ]
+    },
+    {
+      "id": "register",
+      "name": "查询画格和源行",
+      "entry": "GET /captures/{name}/register",
+      "success": "返回目标行、对应源行和可读状态",
+      "failure": "非法行 400",
+      "verification": "python3 examples/walkthrough.py register",
+      "steps": [
+        "把画格加局部行换为卷内行",
+        "按正负偏移映射，再查源页是否可用"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "register",
+        "capture"
+      ]
+    },
+    {
+      "id": "coverage",
+      "name": "分解声音覆盖",
+      "entry": "GET /captures/{name}/coverage",
+      "success": "半开区间无重叠地划分画格窗",
+      "failure": "空窗 400",
+      "verification": "python3 examples/walkthrough.py coverage",
+      "steps": [
+        "验证请求窗长度",
+        "跨声槽扫描页分段并合并同状态相邻段"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "register",
+        "capture"
+      ]
+    },
+    {
+      "id": "trace",
+      "name": "定位一个 PCM 样本",
+      "entry": "GET /captures/{name}/trace",
+      "success": "同一响应展示声槽行、灰度和削顶标记",
+      "failure": "卷外画格 400",
+      "verification": "python3 examples/walkthrough.py trace",
+      "steps": [
+        "校准声槽端点并查询源坐标",
+        "对两个声槽积分并计算签名样本"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "gauge",
+        "register",
+        "capture",
+        "readout"
+      ]
+    },
+    {
+      "id": "audition",
+      "name": "按画格试听",
+      "entry": "GET /captures/{name}/audition",
+      "success": "返回两声道定长 WAV",
+      "failure": "非法窗口 400",
+      "verification": "python3 examples/walkthrough.py audition",
+      "steps": [
+        "计算可读区并生成缺口占位样本",
+        "用原生每秒行数打包交错 PCM"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "gauge",
+        "register",
+        "readout",
+        "wave",
+        "capture"
+      ]
+    },
+    {
+      "id": "compare",
+      "name": "比较标定试听差异",
+      "entry": "GET /captures/{name}/compare",
+      "success": "返回共同可读窗口的左右声道差分",
+      "failure": "相同标定 400",
+      "verification": "python3 examples/walkthrough.py compare",
+      "steps": [
+        "按同卷同窗分别量测与解释 PCM",
+        "只比较可读样本并输出削顶与差分统计"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "gauge",
+        "register",
+        "readout",
+        "capture"
+      ]
+    },
+    {
+      "id": "overlay",
+      "name": "生成画格诊断图",
+      "entry": "GET /captures/{name}/overlay",
+      "success": "画面和声槽的逐行对照可查看",
+      "failure": "无效画格 400",
+      "verification": "python3 examples/walkthrough.py overlay",
+      "steps": [
+        "读取画格图区灰度",
+        "在卷时钟上绘制两条声槽数据和缺失状态"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "gauge",
+        "register",
+        "view",
+        "readout",
+        "capture"
+      ]
+    },
+    {
+      "id": "release",
+      "name": "冻结音频和画格索引",
+      "entry": "POST /captures/{name}/release",
+      "success": "可重放的 WAV 和画格索引同包发布",
+      "failure": "坏标定 400",
+      "verification": "python3 examples/walkthrough.py release",
+      "steps": [
+        "按选定标定生成 PCM 和覆盖",
+        "绑定快照摘要、局部索引及 WAV，写完再公布"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "gauge",
+        "register",
+        "readout",
+        "wave",
+        "parcel"
+      ]
+    },
+    {
+      "id": "verify",
+      "name": "复核已交付声画包",
+      "entry": "GET /parcels/{id}/verify",
+      "success": "验证同一媒体和时间索引",
+      "failure": "存储字节损坏 409",
+      "verification": "python3 examples/walkthrough.py verify",
+      "steps": [
+        "用标识读取冻结 ZIP",
+        "核对声轨头、索引、覆盖分区及缺失静音"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "parcel",
+        "wave",
+        "register"
+      ]
+    }
+  ],
+  "complexity": {
+    "mechanisms": [
+      "time_semantics",
+      "policy_rules",
+      "capacity",
+      "concurrency",
+      "resource_lifecycle",
+      "export_freeze",
+      "lineage",
+      "snapshot_consistency",
+      "idempotency",
+      "error_propagation",
+      "recovery_rollback"
+    ]
+  }
+}

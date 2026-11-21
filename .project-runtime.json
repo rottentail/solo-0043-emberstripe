@@ -1,0 +1,51 @@
+{
+  "language": "Go",
+  "project_shape": "backend",
+  "source_extensions": [
+    ".go"
+  ],
+  "testing": "deferred",
+  "build_command": "go build ./...",
+  "workflow_checks": [
+    {
+      "workflow_id": "intake",
+      "command": "python3 examples/walkthrough.py intake"
+    },
+    {
+      "workflow_id": "calibration",
+      "command": "python3 examples/walkthrough.py calibration"
+    },
+    {
+      "workflow_id": "register",
+      "command": "python3 examples/walkthrough.py register"
+    },
+    {
+      "workflow_id": "coverage",
+      "command": "python3 examples/walkthrough.py coverage"
+    },
+    {
+      "workflow_id": "trace",
+      "command": "python3 examples/walkthrough.py trace"
+    },
+    {
+      "workflow_id": "audition",
+      "command": "python3 examples/walkthrough.py audition"
+    },
+    {
+      "workflow_id": "compare",
+      "command": "python3 examples/walkthrough.py compare"
+    },
+    {
+      "workflow_id": "overlay",
+      "command": "python3 examples/walkthrough.py overlay"
+    },
+    {
+      "workflow_id": "release",
+      "command": "python3 examples/walkthrough.py release"
+    },
+    {
+      "workflow_id": "verify",
+      "command": "python3 examples/walkthrough.py verify"
+    }
+  ]
+}
