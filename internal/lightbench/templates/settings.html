@@ -1,0 +1,17 @@
+{{define "settings"}}
+<section class="work-heading" aria-labelledby="reel-title">
+  <div>
+    <h1 id="reel-title">{{.Reel.Name}}</h1>
+    <p class="reel-facts"><span>{{.Reel.FPS}} 格/秒</span><span>{{.SampleRate}} 赫兹</span><span>{{.Available}} / {{.Reel.Frames}} 格有画面</span><span>声画偏移 {{printf "%+d" .Reel.Lead}} 行</span></p>
+  </div>
+  {{if .Active}}
+  <form id="window-form" class="window-form" aria-label="画格窗口">
+    <label>起始画格<input name="start" type="number" min="0" max="{{.Reel.Frames}}" value="0" required></label>
+    <label>截止画格<input name="end" type="number" min="1" max="{{.Reel.Frames}}" value="{{.InitialEnd}}" required></label>
+    <label>光学标定<select name="profile">{{range .Profiles}}<option value="{{.ID}}" {{if .Selected}}selected{{end}} {{if not .Usable}}disabled{{end}}>{{.ID}}{{if not .Usable}} · 不可用{{end}}</option>{{end}}</select></label>
+    <button type="submit">应用区间</button>
+  </form>
+  {{end}}
+</section>
+{{if .Active}}<p id="window-status" class="window-status" role="status">区间包含起始画格，截止画格不包含在内。</p>{{end}}
+{{end}}

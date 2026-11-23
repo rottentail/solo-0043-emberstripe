@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/httpapi"
+	"github.com/rottentail/solo-0043-emberstripe/internal/lightbench"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
 )
 
@@ -29,7 +30,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	server := &http.Server{Handler: httpapi.New(s), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 16 << 10}
+	mux := http.NewServeMux()
+	api := httpapi.New(s)
+	mux.Handle("/captures", api)
+	mux.Handle("/captures/", api)
+	mux.Handle("/parcels/", api)
+	mux.Handle("/", lightbench.New(s))
+	server := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 16 << 10}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	log.Printf("Emberstripe listening on %s", listener.Addr())

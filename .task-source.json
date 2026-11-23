@@ -244,6 +244,30 @@
       "invariants": [
         "归档身份由确切字节决定"
       ]
+    },
+    {
+      "id": "applied_window",
+      "label": "已应用工作窗",
+      "relations": [
+        "reads.reel",
+        "uses.gauge"
+      ],
+      "invariants": [
+        "窗口和标定在服务端校验成功后一起生效",
+        "待提交表单不改写当前取样坐标系"
+      ]
+    },
+    {
+      "id": "scope_bin",
+      "label": "声道包络桶",
+      "relations": [
+        "indexes.applied_window",
+        "summarizes.readout"
+      ],
+      "invariants": [
+        "覆盖整个画格行区间",
+        "只有可读样本贡献极值"
+      ]
     }
   ],
   "state_machines": [
@@ -332,6 +356,25 @@
       "invariants": [
         "归档身份由确切字节决定"
       ]
+    },
+    {
+      "subject": "applied_window",
+      "states": [
+        "empty",
+        "requesting",
+        "ready",
+        "rejected"
+      ],
+      "transitions": [
+        "empty->requesting",
+        "ready->requesting",
+        "requesting->ready",
+        "requesting->rejected",
+        "rejected->requesting"
+      ],
+      "invariants": [
+        "拒绝新请求保留前次成功区间及标定"
+      ]
     }
   ],
   "capability_families": [
@@ -417,6 +460,28 @@
         "read-identity",
         "sample-structure",
         "coverage-contract"
+      ],
+      "available": true
+    },
+    {
+      "family": "装载扫描卷与可用标定",
+      "occupied_by": [
+        "bench-profile-picker"
+      ],
+      "available": true
+    },
+    {
+      "family": "查看双声道范围和画格覆盖",
+      "occupied_by": [
+        "bench-window-readout",
+        "bench-clock-cursor"
+      ],
+      "available": true
+    },
+    {
+      "family": "投影扫描条带并定位光学样本",
+      "occupied_by": [
+        "bench-strip-projection"
       ],
       "available": true
     }
@@ -529,7 +594,7 @@
     },
     {
       "id": "profile-delta",
-      "anchor": "Compare / render",
+      "anchor": "Compare / RenderWindow",
       "entry": "GET /captures/{name}/compare",
       "distinct_outcome": "compare peak 与 RMS",
       "mechanism": "policy_rules"
@@ -596,6 +661,34 @@
       "entry": "GET /parcels/{id}/verify",
       "distinct_outcome": "verify 恢复出完整覆盖",
       "mechanism": "policy_rules"
+    },
+    {
+      "id": "bench-profile-picker",
+      "anchor": "reelPage / Measure",
+      "entry": "GET /lightbench/{reel}",
+      "distinct_outcome": "只有参考完整且两个声道均有效的标定可选",
+      "mechanism": "policy_rules"
+    },
+    {
+      "id": "bench-window-readout",
+      "anchor": "window / summarize / RenderWindow",
+      "entry": "GET /lightbench/{reel}/window",
+      "distinct_outcome": "可按同一窗口核对原始覆盖和声道包络",
+      "mechanism": "time_semantics"
+    },
+    {
+      "id": "bench-clock-cursor",
+      "anchor": "scope / select / audition",
+      "entry": "GET /lightbench/{reel}",
+      "distinct_outcome": "浏览器位置在绝对画格行与窗内波形时间之间转换",
+      "mechanism": "snapshot_consistency"
+    },
+    {
+      "id": "bench-strip-projection",
+      "anchor": "strip / film",
+      "entry": "GET /lightbench/{reel}/strip",
+      "distinct_outcome": "横向位置回到原画格行，图片缓存以源版本为边界",
+      "mechanism": "lineage"
     }
   ],
   "tension_points": [
@@ -648,6 +741,21 @@
       "workflow_id": "verify",
       "description": "单个音频摘要正确也不保证画格计数一致",
       "observable_failure": "内容完整却把错误采样率用于对齐"
+    },
+    {
+      "workflow_id": "workbench",
+      "description": "卷可载入而某些预设无法标定，默认选择需要考虑每个参考页和两个声道",
+      "observable_failure": "页面展示可选标定却在首窗读取时失败"
+    },
+    {
+      "workflow_id": "window-inspection",
+      "description": "精确覆盖时钟和有限数量的可视桶必须共存，跨有效和无效段的桶不能让补零压低真实极值",
+      "observable_failure": "缺页显示为静音波形，或点击后定位到另一个画格行"
+    },
+    {
+      "workflow_id": "strip-projection",
+      "description": "灰阶图缩小后必须可定位到原画格行，画面无页时仍可能有偏移后的可读声槽",
+      "observable_failure": "条带比例映射错误，或画面缺页遮蔽了实际声源"
     }
   ],
   "prompt_anchors": [
@@ -1089,7 +1197,7 @@
         ],
         "functions": [
           "Compare",
-          "render"
+          "RenderWindow"
         ]
       },
       "task_type": "功能开发",
@@ -1775,7 +1883,7 @@
         ],
         "functions": [
           "Compare",
-          "render"
+          "RenderWindow"
         ]
       },
       "task_type": "功能优化",
@@ -2262,7 +2370,7 @@
         ],
         "functions": [
           "Compare",
-          "render"
+          "RenderWindow"
         ]
       },
       "task_type": "代码重构",
@@ -2694,7 +2802,7 @@
         ],
         "functions": [
           "Compare",
-          "render"
+          "RenderWindow"
         ]
       },
       "task_type": "依赖升级与迁移",
@@ -3938,7 +4046,7 @@
         ],
         "functions": [
           "Compare",
-          "render"
+          "RenderWindow"
         ]
       },
       "task_type": "技术讨论",
@@ -4343,7 +4451,7 @@
         ],
         "functions": [
           "Compare",
-          "render"
+          "RenderWindow"
         ]
       },
       "task_type": "问题排查与诊断",
@@ -5181,7 +5289,7 @@
         ],
         "functions": [
           "Compare",
-          "render"
+          "RenderWindow"
         ]
       },
       "task_type": "泛Agent需求",

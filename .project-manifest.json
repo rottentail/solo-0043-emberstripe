@@ -1,7 +1,7 @@
 {
   "name": "Emberstripe",
   "description": "胶片灰度条带光学声轨数字化 HTTP 服务",
-  "project_shape": "backend",
+  "project_shape": "fullstack",
   "modules": [
     {
       "id": "capture",
@@ -47,6 +47,21 @@
       "id": "httpapi",
       "path": "internal/httpapi/httpapi.go",
       "responsibility": "请求参数、状态、响应编码和并发槽位"
+    },
+    {
+      "id": "lightbench",
+      "path": "internal/lightbench",
+      "responsibility": "浏览器入口、画格投影、限流与画格时钟上的包络响应"
+    },
+    {
+      "id": "bench-page",
+      "path": "internal/lightbench/templates",
+      "responsibility": "以扫描卷和可用标定构成可访问的中文浏览器工作台"
+    },
+    {
+      "id": "bench-controls",
+      "path": "internal/lightbench/assets/scripts",
+      "responsibility": "编排浏览器工作窗、探针、双声道绘图、试听和冻结结果"
     }
   ],
   "workflows": [
@@ -242,6 +257,67 @@
         "parcel",
         "wave",
         "register"
+      ]
+    },
+    {
+      "id": "workbench",
+      "name": "装载扫描卷与可用标定",
+      "entry": "GET /lightbench/{reel}",
+      "steps": [
+        "列出启动时登记的卷",
+        "按参考页和声道端点判定每个标定是否可用"
+      ],
+      "success": "显示当前卷、独立标定状态与工作入口",
+      "failure": "未知卷显示 404，没有标定时关闭绘图入口",
+      "verification": "python3 examples/walkthrough.py workbench",
+      "module_ids": [
+        "lightbench",
+        "bench-page",
+        "station",
+        "capture",
+        "gauge"
+      ]
+    },
+    {
+      "id": "window-inspection",
+      "name": "查看双声道范围和画格覆盖",
+      "entry": "GET /lightbench/{reel}/window",
+      "steps": [
+        "验证零基半开窗口与光学标定",
+        "按画格行输出声槽包络及扫描页状态",
+        "在浏览器同步条带、波形与画格探针"
+      ],
+      "success": "每条覆盖区间和左右极值归属到同一画格时钟",
+      "failure": "无效区间或不可用标定保留前次浏览器结果",
+      "verification": "python3 examples/walkthrough.py window-inspection",
+      "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "station",
+        "register",
+        "gauge",
+        "readout"
+      ]
+    },
+    {
+      "id": "strip-projection",
+      "name": "投影扫描条带并定位光学样本",
+      "entry": "GET /lightbench/{reel}/strip",
+      "steps": [
+        "定位选中画格的扫描原页",
+        "沿画格行压缩灰阶并绘制为横向图片",
+        "将浏览器击中的画格行交给声槽探针"
+      ],
+      "success": "画面缩略投影与画格行坐标一致，缺页仍可查声音来源",
+      "failure": "非法画格与扫描缺失分别返回 400 和 404",
+      "verification": "python3 examples/walkthrough.py strip-projection",
+      "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "bench-page",
+        "capture",
+        "register",
+        "station"
       ]
     }
   ],

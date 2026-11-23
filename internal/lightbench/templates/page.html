@@ -1,0 +1,41 @@
+{{define "page"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emberstripe · 胶片声轨工作台</title>
+  <link rel="stylesheet" href="/light-assets/styles/base.css">
+  <link rel="stylesheet" href="/light-assets/styles/bench.css">
+  <link rel="stylesheet" href="/light-assets/styles/scope.css">
+  <link rel="stylesheet" href="/light-assets/styles/details.css">
+  {{if .Active}}<script type="module" src="/light-assets/scripts/main.js"></script>{{end}}
+</head>
+<body>
+  {{template "masthead" .}}
+  {{if .Reel}}
+  <main class="bench" data-reel="{{.Reel.Name}}">
+    {{template "settings" .}}
+    {{if .Active}}
+    <div class="work-surface">
+      <div class="optical-work">
+        {{template "film" .}}
+        {{template "scope" .}}
+      </div>
+      <div class="reference-stack">
+        {{template "probe" .}}
+        {{template "comparison" .}}
+      </div>
+    </div>
+    {{template "handoff" .}}
+    {{else}}
+    <p class="empty-line">此卷没有可用标定。请补齐参考页或调整扫描标定后重新载入工位。</p>
+    {{end}}
+  </main>
+  {{else}}
+  <main class="bench empty-bench">
+    {{if .Names}}<h1>扫描卷不可用</h1><p>请从上方卷索引选择已登记的扫描卷。</p>
+    {{else}}<h1>等待扫描卷</h1><p>将条带和卷描述放入扫描目录，重启服务后即可在此查看。</p>{{end}}
+  </main>
+  {{end}}
+</body>
+</html>{{end}}

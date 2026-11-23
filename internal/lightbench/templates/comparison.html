@@ -1,0 +1,16 @@
+{{define "comparison"}}
+<section class="detail" aria-labelledby="comparison-title">
+  <div class="section-head"><h2 id="comparison-title">标定对照</h2><span id="active-profile" class="section-note"></span></div>
+  <dl class="readings calibration" id="calibration-readings">
+    <div><dt>左声槽暗／亮</dt><dd data-value="left">—</dd></div>
+    <div><dt>右声槽暗／亮</dt><dd data-value="right">—</dd></div>
+  </dl>
+  {{if .Alternative}}
+  <form id="compare-form" class="compare-form" aria-label="选择对照标定">
+    <label>对照标定<select name="against">{{range .Profiles}}{{if .Usable}}<option value="{{.ID}}">{{.ID}}</option>{{end}}{{end}}</select></label>
+    <button type="submit" class="secondary" disabled>比较</button>
+  </form>
+  <output id="compare-result" class="compare-result" aria-live="polite"></output>
+  {{else}}<p class="muted small">此卷仅有一种可用标定。</p>{{end}}
+</section>
+{{end}}

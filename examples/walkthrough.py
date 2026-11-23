@@ -114,11 +114,47 @@ def workflow(base, name, parcels):
         request(path, 409)
         request('/parcels/'+'f'*64+'/verify', 404)
         return {'verified_frames': receipt['wave']['sample_frames'], 'tamper_status': 409}
+    if name == 'workbench':
+        first = request('/').decode()
+        assert 'data-reel="cinder-a"' in first and '画格探针' in first
+        second = request('/lightbench/vireo-b').decode()
+        assert 'data-reel="vireo-b"' in second and '声画偏移 -135 行' in second
+        assert '不可用' in second and '/light-assets/scripts/main.js' in second
+        request('/lightbench/unknown', 404)
+        return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True}
+    if name == 'window-inspection':
+        path = '/lightbench/cinder-a/window?start=1&end=4&profile=bench'
+        data = request(path)
+        assert data['coverage'] == get('coverage?start=1&end=4')
+        assert data['rate'] == 48000 and data['rows_per_frame'] == 2000
+        assert [(frame['depth'], frame['readable'], frame['missing']) for frame in data['frames']] == [
+            (16, 1770, 230), (0, 230, 1770), (16, 2000, 0)]
+        bins = data['envelope']
+        assert bins[0]['start'] == 2000 and bins[-1]['end'] == 8000
+        assert sum(item['readable'] for item in bins) == 4000
+        assert any(item['readable'] == 0 for item in bins)
+        assert any(0 < item['readable'] < item['end'] - item['start'] for item in bins)
+        assert any(item['min'] != item['max'] for item in bins if item['readable'])
+        request(path.replace('profile=bench', 'profile=absent'), 422)
+        request(path.replace('end=4', 'end=1'), 400)
+        return {'coverage_runs': len(data['coverage']), 'readable_rows': 4000, 'envelope_bins': len(bins)}
+    if name == 'strip-projection':
+        prefix = '/lightbench/cinder-a/strip?frame='
+        original = request(prefix+'1')
+        mixed_depth = request(prefix+'4')
+        assert original[:8] == b'\x89PNG\r\n\x1a\n' and struct.unpack('>II', original[16:24]) == (768, 64)
+        assert original != mixed_depth
+        request(prefix+'2', 404)
+        request(prefix+'7', 400)
+        return {'projection': '768×64', 'missing_status': 404}
     raise ValueError(name)
 
 
 def main():
-    names = 'intake calibration register coverage trace audition compare overlay release verify'.split()
+    names = (
+        'intake calibration register coverage trace audition compare overlay release verify '
+        'workbench window-inspection strip-projection'
+    ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
     args = cli.parse_args()

@@ -1,0 +1,11 @@
+{{define "handoff"}}
+<section class="detail handoff" aria-labelledby="handoff-title">
+  <div><h2 id="handoff-title">冻结交接</h2><p id="handoff-scope" class="muted">载入画格窗后可以冻结交接包。</p></div>
+  <div class="handoff-actions">
+    <button id="release-button" type="button" disabled>冻结交接包</button>
+    <a id="parcel-download" class="button secondary" hidden download>下载交接包</a>
+    <button id="verify-button" type="button" class="secondary" hidden>校验交接包</button>
+  </div>
+  <p id="parcel-status" class="parcel-status" role="status"></p>
+</section>
+{{end}}

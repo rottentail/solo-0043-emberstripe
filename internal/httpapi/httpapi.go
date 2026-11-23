@@ -2,11 +2,13 @@
 package httpapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
@@ -123,7 +125,8 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 			invalid(w, err.Error())
 			return
 		}
-		binary(w, "audio/wav", data)
+		w.Header().Set("Content-Type", "audio/wav")
+		http.ServeContent(w, r, "audition.wav", time.Time{}, bytes.NewReader(data))
 	case "release":
 		receipt, err := s.Release(reel, window, profile)
 		if err != nil {

@@ -1,8 +1,11 @@
 {
-  "language": "Go",
-  "project_shape": "backend",
+  "language": "Go + HTML + CSS + JavaScript",
+  "project_shape": "fullstack",
   "source_extensions": [
-    ".go"
+    ".go",
+    ".html",
+    ".css",
+    ".js"
   ],
   "testing": "deferred",
   "build_command": "go build ./...",
@@ -46,6 +49,18 @@
     {
       "workflow_id": "verify",
       "command": "python3 examples/walkthrough.py verify"
+    },
+    {
+      "workflow_id": "workbench",
+      "command": "python3 examples/walkthrough.py workbench"
+    },
+    {
+      "workflow_id": "window-inspection",
+      "command": "python3 examples/walkthrough.py window-inspection"
+    },
+    {
+      "workflow_id": "strip-projection",
+      "command": "python3 examples/walkthrough.py strip-projection"
     }
   ]
 }

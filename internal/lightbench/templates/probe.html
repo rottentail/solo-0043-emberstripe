@@ -1,0 +1,17 @@
+{{define "probe"}}
+<section class="detail" aria-labelledby="probe-title">
+  <div class="section-head"><h2 id="probe-title">画格探针</h2><span id="probe-badge" class="section-note" role="status"></span></div>
+  <form id="probe-form" class="probe-form" aria-label="选取画格行">
+    <label>画格<input name="frame" type="number" min="0" value="0" required></label>
+    <label>画格行<input name="row" type="number" min="0" value="0" required></label>
+    <button type="submit" class="secondary" disabled>定位</button>
+  </form>
+  <dl class="readings" id="probe-values">
+    <div><dt>画格时钟</dt><dd data-value="position">—</dd></div>
+    <div><dt>源声槽</dt><dd data-value="source">—</dd></div>
+    <div><dt>左／右灰阶</dt><dd data-value="gray">—</dd></div>
+    <div><dt>左／右采样</dt><dd data-value="sample">—</dd></div>
+    <div><dt>削顶</dt><dd data-value="clipped">—</dd></div>
+  </dl>
+</section>
+{{end}}

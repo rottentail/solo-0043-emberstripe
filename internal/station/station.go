@@ -90,7 +90,9 @@ func Coverage(reel *capture.Reel, w register.Window) ([]register.Run, error) {
 	}
 	return register.Coverage(reel, w), nil
 }
-func render(reel *capture.Reel, w register.Window, profile string) (gauge.Gauge, readout.Render, error) {
+
+// RenderWindow resolves a calibration and extracts a window on the native picture clock.
+func RenderWindow(reel *capture.Reel, w register.Window, profile string) (gauge.Gauge, readout.Render, error) {
 	if err := register.Validate(reel.Header, w); err != nil {
 		return gauge.Gauge{}, readout.Render{}, err
 	}
@@ -101,7 +103,7 @@ func render(reel *capture.Reel, w register.Window, profile string) (gauge.Gauge,
 	return g, readout.Extract(reel, g, w), nil
 }
 func Audition(reel *capture.Reel, w register.Window, profile string) ([]byte, error) {
-	_, r, err := render(reel, w, profile)
+	_, r, err := RenderWindow(reel, w, profile)
 	if err != nil {
 		return nil, err
 	}
@@ -111,11 +113,11 @@ func Compare(reel *capture.Reel, w register.Window, a, b string) (map[string]any
 	if b == "" {
 		return nil, errors.New("second profile is required")
 	}
-	first, ar, err := render(reel, w, a)
+	first, ar, err := RenderWindow(reel, w, a)
 	if err != nil {
 		return nil, err
 	}
-	second, br, err := render(reel, w, b)
+	second, br, err := RenderWindow(reel, w, b)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +134,7 @@ func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 	return view.Overlay(reel, g, frame)
 }
 func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
-	g, r, err := render(reel, w, profile)
+	g, r, err := RenderWindow(reel, w, profile)
 	if err != nil {
 		return parcel.Receipt{}, &InvalidRenderingInput{Cause: err}
 	}
