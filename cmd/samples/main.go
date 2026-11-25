@@ -44,6 +44,15 @@ func generate(dir, name string, lead, rows, fps, gap int) error {
 		{ID: "flat", Dark: patch(0, 0, 18), Clear: patch(0, 18, 36)},
 		{ID: "absent", Dark: patch(gap, 0, 36), Clear: patch(0, 36, 72)},
 	}}
+	// Edge marks live only in the gaps outside picture and both sound lanes.
+	// cinder-a shares one transport cadence between edge and lanes; vireo-b
+	// carries a deliberately close but distinct lane frequency, so the
+	// verification must keep the two causes separate.
+	edgeHz := 165.0
+	leftHz, rightHz := 165.0, 165.0
+	if name == "vireo-b" {
+		leftHz, rightHz = 142.0, 142.0
+	}
 	raw, err := json.MarshalIndent(h, "", "  ")
 	if err != nil {
 		return err
@@ -66,6 +75,14 @@ func generate(dir, name string, lead, rows, fps, gap int) error {
 				if x < h.Picture.X1 && ((x+frame*5)%25 < 4 || y%500 < 16) {
 					intensity = 57000
 				}
+				// Transport periodicity is painted into the edge gaps only,
+				// never into the picture columns or the optical sound lanes.
+				if (x >= h.Picture.X1 && x < h.Lanes[0].X0) || (x >= h.Lanes[1].X1 && x < h.Width) {
+					if frame >= 2 {
+						edgeTime := float64(frame*h.Rows+y) / float64(fps*h.Rows)
+						intensity = uint16(30000 + 4200*math.Sin(edgeTime*2*math.Pi*edgeHz))
+					}
+				}
 				for lane, band := range h.Lanes {
 					if x < band.X0 || x >= band.X1 {
 						continue
@@ -83,10 +100,20 @@ func generate(dir, name string, lead, rows, fps, gap int) error {
 						}
 					} else {
 						t := float64(frame*h.Rows+y) / float64(h.FPS*h.Rows)
+						laneHz := leftHz
+						if lane == 1 {
+							laneHz = rightHz
+						}
 						mark := int(math.Round(8 + 6*math.Sin(t*2*math.Pi*float64(280+220*lane))))
 						intensity = uint16(dark)
 						if x-band.X0 < mark {
 							intensity = uint16(clear)
+						}
+						// A faint transport-synchronized modulation rides on
+						// the programme waveform in the lane columns.
+						if frame >= 2 {
+							ride := 3200 * math.Sin(t*2*math.Pi*laneHz)
+							intensity = uint16(math.Max(0, math.Min(65535, float64(intensity)+ride)))
 						}
 						if frame == 5 && y >= 120 && y < 155 && lane == 1 {
 							intensity = 64000

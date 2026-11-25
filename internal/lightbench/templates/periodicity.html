@@ -1,0 +1,26 @@
+{{define "periodicity"}}
+<section class="detail periodicity" aria-labelledby="periodicity-title">
+  <div class="section-head">
+    <h2 id="periodicity-title">周期干扰核验</h2>
+    <span id="periodicity-badge" class="section-note" role="status"></span>
+  </div>
+  <p class="muted small periodicity-intro">在声槽以外圈一条参照带，把带边周期纹与另一画格位置的声槽读数放在同一时钟上复听。相近频率若超出合并分辨范围，不会直接判成同一成因。</p>
+  <form id="periodicity-form" class="periodicity-form" aria-label="参照带列区与核验">
+    <label>参照带起列<input name="x0" type="number" min="0" placeholder="默认"></label>
+    <label>参照带止列<input name="x1" type="number" min="1" placeholder="默认"></label>
+    <button type="submit" class="secondary" disabled>核验周期</button>
+  </form>
+  <p id="periodicity-band" class="muted small"></p>
+  <div id="periodicity-verdict" class="periodicity-verdict" aria-live="polite"></div>
+  <canvas id="periodicity-plot" aria-label="带边与声槽频谱对照图" hidden></canvas>
+  <div id="periodicity-pairs" class="periodicity-pairs"></div>
+  <div id="periodicity-blocks" class="periodicity-blocks"></div>
+  <div class="periodicity-audio">
+    <button type="button" id="periodic-edge-button" class="secondary" disabled>复听带边参照</button>
+    <button type="button" id="periodic-left-button" class="secondary" disabled>带边／左声槽</button>
+    <button type="button" id="periodic-right-button" class="secondary" disabled>带边／右声槽</button>
+    <audio id="periodic-media" controls preload="none" aria-label="周期证据试听" hidden></audio>
+  </div>
+  <p id="periodicity-status" class="muted small" role="status"></p>
+</section>
+{{end}}

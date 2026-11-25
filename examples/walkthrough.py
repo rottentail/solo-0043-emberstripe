@@ -147,13 +147,58 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'periodicity':
+        base_path = '/lightbench/cinder-a/periodicity?start=2&end=7&profile=bench'
+        report = request(base_path)
+        assert report['reference_band'] == {'x0': 64, 'x1': 72}
+        assert report['sample_rate_hz'] == 48000
+        assert (report['readable_rows'], report['missing_rows'], report['outside_rows']) == (8000, 1770, 230)
+        kinds = [spectrum['kind'] for spectrum in report['spectra']]
+        assert kinds == ['edge', 'left_lane', 'right_lane']
+        # Missing middle page and outside material keep their original positions.
+        blocks = {(block['status'], block['frame']) for block in report['unreadable_blocks']}
+        assert ('missing_sheet', 2) in blocks and ('outside_capture', -1) in blocks
+        # Edge and lanes share the transport cadence; the loud programme peaks
+        # at 278/499 Hz must not mask the edge-aligned answer near 163 Hz.
+        assert report['overall_verdict'] == 'shared_period_supported'
+        for pair in report['pairs']:
+            assert pair['verdict'] == 'shared_period_supported'
+            assert pair['frequency_gap_hz'] == 0 and pair['edge_cycles'] >= 3
+            assert pair['lane_answer_to_floor'] >= 2
+        # Close but distinct frequencies on vireo-b must not be merged by name.
+        distinct = request('/lightbench/vireo-b/periodicity?start=2&end=7&profile=bench')
+        assert distinct['overall_verdict'] == 'programme_only_not_supported'
+        for pair in distinct['pairs']:
+            assert pair['verdict'] == 'programme_only_not_supported'
+            assert pair['frequency_gap_hz'] > pair['resolution_limit_hz']
+        # Reference bands may not touch the picture or the optical sound lanes.
+        for invalid in ('x0=72&x1=80', 'x0=10&x1=20', 'x0=108&x1=120'):
+            request('/lightbench/cinder-a/periodicity?start=2&end=7&'+invalid, 400)
+        custom = request('/lightbench/cinder-a/periodicity?start=2&end=7&x0=108&x1=112')
+        assert custom['reference_band'] == {'x0': 108, 'x1': 112}
+        request('/lightbench/nope/periodicity?start=0&end=2', 404)
+        return {'shared': report['overall_verdict'], 'distinct': distinct['overall_verdict'],
+                'retained_blocks': len(report['unreadable_blocks'])}
+    if name == 'periodic-audio':
+        for mode, channels in (('edge', 2), ('left', 2), ('right', 2)):
+            path = f'/lightbench/cinder-a/periodic-audio?start=2&end=7&profile=bench&mode={mode}'
+            blob = request(path)
+            with wave.open(io.BytesIO(blob)) as audio:
+                assert (audio.getnchannels(), audio.getsampwidth(), audio.getframerate()) == (channels, 2, 48000)
+                assert audio.getnframes() == 10000
+                audio.setpos(0)
+                head = struct.unpack('<3540h', audio.readframes(1770))
+                assert set(head) == {0}
+        request('/lightbench/cinder-a/periodic-audio?start=2&end=7&mode=bogus', 400)
+        request('/lightbench/cinder-a/periodic-audio?start=2&end=7&x0=72&x1=80', 400)
+        return {'modes': ['edge', 'left', 'right'], 'silent_lead_rows': 1770}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection periodicity periodic-audio'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

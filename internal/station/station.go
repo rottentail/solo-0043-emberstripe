@@ -10,6 +10,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
+	"github.com/rottentail/solo-0043-emberstripe/internal/periodicity"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
@@ -132,6 +133,55 @@ func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 		return nil, err
 	}
 	return view.Overlay(reel, g, frame)
+}
+
+// ReferenceBand resolves the edge-band columns for a verification. Without
+// explicit coordinates it uses the wider gap outside picture and both lanes.
+func ReferenceBand(reel *capture.Reel, x0, x1 int) (capture.Span, error) {
+	if x0 == 0 && x1 == 0 {
+		return periodicity.DefaultBand(reel)
+	}
+	band := capture.Span{X0: x0, X1: x1}
+	if !periodicity.ValidBand(reel, band) {
+		return capture.Span{}, periodicity.ErrInvalidBand
+	}
+	return band, nil
+}
+
+// PeriodicReport verifies whether an edge-band cadence also appears in the
+// optical sound lanes of the same window.
+func PeriodicReport(reel *capture.Reel, w register.Window, band capture.Span) (periodicity.Report, error) {
+	if err := register.Validate(reel.Header, w); err != nil {
+		return periodicity.Report{}, err
+	}
+	return periodicity.Verify(reel, w, band)
+}
+
+// PeriodicAudio renders one evidence stream, or an edge/lane comparison, for
+// re-listening on the native sample clock.
+func PeriodicAudio(reel *capture.Reel, w register.Window, band capture.Span, mode string) ([]byte, error) {
+	if err := register.Validate(reel.Header, w); err != nil {
+		return nil, err
+	}
+	var (
+		rate    int
+		samples []int16
+		err     error
+	)
+	switch mode {
+	case "", "edge":
+		rate, samples, err = periodicity.Audio(reel, w, periodicity.Edge, band)
+	case "left":
+		rate, samples, err = periodicity.ComparisonAudio(reel, w, periodicity.Left, band)
+	case "right":
+		rate, samples, err = periodicity.ComparisonAudio(reel, w, periodicity.Right, band)
+	default:
+		return nil, errors.New("unknown periodicity audio mode")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return wave.Encode(rate, samples), nil
 }
 func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
 	g, r, err := RenderWindow(reel, w, profile)
