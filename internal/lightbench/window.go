@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
+	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
 )
@@ -18,13 +19,15 @@ type frameCoverage struct {
 }
 
 type windowReadout struct {
-	Window   register.Window `json:"window"`
-	Rate     int             `json:"rate"`
-	Rows     int             `json:"rows_per_frame"`
-	Profile  gauge.Gauge     `json:"profile"`
-	Frames   []frameCoverage `json:"frames"`
-	Coverage []register.Run  `json:"coverage"`
-	Envelope []amplitudeBin  `json:"envelope"`
+	Window      register.Window   `json:"window"`
+	Rate        int               `json:"rate"`
+	Rows        int               `json:"rows_per_frame"`
+	Profile     gauge.Gauge       `json:"profile"`
+	Frames      []frameCoverage   `json:"frames"`
+	Coverage    []register.Run    `json:"coverage"`
+	Envelope    []amplitudeBin    `json:"envelope"`
+	EdgeBalance []readout.EdgeBin `json:"edge_balance"`
+	LaneWidths  [2]int            `json:"lane_widths"`
 }
 
 func (b *bench) window(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +48,8 @@ func (b *bench) window(w http.ResponseWriter, r *http.Request) {
 	result := windowReadout{
 		Window: window, Rate: register.Rate(reel.Header), Rows: reel.Rows, Profile: calibration,
 		Coverage: render.Coverage, Envelope: summarize(render, window.Start*reel.Rows),
+		EdgeBalance: readout.EdgeBalance(reel, calibration, window),
+		LaneWidths:  [2]int{reel.Lanes[0].Width(), reel.Lanes[1].Width()},
 	}
 	for frame := window.Start; frame < window.End; frame++ {
 		sheet := reel.Sheets[frame]

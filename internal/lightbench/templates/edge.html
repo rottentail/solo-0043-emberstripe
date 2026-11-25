@@ -1,0 +1,17 @@
+{{define "edge"}}
+<section class="edge-section" aria-labelledby="edge-title">
+  <div class="section-head">
+    <h2 id="edge-title">边缘均衡图</h2>
+    <span id="edge-summary" class="section-note">等待载入窗口</span>
+  </div>
+  <p class="edge-intro">每个声槽按列分左右两半，比较同一画格行两侧平均灰阶，并按该槽标定反差归一。正值偏右亮、负值偏左亮；持续同向的段落才提示槽偏歪。</p>
+  <div class="edge-plot">
+    <div class="edge-lane-labels" aria-hidden="true"><span>左槽</span><span>右槽</span></div>
+    <canvas id="edge-canvas" aria-label="声槽左右边缘灰度差，点击定位画格行"></canvas>
+  </div>
+  <div class="edge-legend" aria-label="依据充分性图例">
+    <span class="edge-supported">依据充分</span><span class="edge-weak">行数不足或跨位深</span><span class="edge-gap">缺页／卷外无依据</span>
+  </div>
+  <p id="edge-readout" class="edge-readout muted small" role="status" aria-live="polite">载入窗口后在此查看每个分桶的依据。</p>
+</section>
+{{end}}

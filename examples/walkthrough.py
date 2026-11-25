@@ -147,13 +147,40 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'edge-balance':
+        path = '/lightbench/cinder-a/window?start=0&end=7&profile=bench'
+        data = request(path)
+        edges = data['edge_balance']
+        assert data['lane_widths'] == [16, 16]
+        assert len(edges) == 256 and edges[0]['start'] == 0 and edges[-1]['end'] == 14000
+        rows = data['rows_per_frame']
+        frame_six = [bin for bin in edges if bin['start'] >= 6*rows and bin['readable'] >= 8]
+        assert frame_six and all(bin['lanes'][0]['mean'] > 0 and bin['lanes'][1]['mean'] > 0 for bin in frame_six)
+        assert all(bin['lanes'][0]['persistent'] >= 0.8 for bin in frame_six)
+        earlier = [bin for bin in edges if bin['end'] <= 5*rows and bin['readable'] >= 8]
+        assert all(bin['lanes'][0]['mean'] < 0 for bin in earlier)
+        assert any(bin['readable'] == 0 for bin in edges)
+        assert any(len(bin['depths']) > 1 for bin in edges)
+        assert all(set(bin['depths']) <= {'8', '16'} for bin in edges)
+        spot = next(bin for bin in edges if bin['start'] <= 6*rows+640 < bin['end'])
+        assert spot['readable'] >= 8
+        other = request('/lightbench/vireo-b/window?start=0&end=7&profile=bench')
+        assert len(other['edge_balance']) == 256 and other['lane_widths'] == [16, 16]
+        assert any(bin['readable'] == 0 for bin in other['edge_balance'])
+        request(path.replace('profile=bench', 'profile=absent'), 422)
+        return {
+            'bins': len(edges),
+            'right_bright_frame_six': len(frame_six),
+            'unsupported_gap_bins': sum(1 for bin in edges if bin['readable'] == 0),
+            'mixed_depth_bins': sum(1 for bin in edges if len(bin['depths']) > 1),
+        }
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection edge-balance'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

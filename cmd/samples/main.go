@@ -85,10 +85,26 @@ func generate(dir, name string, lead, rows, fps, gap int) error {
 						t := float64(frame*h.Rows+y) / float64(h.FPS*h.Rows)
 						mark := int(math.Round(8 + 6*math.Sin(t*2*math.Pi*float64(280+220*lane))))
 						intensity = uint16(dark)
-						if x-band.X0 < mark {
+						if frame == 6 {
+							// The whole sheet keeps its bright area against the
+							// right lane edge: a sustained opposite lateral bias
+							// that the edge-balance chart must isolate from the
+							// other frames' left-edge bright pattern.
+							edge := 4 + int(math.Round(2*math.Sin(t*2*math.Pi*float64(170+120*lane))))
+							if x-band.X0 >= band.Width()-edge {
+								intensity = uint16(clear)
+							}
+						} else if x-band.X0 < mark {
 							intensity = uint16(clear)
 						}
 						if frame == 5 && y >= 120 && y < 155 && lane == 1 {
+							intensity = 64000
+						}
+						// One isolated bright row in frame 6 lights the whole
+						// left half at once: a single-row artifact a row-level
+						// view could mistake for skew, which the binned chart
+						// must not let flip the sustained conclusion.
+						if frame == 6 && y == 640 && lane == 0 && x-band.X0 < band.Width()/2 {
 							intensity = 64000
 						}
 					}

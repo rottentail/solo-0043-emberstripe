@@ -1,0 +1,13 @@
+.edge-section { border: 1px solid #353a33; border-radius: .42rem; background: var(--scope); color: #faf4e8; padding: .84rem; min-width: 0; }
+.edge-section .section-note { color: #cac9b9; }
+.edge-intro { margin-top: .45rem; color: #d3d0bf; font-size: .76rem; line-height: 1.45; }
+.edge-plot { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: .34rem; margin-top: .55rem; }
+.edge-lane-labels { display: grid; grid-template-rows: 1fr 1fr; color: #d6d4c2; font-size: .72rem; }
+.edge-lane-labels span { align-self: center; }
+#edge-canvas { width: 100%; height: 9.6rem; background: #1b201e; border-radius: .18rem; cursor: crosshair; }
+.edge-legend { display: flex; flex-wrap: wrap; gap: .55rem .9rem; margin: .45rem 0; color: #dddacb; font-size: .73rem; }
+.edge-legend span::before { display: inline-block; width: .6rem; height: .6rem; margin-right: .28rem; border-radius: .13rem; content: ''; }
+.edge-legend .edge-supported::before { background: #efa66e; }
+.edge-legend .edge-weak::before { background: repeating-linear-gradient(135deg, #d8d2bd 0 2px, #6d6a5d 2px 5px); }
+.edge-legend .edge-gap::before { background: #58352e; }
+.edge-readout { margin-top: .35rem; color: #d3d0bf !important; line-height: 1.45; }

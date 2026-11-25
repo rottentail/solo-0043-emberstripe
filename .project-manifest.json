@@ -21,7 +21,7 @@
     {
       "id": "readout",
       "path": "internal/readout/readout.go",
-      "responsibility": "灰度积分、削顶与立体声采样差分"
+      "responsibility": "灰度积分、削顶、立体声采样差分与声槽左右边缘均衡"
     },
     {
       "id": "wave",
@@ -318,6 +318,29 @@
         "capture",
         "register",
         "station"
+      ]
+    },
+    {
+      "id": "edge-balance",
+      "name": "查看声槽边缘均衡并定位持续偏亮材料",
+      "entry": "GET /lightbench/{reel}/window",
+      "steps": [
+        "逐行把每个声槽按列分成左右两半并计算平均灰阶差",
+        "用各声槽自身标定反差归一，再按画格行分桶汇总同向比例与离散度",
+        "在浏览器随窗口和探针绘制边缘均衡，依据不足的分桶降权显示"
+      ],
+      "success": "持续一边发亮的材料段与其他帧方向相反且可回到原条带核对，单行亮点不翻转分桶结论",
+      "failure": "缺页、卷外、行数不足或跨位深分桶明确标记为依据不足",
+      "verification": "python3 examples/walkthrough.py edge-balance",
+      "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "bench-page",
+        "station",
+        "register",
+        "gauge",
+        "readout",
+        "capture"
       ]
     }
   ],
