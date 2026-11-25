@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
+	"github.com/rottentail/solo-0043-emberstripe/internal/cue"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
@@ -20,7 +21,7 @@ import (
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
+	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "timing": "GET", "timing-sheet": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
 		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
 			reel, ok := s.Reel(r.PathValue("name"))
 			if !ok {
@@ -116,6 +117,26 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 	case "coverage":
 		v, err := station.Coverage(reel, window)
 		respond(w, v, err)
+	case "timing", "timing-sheet":
+		marks, err := cue.ParseMarks(query, reel.Header, window)
+		if err != nil {
+			invalid(w, err.Error())
+			return
+		}
+		if action == "timing-sheet" {
+			sheet, err := station.TimingSheet(reel, window, profile, marks)
+			respond(w, sheet, err)
+			return
+		}
+		data, sheet, err := station.Timing(reel, window, profile, marks)
+		if err != nil {
+			invalid(w, err.Error())
+			return
+		}
+		w.Header().Set("Content-Type", "audio/wav")
+		w.Header().Set("Content-Disposition", `inline; filename="timing.wav"`)
+		w.Header().Set("X-Cue-Markers", strconv.Itoa(len(sheet.Markers)))
+		http.ServeContent(w, r, "timing.wav", time.Time{}, bytes.NewReader(data))
 	case "compare":
 		v, err := station.Compare(reel, window, profile, query.Get("against"))
 		respond(w, v, err)

@@ -7,7 +7,7 @@ export function scope(root, onPosition) {
   const canvas = root.querySelector('#waveform');
   const clock = root.querySelector('#scope-clock');
   const list = root.querySelector('#coverage-list');
-  let data, cursor, playhead;
+  let data, cursor, playhead, cueMarks = [];
   const first = () => data.window.start * data.rows_per_frame;
   const length = () => (data.window.end - data.window.start) * data.rows_per_frame;
 
@@ -50,6 +50,15 @@ export function scope(root, onPosition) {
     }
     if (cursor !== undefined) vertical(paint, Math.max(1, x(cursor + .5)), height, '#f6a069');
     if (playhead !== undefined) vertical(paint, x(playhead), height, '#fbf5e6', true);
+    for (const absolute of cueMarks) {
+      paint.strokeStyle = '#7fd8c9';
+      paint.lineWidth = 2;
+      paint.beginPath();
+      paint.moveTo(x(absolute), 0);
+      paint.lineTo(x(absolute), height);
+      paint.stroke();
+      paint.lineWidth = 1;
+    }
   }
 
   canvas.addEventListener('click', (event) => {
@@ -61,6 +70,7 @@ export function scope(root, onPosition) {
     setWindow(windowData) {
       data = windowData;
       cursor = playhead = undefined;
+      cueMarks = [];
       clock.textContent = `${compactNumber(length())} 个采样位置 · ${compactNumber(length() * 1000 / data.rate)} 毫秒`;
       const runs = data.coverage.map((run) => {
         const button = document.createElement('button');
@@ -74,5 +84,6 @@ export function scope(root, onPosition) {
     },
     select(frame, row) { cursor = frame * data.rows_per_frame + row; draw(); },
     playback(absolute) { playhead = absolute; draw(); },
+    setMarkers(absoluteRows) { cueMarks = absoluteRows; draw(); },
   };
 }

@@ -29,6 +29,11 @@
       "responsibility": "WAVE PCM 字节格式及头部检查"
     },
     {
+      "id": "cue",
+      "path": "internal/cue/cue.go",
+      "responsibility": "听审报点解析、双声道报点音合成、发声段与报点表"
+    },
+    {
       "id": "view",
       "path": "internal/view/view.go",
       "responsibility": "画面灰度与取样诊断的同位置布局"
@@ -175,6 +180,48 @@
         "register",
         "readout",
         "wave",
+        "capture"
+      ]
+    },
+    {
+      "id": "timing-track",
+      "name": "导出听审计时带",
+      "entry": "GET /captures/{name}/timing",
+      "success": "返回与试听同窗长的双声道 WAV，报点在普通播放器可听，缺口保持静音",
+      "failure": "报点越窗、重复或可听部分不足 5 毫秒为 400",
+      "verification": "python3 examples/walkthrough.py timing-track",
+      "steps": [
+        "解析按画格行排序的 mark=frame:row 报点并校验窗口归属",
+        "只在可读声槽行把报点短音加法混入双声道，缺口和窗尾不补材料",
+        "逐报点记录发声段、可听样本数、补零段与原卷行换算关系"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "cue",
+        "gauge",
+        "register",
+        "readout",
+        "wave",
+        "capture"
+      ]
+    },
+    {
+      "id": "timing-sheet",
+      "name": "导出报点表",
+      "entry": "GET /captures/{name}/timing-sheet",
+      "success": "报点表给出实际时间、窗内采样帧、原卷画格行和补零段的可机读对应",
+      "failure": "与计时带相同的参数校验失败为 400",
+      "verification": "python3 examples/walkthrough.py timing-track",
+      "steps": [
+        "按同一份合成参数渲染计时带但仅返回 JSON 报点表",
+        "按 origin_picture_row 与 sample_rate 说明导出时间到原卷行的找回公式"
+      ],
+      "module_ids": [
+        "httpapi",
+        "station",
+        "cue",
+        "register",
         "capture"
       ]
     },

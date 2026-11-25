@@ -13,4 +13,14 @@
 .handoff-actions { display: flex; flex-wrap: wrap; gap: .42rem; }
 .parcel-status { grid-column: 1 / -1; color: var(--ember-dark); overflow-wrap: anywhere; }
 .parcel-status:empty { display: none; }
+.timing { margin-top: .8rem; display: grid; gap: .6rem; }
+.timing-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: .42rem; align-items: end; }
+.timing-marks { display: flex; flex-wrap: wrap; gap: .35rem; min-height: .4rem; }
+.timing-marks:empty::after { content: '尚未插入报点。'; color: var(--muted); font-size: .78rem; }
+.mark-chip { min-height: 1.9rem; padding: .2rem .55rem; background: #eef4f1; color: #234a43; border: 1px solid #9fc7bd; font: .74rem/1.2 var(--mono); }
+.mark-chip:hover { background: #dcebe6; }
+.timing-actions { display: flex; flex-wrap: wrap; gap: .42rem; }
+#timing-media { width: 100%; max-width: 34rem; height: 2.35rem; }
+.timing-status { color: var(--ember-dark); font-size: .8rem; overflow-wrap: anywhere; }
+.timing-status:empty { display: none; }
 @media (max-width: 700px) { .handoff { grid-template-columns: minmax(0, 1fr); } }

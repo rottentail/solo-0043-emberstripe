@@ -85,6 +85,57 @@ def workflow(base, name, parcels):
         assert result['right_clipped'] != result['left_clipped']
         get('compare?start=1&end=4&against=bench', 400)
         return result['difference']
+    if name == 'timing-track':
+        plain = get('audition?start=1&end=4&profile=bench')
+        rejected = (
+            'timing?start=1&end=4&profile=bench&mark=0:0',
+            'timing?start=1&end=4&profile=bench&mark=1:abc',
+            'timing?start=1&end=4&profile=bench&mark=1:100&mark=1:100',
+            'timing?start=1&end=4&profile=bench',
+            'timing-sheet?start=1&end=4&profile=bench&mark=3:1999',
+        )
+        for path in rejected:
+            get(path, 400)
+        # First cue crosses the frame-2 missing sheet; second starts inside the gap.
+        query = 'timing?start=1&end=4&profile=bench&mark=1:1769&mark=1:1790'
+        data = get(query)
+        sheet = get(query.replace('timing?', 'timing-sheet?'))
+        with wave.open(io.BytesIO(data)) as audio:
+            assert (audio.getnchannels(), audio.getsampwidth(), audio.getframerate(), audio.getnframes()) == (2, 2, 48000, 6000)
+            audio.setpos(1768)
+            assert struct.unpack('<hh', audio.readframes(1)) == struct.unpack('<2h', plain[44+4*1768:48+4*1768])
+            audio.setpos(1769)
+            assert audio.readframes(1) == plain[44+4*1769:48+4*1769]
+            assert audio.readframes(1) == bytes(4)
+            audio.setpos(2021)
+            assert audio.readframes(1749) == bytes(1749 * 4)
+            audio.setpos(3770)
+            # The resumed segment fades in over 2 ms (96 samples) to avoid clicks.
+            assert audio.readframes(96) != bytes(96 * 4)
+            assert struct.unpack('<hh', audio.readframes(1)) != (0, 0)
+        assert sheet['origin_picture_row'] == 2000 and sheet['sample_frames'] == 6000
+        assert sheet['tone'] == {'frequency_hz': 1000, 'duration_ms': 60, 'peak_amplitude': 12000, 'fade_ms': 2, 'minimum_audible_ms': 5}
+        assert [(pad['sample_start'], pad['sample_end'], pad['status']) for pad in sheet['zero_pads']] == [(1770, 3770, 'missing_sheet')]
+        first, second = sheet['markers']
+        assert (first['frame'], first['row'], first['picture_row'], first['onset_status']) == (1, 1769, 3769, 'readable')
+        assert first['complete'] is False and first['sounding_samples'] == 880
+        assert [(seg['sample_start'], seg['sample_end']) for seg in first['sounding_segments']] == [(1769, 1770), (3770, 4649)]
+        assert second['onset_status'] == 'missing_sheet' and second['complete'] is False
+        assert second['sounding_samples'] == 900
+        assert [(seg['sample_start'], seg['sample_end']) for seg in second['sounding_segments']] == [(3770, 4670)]
+        assert abs(first['time_start_ms'] - 1769 * 1000 / 48000) < 1e-9
+        # Window wholly on readable material produces a complete, uncut cue.
+        full = get('timing-sheet?start=4&end=6&profile=bench&mark=4:100')
+        only = full['markers'][0]
+        assert only['complete'] is True and only['sounding_samples'] == 2880
+        assert [(seg['sample_start'], seg['sample_end']) for seg in only['sounding_segments']] == [(100, 2980)]
+        assert full['zero_pads'] == []
+        full_wav = get('timing?start=4&end=6&profile=bench&mark=4:100')
+        full_plain = get('audition?start=4&end=6&profile=bench')
+        assert full_wav[:44] == full_plain[:44] and len(full_wav) == len(full_plain)
+        # Rows outside every cue stay bit-identical to the plain audition.
+        assert full_wav[44:44+4*100] == full_plain[44:44+4*100]
+        return {'cue_markers': len(sheet['markers']), 'zero_pads': len(sheet['zero_pads']), 'complete_samples': only['sounding_samples']}
     if name == 'overlay':
         a = get('overlay?frame=2')
         b = get('overlay?frame=2&profile=soft')
@@ -120,6 +171,8 @@ def workflow(base, name, parcels):
         second = request('/lightbench/vireo-b').decode()
         assert 'data-reel="vireo-b"' in second and '声画偏移 -135 行' in second
         assert '不可用' in second and '/light-assets/scripts/main.js' in second
+        assert '听审计时带' in first and 'timing-form' in first
+        assert b"timing.js" in request('/light-assets/scripts/main.js')
         request('/lightbench/unknown', 404)
         return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True}
     if name == 'window-inspection':
@@ -152,7 +205,7 @@ def workflow(base, name, parcels):
 
 def main():
     names = (
-        'intake calibration register coverage trace audition compare overlay release verify '
+        'intake calibration register coverage trace audition compare timing-track overlay release verify '
         'workbench window-inspection strip-projection'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)

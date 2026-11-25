@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
+	"github.com/rottentail/solo-0043-emberstripe/internal/cue"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
@@ -108,6 +109,33 @@ func Audition(reel *capture.Reel, w register.Window, profile string) ([]byte, er
 		return nil, err
 	}
 	return wave.Encode(register.Rate(reel.Header), r.Samples), nil
+}
+
+// Timing exports the hearing-audit WAV with audible cue points mixed into both
+// channels. Window length and gap silence are preserved.
+func Timing(reel *capture.Reel, w register.Window, profile string, marks []cue.Marker) ([]byte, cue.Sheet, error) {
+	g, r, err := RenderWindow(reel, w, profile)
+	if err != nil {
+		return nil, cue.Sheet{}, err
+	}
+	rate := register.Rate(reel.Header)
+	mixed, records, pads, err := cue.Render(reel, r.Samples, r.Coverage, w, rate, marks)
+	if err != nil {
+		return nil, cue.Sheet{}, &InvalidRenderingInput{Cause: err}
+	}
+	sheet := cue.Sheet{
+		Capture: reel.Name, Profile: g.Profile, Window: w, Rate: rate, Rows: reel.Rows,
+		Lead: reel.Lead, OriginRow: w.Start * reel.Rows, SampleFrames: len(r.Samples) / 2,
+		Tone: cue.Spec(), Markers: records, Coverage: r.Coverage, ZeroPads: pads,
+	}
+	return wave.Encode(rate, mixed), sheet, nil
+}
+
+// TimingSheet renders the same timing export as Timing but returns only its
+// lookup sheet, so the WAV and sheet can be downloaded independently.
+func TimingSheet(reel *capture.Reel, w register.Window, profile string, marks []cue.Marker) (cue.Sheet, error) {
+	_, sheet, err := Timing(reel, w, profile, marks)
+	return sheet, err
 }
 func Compare(reel *capture.Reel, w register.Window, a, b string) (map[string]any, error) {
 	if b == "" {

@@ -35,6 +35,14 @@
       "command": "python3 examples/walkthrough.py audition"
     },
     {
+      "workflow_id": "timing-track",
+      "command": "python3 examples/walkthrough.py timing-track"
+    },
+    {
+      "workflow_id": "timing-sheet",
+      "command": "python3 examples/walkthrough.py timing-track"
+    },
+    {
       "workflow_id": "compare",
       "command": "python3 examples/walkthrough.py compare"
     },

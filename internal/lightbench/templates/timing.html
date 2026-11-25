@@ -1,0 +1,20 @@
+{{define "timing"}}
+<section class="detail timing" aria-labelledby="timing-title">
+  <div class="section-head">
+    <h2 id="timing-title">听审计时带</h2>
+    <span class="section-note">报点为 1 千赫短音，混在双声道中；缺口行保持静音，窗长与试听材料一致。</span>
+  </div>
+  <form id="timing-form" class="timing-form" aria-label="插入听审报点">
+    <label>报点画格<input name="frame" type="number" min="0" required></label>
+    <label>报点画格行<input name="row" type="number" min="0" required></label>
+    <button type="submit" class="secondary" disabled>插入报点</button>
+  </form>
+  <div id="timing-marks" class="timing-marks" aria-live="polite"></div>
+  <div class="timing-actions">
+    <button type="button" id="timing-wav-button" disabled>导出计时带 WAV</button>
+    <button type="button" id="timing-sheet-button" class="secondary" disabled>导出报点表 JSON</button>
+  </div>
+  <audio id="timing-media" controls preload="none" aria-label="含报点的双声道计时带" hidden></audio>
+  <p id="timing-status" class="timing-status" role="status"></p>
+</section>
+{{end}}
