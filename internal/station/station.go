@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/rottentail/solo-0043-emberstripe/internal/board"
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
@@ -147,4 +148,20 @@ func (s *Station) Release(reel *capture.Reel, w register.Window, profile string)
 		return parcel.Receipt{}, fmt.Errorf("publish sound parcel: %w", err)
 	}
 	return receipt, nil
+}
+
+// PlanReviewBoard resolves a QC listening brief into a timed cue sheet.
+// An infeasible brief is returned with Feasible=false and adjustment options.
+func PlanReviewBoard(reel *capture.Reel, brief board.Request) (board.Plan, error) {
+	brief.Reel = reel.Name
+	return board.PlanBoard(reel, brief)
+}
+
+// ReviewBoardAudio renders the playable WAV for a previously accepted plan.
+func ReviewBoardAudio(reel *capture.Reel, plan board.Plan) ([]byte, board.Plan, error) {
+	audio, stamped, err := board.Render(reel, plan)
+	if err != nil {
+		return nil, plan, &InvalidRenderingInput{Cause: err}
+	}
+	return audio, stamped, nil
 }

@@ -5,17 +5,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/rottentail/solo-0043-emberstripe/internal/board"
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
 )
+
+const reviewBriefLimit = 1 << 20
 
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
@@ -30,6 +34,51 @@ func New(s *station.Station) http.Handler {
 			serveCapture(w, r, s, reel, action)
 		})
 	}
+	mux.HandleFunc("POST /captures/{name}/review-board", func(w http.ResponseWriter, r *http.Request) {
+		reel, ok := s.Reel(r.PathValue("name"))
+		if !ok {
+			write(w, 404, map[string]string{"error": "capture unavailable"})
+			return
+		}
+		var brief board.Request
+		if err := decodeBody(w, r, &brief); err != nil {
+			return
+		}
+		plan, err := station.PlanReviewBoard(reel, brief)
+		if err != nil {
+			invalid(w, err.Error())
+			return
+		}
+		write(w, 200, plan)
+	})
+	mux.HandleFunc("POST /captures/{name}/review-board/listen", func(w http.ResponseWriter, r *http.Request) {
+		reel, ok := s.Reel(r.PathValue("name"))
+		if !ok {
+			write(w, 404, map[string]string{"error": "capture unavailable"})
+			return
+		}
+		var plan board.Plan
+		if err := decodeBody(w, r, &plan); err != nil {
+			return
+		}
+		if !plan.Feasible {
+			write(w, http.StatusUnprocessableEntity, plan)
+			return
+		}
+		audio, stamped, err := station.ReviewBoardAudio(reel, plan)
+		if err != nil {
+			var input *station.InvalidRenderingInput
+			if errors.As(err, &input) {
+				invalid(w, input.Error())
+				return
+			}
+			write(w, 500, map[string]string{"error": "review board render failed"})
+			return
+		}
+		w.Header().Set("X-Board-Seconds", strconv.FormatFloat(stamped.UsedSeconds, 'f', 3, 64))
+		w.Header().Set("Content-Type", "audio/wav")
+		http.ServeContent(w, r, "review-board.wav", time.Time{}, bytes.NewReader(audio))
+	})
 	mux.HandleFunc("GET /parcels/{id}", func(w http.ResponseWriter, r *http.Request) {
 		b, err := s.Store.Read(r.PathValue("id"))
 		if err != nil {
@@ -168,4 +217,24 @@ func parcelError(w http.ResponseWriter, err error) {
 		return
 	}
 	write(w, 409, map[string]string{"error": "sound parcel failed integrity checks"})
+}
+
+// decodeBody reads one bounded JSON object, matching the station's trust model.
+func decodeBody(w http.ResponseWriter, r *http.Request, dst any) error {
+	r.Body = http.MaxBytesReader(w, r.Body, reviewBriefLimit)
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(dst); err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			invalid(w, "review brief exceeds the 1 MiB limit")
+		} else {
+			invalid(w, "request body must be a single JSON object")
+		}
+		return err
+	}
+	if err := dec.Decode(new(any)); err != io.EOF {
+		invalid(w, "trailing data after review brief")
+		return err
+	}
+	return nil
 }

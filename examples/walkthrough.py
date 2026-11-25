@@ -28,6 +28,19 @@ def workflow(base, name, parcels):
             data = response.read()
             return json.loads(data) if response.headers.get_content_type() == 'application/json' else data
 
+    def post_json(path, body, expected=200):
+        payload = json.dumps(body).encode()
+        try:
+            response = urlopen(Request(base + path, data=payload, method='POST',
+                                       headers={'Content-Type': 'application/json'}), timeout=8)
+        except HTTPError as error:
+            response = error
+        with response:
+            assert response.status == expected, (path, response.status, expected)
+            data = response.read()
+            kind = response.headers.get_content_type()
+            return data if kind == 'audio/wav' else json.loads(data)
+
     def get(action, expected=200):
         return request(capture + action, expected)
 
@@ -120,8 +133,11 @@ def workflow(base, name, parcels):
         second = request('/lightbench/vireo-b').decode()
         assert 'data-reel="vireo-b"' in second and '声画偏移 -135 行' in second
         assert '不可用' in second and '/light-assets/scripts/main.js' in second
+        assert '听审拼板' in second and '/light-assets/scripts/reviewboard.js' in second
+        script = request('/light-assets/scripts/reviewboard.js')
+        assert b'review-board/listen' in script and b'adjustments' in script
         request('/lightbench/unknown', 404)
-        return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True}
+        return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True, 'review_board_ui': True}
     if name == 'window-inspection':
         path = '/lightbench/cinder-a/window?start=1&end=4&profile=bench'
         data = request(path)
@@ -147,13 +163,54 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'review-board':
+        brief = {
+            'reel': 'cinder-a', 'profile': 'bench', 'max_seconds': 12,
+            'required': [
+                {'id': 'must-1', 'frame': 0, 'row': 400, 'lead_rows': 240, 'tail_rows': 240, 'note': '卷首底噪'},
+                {'id': 'must-2', 'frame': 2, 'row': 0, 'lead_rows': 300, 'tail_rows': 300,
+                 'separate_from': 'must-3', 'note': '缺页前后'},
+                {'id': 'must-3', 'frame': 4, 'row': 500, 'lead_rows': 200, 'tail_rows': 200, 'note': '8 位页'},
+            ],
+            'optional': [
+                {'id': 'opt-1', 'priority': 1, 'frame': 5, 'row': 130, 'lead_rows': 100, 'tail_rows': 100},
+                {'id': 'opt-2', 'priority': 2, 'frame': 0, 'row': 410, 'lead_rows': 60, 'tail_rows': 60},
+            ],
+        }
+        plan = post_json(capture + 'review-board', brief)
+        assert plan['feasible'] is True and plan['max_seconds'] == 12
+        assert plan['sample_rate'] == 48000 and plan['budget_samples'] == 48000 * 12
+        clip_of = {}
+        for item in plan['items']:
+            if item['id'].startswith('must-'):
+                assert item['outcome'] == 'required'
+                clip_of[item['id']] = item['clip_ids'][0]
+        assert clip_of['must-2'] != clip_of['must-3']
+        opt2 = next(item for item in plan['items'] if item['id'] == 'opt-2')
+        assert opt2['outcome'] == 'shared' and 'must-1' in opt2['shared_with']
+        assert plan['used_seconds'] <= 12
+        audio = post_json(capture + 'review-board/listen', plan, expected=200)
+        with wave.open(io.BytesIO(audio)) as rendered:
+            assert (rendered.getnchannels(), rendered.getsampwidth(), rendered.getframerate()) == (2, 2, 48000)
+            assert rendered.getnframes() == plan['used_samples']
+        must2 = next(item for item in plan['items'] if item['id'] == 'must-2')
+        assert any(note['side'] in ('lead', 'tail', 'anchor') for note in must2['limits'])
+        # An over-tight brief returns a plan with concrete adjustments, not an error.
+        tight = dict(brief, max_seconds=0.01)
+        blocked = post_json(capture + 'review-board', tight)
+        assert blocked['feasible'] is False and blocked['adjustments']
+        assert any(adj['kind'] == 'extend_budget' for adj in blocked['adjustments'])
+        post_json(capture + 'review-board/listen', blocked, expected=422)
+        request('/captures/nope/review-board', 404, method='POST')
+        return {'clips': len(plan['clips']), 'used_seconds': plan['used_seconds'],
+                'adjustments_offered': len(blocked['adjustments'])}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection review-board'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

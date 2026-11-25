@@ -8,7 +8,9 @@
   <link rel="stylesheet" href="/light-assets/styles/bench.css">
   <link rel="stylesheet" href="/light-assets/styles/scope.css">
   <link rel="stylesheet" href="/light-assets/styles/details.css">
-  {{if .Active}}<script type="module" src="/light-assets/scripts/main.js"></script>{{end}}
+  <link rel="stylesheet" href="/light-assets/styles/board.css">
+  {{if .Active}}<script type="module" src="/light-assets/scripts/main.js"></script>
+  <link rel="modulepreload" href="/light-assets/scripts/reviewboard.js">{{end}}
 </head>
 <body>
   {{template "masthead" .}}
@@ -26,6 +28,7 @@
         {{template "comparison" .}}
       </div>
     </div>
+    {{template "reviewboard" .}}
     {{template "handoff" .}}
     {{else}}
     <p class="empty-line">此卷没有可用标定。请补齐参考页或调整扫描标定后重新载入工位。</p>

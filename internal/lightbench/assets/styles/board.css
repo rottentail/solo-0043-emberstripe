@@ -1,0 +1,31 @@
+.review-board { margin-top: .8rem; }
+.board-brief { display: grid; gap: .65rem; margin-top: .6rem; }
+.board-meta { display: flex; align-items: end; gap: .8rem; flex-wrap: wrap; }
+.board-meta label { display: grid; gap: .25rem; font-size: .78rem; color: var(--muted); }
+.board-meta input { width: 7.5rem; }
+.board-hint { color: var(--muted); font-size: .74rem; }
+.board-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.board-columns fieldset { border: 1px solid #ede8db; border-radius: .35rem; padding: .55rem; min-width: 0; }
+.board-columns legend { padding: 0 .35rem; font-size: .8rem; color: var(--ink); font-weight: 650; }
+.board-rows { display: grid; gap: .35rem; }
+.board-row { display: grid; grid-template-columns: minmax(5rem, 1.1fr) repeat(5, minmax(3.4rem, .7fr)) auto; gap: .3rem; align-items: center; }
+.board-row input { min-width: 0; width: 100%; font: .74rem/1.3 var(--mono); padding: .3rem .35rem; }
+.board-add { justify-self: start; margin-top: .45rem; }
+.board-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.board-result { margin-top: .8rem; display: grid; gap: .55rem; }
+.board-summary { display: flex; flex-wrap: wrap; gap: .35rem .8rem; font-size: .78rem; color: var(--muted); }
+.board-fact { border: 1px solid #ede8db; border-radius: .3rem; padding: .22rem .45rem; background: #fbf8f1; }
+.board-table-wrap { overflow-x: auto; }
+.board-table { width: 100%; border-collapse: collapse; font-size: .75rem; min-width: 46rem; }
+.board-table th, .board-table td { border-bottom: 1px solid #ede8db; padding: .4rem .45rem; text-align: left; vertical-align: top; }
+.board-table th { color: var(--muted); font-weight: 650; }
+.board-table small { color: var(--muted); }
+.board-adjustments { border: 1px solid #e3b7a8; background: #fdf1ec; border-radius: .35rem; padding: .6rem .75rem; }
+.board-adjustments h3 { margin: 0 0 .4rem; font-size: .86rem; color: var(--ember-dark); }
+.board-adjustments ol { margin: 0; padding-left: 1.1rem; display: grid; gap: .3rem; font-size: .78rem; }
+#board-audio { width: 100%; }
+#board-status[data-error] { color: var(--ember-dark); font-weight: 650; }
+@media (max-width: 880px) {
+  .board-columns { grid-template-columns: 1fr; }
+  .board-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

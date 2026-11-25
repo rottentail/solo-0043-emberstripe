@@ -42,6 +42,29 @@ curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"
 
 `start` 包含起点、`end` 排除终点，二者都是零基画格号。`frame`、`row` 也是零基。以 `cinder-a` 为例，画格 1 的第 1770 行使用第 2 页的第 0 行声槽。第 2 页未扫描，试听 WAV 在相应位置保留双声道零值。区间有音频零值时，以 `coverage` 区分缺页、越出卷界和可读样本。`overlay` 左侧是该画格的画面灰度条带，右侧两个带分别表示映射到同一画格行的左／右声音。亮橙表示样本位置，亮红表示超出标定范围，暗红底表示该带没有输入材料。
 
+## 听审拼板（12 秒内的质检证据）
+
+质检会要求在固定时长内按会议顺序播放若干必听位置和按优先级安排的选听对照。`review-board` 入口接收一份简报，把每个标记位置解析成带前/后上下文的画格行区间，并返回可直接渲染的线索表：
+
+```sh
+curl -X POST "$base/captures/cinder-a/review-board" \
+  -H 'Content-Type: application/json' \
+  -d '{"profile":"bench","max_seconds":12,
+       "required":[{"id":"must-1","frame":2,"row":0,"lead_rows":300,"tail_rows":300,"separate_from":"must-2"},
+                   {"id":"must-2","frame":4,"row":500,"lead_rows":200,"tail_rows":200}],
+       "optional":[{"id":"opt-1","priority":1,"frame":5,"row":130,"lead_rows":100,"tail_rows":100}]}'
+```
+
+线索表（JSON）的语义：
+
+- `clips` 是拼板时间线上的连续播放，带拼板内采样偏移和原卷画格行区间；两个标记区间重叠且无隔开要求时合并成同一次播放，`items[].shared_with` 标明共用关系。
+- `separate_from` 强制两个必听项落在不同 clip，clip 上的 `separates` 记录被哪条隔开要求拆开。
+- `items[].limits` 按锚点的前上下文/锚点/后上下文列出缺页和卷外区间，说明「名义够长的前后文实际听不全」的具体行号。
+- 选听项按 `priority` 处理为 `shared`（共用现有播放）、`added`（新增 clip）、`split`（预算不足时拆开、只保留锚点和放得下的上下文）或 `omitted`（只能省去），并附原因。
+- 超过时长或单条播放超过 48 格工位上限时 `feasible=false`，`adjustments` 给出具体到位置的放宽清单（取消哪条隔开、缩短哪项的哪侧上下文、或把上限放宽到多少秒）。
+
+`feasible=true` 的计划可回传到 `review-board/listen` 取得可直接播放的立体声 WAV；WAV 与线索表共用同一原生采样时钟，每个拼板样本都能经 `clip.picture` 与 `board_sample_start` 回溯到原卷画格行。不可行的计划在该入口返回 422，不会生成音频。浏览器工作台的「听审拼板」面板提供同样的登记、线索表和试听能力。
+
 输入格式、具体坐标规则和局部资源上限见 `PROJECT_SPEC.md`。真实工作流复走如下。默认运行时用临时目录及临时回环端口。
 
 ```sh

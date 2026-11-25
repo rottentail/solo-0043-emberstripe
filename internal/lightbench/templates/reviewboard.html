@@ -1,0 +1,63 @@
+{{define "reviewboard"}}
+<section class="detail review-board" aria-labelledby="board-title">
+  <div class="section-head">
+    <h2 id="board-title">听审拼板</h2>
+    <p class="section-note">按会议顺序登记必听位置与选听对照，规划 12 秒内可直接播放的拼板与原卷行线索。</p>
+  </div>
+  <form id="board-brief" class="board-brief">
+    <div class="board-meta">
+      <label>时长上限（秒）<input name="max_seconds" type="number" min="0.1" step="0.1" value="12" required></label>
+      <p class="board-hint">必听条目按填写顺序编号；「隔开」填写另一条必听项的 id。</p>
+    </div>
+    <div class="board-columns">
+      <fieldset>
+        <legend>必听位置</legend>
+        <div class="board-rows" data-kind="required">
+          <div class="board-row">
+            <input name="r-id" placeholder="id，如 must-1" required>
+            <input name="r-frame" type="number" min="0" placeholder="画格" required>
+            <input name="r-row" type="number" min="0" placeholder="行" required>
+            <input name="r-lead" type="number" min="0" placeholder="前文行" value="200">
+            <input name="r-tail" type="number" min="0" placeholder="后文行" value="200">
+            <input name="r-sep" placeholder="隔开（可空）">
+            <button type="button" class="board-remove secondary" hidden>删除</button>
+          </div>
+        </div>
+        <button type="button" class="board-add secondary" data-kind="required">添加必听项</button>
+      </fieldset>
+      <fieldset>
+        <legend>选听对照（按优先级）</legend>
+        <div class="board-rows" data-kind="optional">
+          <div class="board-row">
+            <input name="o-id" placeholder="id，如 opt-1">
+            <input name="o-frame" type="number" min="0" placeholder="画格">
+            <input name="o-row" type="number" min="0" placeholder="行">
+            <input name="o-lead" type="number" min="0" placeholder="前文行" value="100">
+            <input name="o-tail" type="number" min="0" placeholder="后文行" value="100">
+            <input name="o-priority" type="number" min="1" placeholder="优先级" value="1">
+            <button type="button" class="board-remove secondary" hidden>删除</button>
+          </div>
+        </div>
+        <button type="button" class="board-add secondary" data-kind="optional">添加选听项</button>
+      </fieldset>
+    </div>
+    <div class="board-actions">
+      <button type="submit">规划拼板</button>
+      <button type="button" id="board-listen" class="secondary" disabled>载入拼板试听</button>
+    </div>
+  </form>
+  <p id="board-status" class="parcel-status" role="status"></p>
+  <div id="board-result" class="board-result" hidden>
+    <h3>线索表</h3>
+    <div id="board-summary" class="board-summary"></div>
+    <div class="board-table-wrap">
+      <table class="board-table">
+        <thead><tr><th>顺序</th><th>条目</th><th>处理</th><th>播放</th><th>原卷画格行（起–止）</th><th>拼板时间（秒）</th><th>覆盖与说明</th></tr></thead>
+        <tbody id="board-items"></tbody>
+      </table>
+    </div>
+    <div id="board-adjustments" class="board-adjustments" hidden></div>
+    <audio id="board-audio" controls preload="none"></audio>
+  </div>
+</section>
+{{end}}
