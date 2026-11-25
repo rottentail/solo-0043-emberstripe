@@ -61,6 +61,14 @@
     {
       "workflow_id": "strip-projection",
       "command": "python3 examples/walkthrough.py strip-projection"
+    },
+    {
+      "workflow_id": "silence-review",
+      "command": "python3 examples/walkthrough.py silence-review"
+    },
+    {
+      "workflow_id": "silence-verdicts",
+      "command": "python3 examples/walkthrough.py silence-verdicts"
     }
   ]
 }

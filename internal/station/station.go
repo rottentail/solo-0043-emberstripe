@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
@@ -12,6 +13,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
+	"github.com/rottentail/solo-0043-emberstripe/internal/silence"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
 	"github.com/rottentail/solo-0043-emberstripe/internal/wave"
 )
@@ -22,8 +24,9 @@ func (e *InvalidRenderingInput) Error() string { return e.Cause.Error() }
 func (e *InvalidRenderingInput) Unwrap() error { return e.Cause }
 
 type Station struct {
-	catalog map[string]*capture.Reel
-	Store   parcel.Store
+	catalog  map[string]*capture.Reel
+	Store    parcel.Store
+	Verdicts silence.Store
 }
 type CaptureInfo struct {
 	capture.Header
@@ -38,10 +41,18 @@ func Open(scans, releases string) (*Station, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := os.MkdirAll(releases, 0750); err != nil {
+	if err := os.MkdirAll(releases, 0o750); err != nil {
 		return nil, err
 	}
-	return &Station{catalog: catalog, Store: parcel.Store{Root: releases}}, nil
+	verdicts := filepath.Join(releases, "silence-verdicts")
+	if err := os.MkdirAll(verdicts, 0o750); err != nil {
+		return nil, err
+	}
+	return &Station{
+		catalog:  catalog,
+		Store:    parcel.Store{Root: releases},
+		Verdicts: silence.Store{Root: verdicts},
+	}, nil
 }
 func (s *Station) Names() []string {
 	names := make([]string, 0, len(s.catalog))
@@ -147,4 +158,56 @@ func (s *Station) Release(reel *capture.Reel, w register.Window, profile string)
 		return parcel.Receipt{}, fmt.Errorf("publish sound parcel: %w", err)
 	}
 	return receipt, nil
+}
+
+// SilenceReview runs the quiet-leader analysis over a validated window. The
+// same calibrated render that feeds audition and release drives the review, so
+// the rows the foreman sees match the frozen PCM clock exactly.
+func SilenceReview(reel *capture.Reel, w register.Window, profile string, t silence.Thresholds) (silence.Analysis, gauge.Gauge, error) {
+	if err := silence.ValidateThresholds(t); err != nil {
+		return silence.Analysis{}, gauge.Gauge{}, err
+	}
+	g, render, err := RenderWindow(reel, w, profile)
+	if err != nil {
+		return silence.Analysis{}, gauge.Gauge{}, err
+	}
+	return silence.Analyze(reel.Name, reel.Rows, register.Rate(reel.Header), g, render, w, t), g, nil
+}
+
+// SaveVerdict records a sign-off against the exact calibration and source
+// snapshot used for the analysis, so a later shift can reopen and revalidate it.
+func (s *Station) SaveVerdict(reel *capture.Reel, w register.Window, profile string, t silence.Thresholds, signedBy, note string, approved bool) (silence.Verdict, error) {
+	analysis, g, err := SilenceReview(reel, w, profile, t)
+	if err != nil {
+		return silence.Verdict{}, &InvalidRenderingInput{Cause: err}
+	}
+	verdict := silence.Verdict{
+		Capture: reel.Name, Window: w, Profile: profile, Thresholds: t,
+		Baseline: silence.Baseline{SourceDigest: reel.Digest, Gauge: g},
+		Analysis: analysis, SignedBy: signedBy, Note: note, Approved: approved,
+	}
+	saved, err := s.Verdicts.Save(verdict)
+	if err != nil {
+		return silence.Verdict{}, fmt.Errorf("save silence verdict: %w", err)
+	}
+	return saved, nil
+}
+
+// ReopenVerdict loads a saved verdict and checks it against the live catalog.
+// Re-registration changes the reel digest; a new calibration changes the gauge.
+func (s *Station) ReopenVerdict(reel *capture.Reel, id string) (silence.Verdict, silence.Revalidation, error) {
+	verdict, err := s.Verdicts.Read(reel.Name, id)
+	if err != nil {
+		return silence.Verdict{}, silence.Revalidation{}, err
+	}
+	g, err := gauge.Measure(reel, verdict.Profile)
+	if err != nil {
+		return silence.Verdict{}, silence.Revalidation{}, err
+	}
+	return verdict, silence.Revalidate(verdict, reel.Digest, g), nil
+}
+
+// ListVerdicts returns the saved sign-offs for a reel.
+func (s *Station) ListVerdicts(reel *capture.Reel) ([]silence.Verdict, error) {
+	return s.Verdicts.List(reel.Name)
 }

@@ -20,6 +20,28 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
 
+## 片头静音审签
+
+本应安静的片头在「片头静音审签」面板核对。面板与当前画格窗、标定共用同一时钟，领班设定低电平阈值（PCM 幅值，缺省 128）和短脉冲行数上限后审签：
+
+- 每个画格行分为可读低电平、超限脉冲和补零空洞三类。补零空洞来自声槽缺页或卷外，不会被当成真实低电平；每格分别计数。
+- 相邻同类行合并为区段，跨画格的同一段静音保持为单个可查区段并标注「跨画格」；窄的短脉冲单独成段，可点击定位到波形、条带和探针的同一画格行。
+- 区段保留左右声道峰值与超限行数，并给出脉冲合计是否在短脉冲上限内的结论。
+- 填写签认领班后可保存判定。判定记录阈值、完整分析以及签认时的扫描源摘要和标定端点。下一班重开同一判定时，若补扫换页改变了源摘要、或标定换版改变了端点，面板会标明判定不可沿用并列出原因；未变化则确认可沿用。
+
+命令行入口如下，`level` 和 `max_pulse_rows` 均可调：
+
+```sh
+curl "$base/captures/cinder-a/silence?start=1&end=4&profile=bench&level=128&max_pulse_rows=2"
+curl -X POST "$base/captures/cinder-a/silence/verdicts" \
+  -H 'Content-Type: application/json' \
+  -d '{"start":1,"end":4,"profile":"bench","level":128,"max_pulse_rows":2,"signed_by":"lead-chen","note":"片头静音核签","approved":true}'
+curl "$base/captures/cinder-a/silence/verdicts"
+curl "$base/captures/cinder-a/silence/verdicts/<判定标识>"
+```
+
+最后一个接口返回判定原文和 `revalidation` 血缘复核结果。判定文件保存在交接目录的 `silence-verdicts/` 下，原子写入并按内容寻址，重复签认同一份结果得到同一标识。
+
 ## 从画格检查到交付
 
 在另一个终端运行以下命令。

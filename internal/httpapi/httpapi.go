@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -14,13 +15,14 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
+	"github.com/rottentail/solo-0043-emberstripe/internal/silence"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
 )
 
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
+	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST", "silence": "GET", "silence/verdicts": "GET"} {
 		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
 			reel, ok := s.Reel(r.PathValue("name"))
 			if !ok {
@@ -30,6 +32,31 @@ func New(s *station.Station) http.Handler {
 			serveCapture(w, r, s, reel, action)
 		})
 	}
+	mux.HandleFunc("POST /captures/{name}/silence/verdicts", func(w http.ResponseWriter, r *http.Request) {
+		reel, ok := s.Reel(r.PathValue("name"))
+		if !ok {
+			write(w, 404, map[string]string{"error": "capture unavailable"})
+			return
+		}
+		saveVerdict(w, r, s, reel)
+	})
+	mux.HandleFunc("GET /captures/{name}/silence/verdicts/{id}", func(w http.ResponseWriter, r *http.Request) {
+		reel, ok := s.Reel(r.PathValue("name"))
+		if !ok {
+			write(w, 404, map[string]string{"error": "capture unavailable"})
+			return
+		}
+		verdict, check, err := s.ReopenVerdict(reel, r.PathValue("id"))
+		if err != nil {
+			if os.IsNotExist(err) {
+				write(w, 404, map[string]string{"error": "silence verdict missing"})
+				return
+			}
+			invalid(w, err.Error())
+			return
+		}
+		write(w, 200, map[string]any{"verdict": verdict, "revalidation": check})
+	})
 	mux.HandleFunc("GET /parcels/{id}", func(w http.ResponseWriter, r *http.Request) {
 		b, err := s.Store.Read(r.PathValue("id"))
 		if err != nil {
@@ -105,6 +132,11 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		}
 		return
 	}
+	if action == "silence/verdicts" {
+		verdicts, err := s.ListVerdicts(reel)
+		respond(w, verdicts, err)
+		return
+	}
 	start, a := strconv.Atoi(query.Get("start"))
 	end, b := strconv.Atoi(query.Get("end"))
 	if a != nil || b != nil {
@@ -116,6 +148,14 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 	case "coverage":
 		v, err := station.Coverage(reel, window)
 		respond(w, v, err)
+	case "silence":
+		t, err := thresholdsFromQuery(query)
+		if err != nil {
+			invalid(w, err.Error())
+			return
+		}
+		analysis, _, err := station.SilenceReview(reel, window, profile, t)
+		respond(w, analysis, err)
 	case "compare":
 		v, err := station.Compare(reel, window, profile, query.Get("against"))
 		respond(w, v, err)
@@ -168,4 +208,61 @@ func parcelError(w http.ResponseWriter, err error) {
 		return
 	}
 	write(w, 409, map[string]string{"error": "sound parcel failed integrity checks"})
+}
+
+func thresholdsFromQuery(query url.Values) (silence.Thresholds, error) {
+	t := silence.Thresholds{Level: silence.DefaultLevel, MaxPulse: 1}
+	if raw := query.Get("level"); raw != "" {
+		value, err := strconv.Atoi(raw)
+		if err != nil {
+			return silence.Thresholds{}, errors.New("level must be an integer PCM magnitude")
+		}
+		t.Level = value
+	}
+	if raw := query.Get("max_pulse_rows"); raw != "" {
+		value, err := strconv.Atoi(raw)
+		if err != nil {
+			return silence.Thresholds{}, errors.New("max_pulse_rows must be an integer row count")
+		}
+		t.MaxPulse = value
+	}
+	if err := silence.ValidateThresholds(t); err != nil {
+		return silence.Thresholds{}, err
+	}
+	return t, nil
+}
+
+type verdictRequest struct {
+	Start    int    `json:"start"`
+	End      int    `json:"end"`
+	Profile  string `json:"profile"`
+	Level    int    `json:"level"`
+	MaxPulse int    `json:"max_pulse_rows"`
+	SignedBy string `json:"signed_by"`
+	Note     string `json:"note"`
+	Approved bool   `json:"approved"`
+}
+
+func saveVerdict(w http.ResponseWriter, r *http.Request, s *station.Station, reel *capture.Reel) {
+	var req verdictRequest
+	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
+		invalid(w, "verdict body must be a JSON object with the review window")
+		return
+	}
+	window := register.Window{Start: req.Start, End: req.End}
+	thresholds := silence.Thresholds{Level: req.Level, MaxPulse: req.MaxPulse}
+	verdict, err := s.SaveVerdict(reel, window, req.Profile, thresholds, req.SignedBy, req.Note, req.Approved)
+	if err != nil {
+		var input *station.InvalidRenderingInput
+		if errors.As(err, &input) {
+			invalid(w, input.Error())
+			return
+		}
+		invalid(w, err.Error())
+		return
+	}
+	w.Header().Set("Location", "/captures/"+reel.Name+"/silence/verdicts/"+verdict.ID)
+	write(w, 201, verdict)
 }

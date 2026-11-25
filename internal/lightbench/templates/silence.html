@@ -1,0 +1,32 @@
+{{define "silence"}}
+<section class="silence-section" aria-labelledby="silence-title">
+  <div class="section-head"><h2 id="silence-title">片头静音审签</h2><span id="silence-clock" class="section-note"></span></div>
+  <form id="silence-form" class="silence-form" aria-label="静音判定阈值">
+    <label>低电平阈值（PCM 幅值）<input name="level" type="number" min="0" max="32767" value="128" required></label>
+    <label>短脉冲上限（行）<input name="max_pulse_rows" type="number" min="0" max="64" value="1" required></label>
+    <button type="submit" class="silence-run" disabled>审签当前窗口</button>
+  </form>
+  <p id="silence-status" class="silence-status" role="status"></p>
+  <div id="silence-summary" class="silence-summary" hidden>
+    <div class="silence-totals">
+      <span class="tag silence">可读低电平 <b data-total="silence">0</b> 行</span>
+      <span class="tag pulse">超限脉冲 <b data-total="pulse">0</b> 行</span>
+      <span class="tag hole">补零空洞 <b data-total="zero_hole">0</b> 行</span>
+    </div>
+    <p id="silence-lanes" class="silence-lanes"></p>
+    <p id="silence-pulse-verdict" class="silence-pulse-verdict"></p>
+  </div>
+  <div id="silence-frames" class="silence-frames" aria-label="逐画格审签计数"></div>
+  <div id="silence-segments" class="silence-segments" aria-label="静音审签区段"></div>
+  <form id="verdict-form" class="verdict-form" aria-label="保存静音判定" hidden>
+    <label>签认领班<input name="signed_by" maxlength="48" placeholder="工号或姓名" required></label>
+    <label class="verdict-note">备注<input name="note" maxlength="500" placeholder="可选，最多 500 字"></label>
+    <label class="verdict-choice"><input type="checkbox" name="approved" checked> 判为合格静音</label>
+    <button type="submit">保存判定</button>
+  </form>
+  <div class="saved-verdicts">
+    <div class="section-head"><h3>已保存判定</h3><button type="button" id="verdicts-refresh" class="secondary" disabled>刷新列表</button></div>
+    <div id="verdicts-list" class="verdicts-list"></div>
+  </div>
+</section>
+{{end}}

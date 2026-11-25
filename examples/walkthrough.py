@@ -147,13 +147,82 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'silence-review':
+        path = capture + 'silence?start=1&end=4&profile=bench&level=32767&max_pulse_rows=2'
+        review = request(path)
+        assert review['totals'] == {'silence': 4000, 'pulse': 0, 'zero_hole': 2000}
+        assert review['lanes'][0]['peak_abs_sample'] > 0 and review['lanes'][1]['peak_abs_sample'] > 0
+        by_status = {}
+        for segment in review['segments']:
+            by_status.setdefault(segment['status'], []).append(segment)
+        hole = by_status['zero_hole']
+        assert len(hole) == 1 and hole[0]['rows'] == 2000 and hole[0]['crosses_frame'] is True
+        assert hole[0]['coverage'][0]['status'] == 'missing_sheet'
+        # zero holes never carry optical extrema, readable silence keeps them.
+        assert hole[0]['peak_abs_sample'] == [0, 0]
+        assert any(segment['crosses_frame'] for segment in by_status['silence'])
+        frame_rows = {(item['frame']): (item['silence_rows'], item['zero_hole_rows']) for item in review['frames']}
+        assert frame_rows == {1: (1770, 230), 2: (230, 1770), 3: (2000, 0)}
+        # a tighter level splits the tone into dedicated pulse segments while
+        # the zero holes stay classified separately from readable material.
+        tight = request(capture + 'silence?start=1&end=4&profile=bench&level=128&max_pulse_rows=2')
+        assert tight['totals']['pulse'] >= 2 and tight['totals']['zero_hole'] == 2000
+        pulse_segments = [segment for segment in tight['segments'] if segment['status'] == 'pulse']
+        assert pulse_segments and all(segment['peak_abs_sample'] != [0, 0] for segment in pulse_segments)
+        assert tight['totals']['silence'] + tight['totals']['pulse'] == 4000
+        request(capture + 'silence?start=1&end=4&level=99999', 400)
+        request(capture + 'silence?start=4&end=4', 400)
+        return {
+            'segments': len(review['segments']),
+            'silence_rows': review['totals']['silence'],
+            'zero_hole_rows': review['totals']['zero_hole'],
+            'pulse_segments': len(pulse_segments),
+        }
+    if name == 'silence-verdicts':
+        body = json.dumps({
+            'start': 1, 'end': 4, 'profile': 'bench', 'level': 32767,
+            'max_pulse_rows': 2, 'signed_by': 'walkthrough-lead',
+            'note': 'quiet head review', 'approved': True,
+        }).encode()
+        req = Request(base + capture + 'silence/verdicts', data=body, method='POST',
+                      headers={'Content-Type': 'application/json'})
+        try:
+            with urlopen(req, timeout=8) as response:
+                assert response.status == 201
+                saved = json.loads(response.read())
+                location = response.headers['Location']
+        except HTTPError as error:
+            raise AssertionError(('save verdict', error.status))
+        assert location == capture + 'silence/verdicts/' + saved['id']
+        assert saved['baseline']['source_sha256'] and saved['baseline']['gauge']['profile'] == 'bench'
+        # repeating the same judgment is idempotent.
+        req = Request(base + capture + 'silence/verdicts', data=body, method='POST',
+                      headers={'Content-Type': 'application/json'})
+        with urlopen(req, timeout=8) as response:
+            assert json.loads(response.read())['id'] == saved['id']
+        listing = request(capture + 'silence/verdicts')
+        assert any(item['id'] == saved['id'] for item in listing)
+        reopened = request(capture + 'silence/verdicts/' + saved['id'])
+        assert reopened['verdict']['id'] == saved['id']
+        assert reopened['revalidation'] == {'valid': True}
+        bad = json.dumps({'start': 1, 'end': 4, 'profile': 'bench', 'level': 128,
+                          'signed_by': '', 'approved': True}).encode()
+        req = Request(base + capture + 'silence/verdicts', data=bad, method='POST',
+                      headers={'Content-Type': 'application/json'})
+        try:
+            urlopen(req, timeout=8)
+            raise AssertionError('unsigned verdict must be rejected')
+        except HTTPError as error:
+            assert error.status == 400
+        request(capture + 'silence/verdicts/' + 'a' * 24, 404)
+        return {'verdict': saved['id'], 'revalidation': reopened['revalidation']}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection silence-review silence-verdicts'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
