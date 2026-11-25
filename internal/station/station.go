@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
+	"github.com/rottentail/solo-0043-emberstripe/internal/cut"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
@@ -101,6 +102,16 @@ func RenderWindow(reel *capture.Reel, w register.Window, profile string) (gauge.
 		return gauge.Gauge{}, readout.Render{}, err
 	}
 	return g, readout.Extract(reel, g, w), nil
+}
+
+// CutPoints resolves a window and ranks frame-aligned edit candidates on the
+// native picture clock, keeping padded zeros separate from readable silence.
+func CutPoints(reel *capture.Reel, w register.Window, profile string) (cut.Report, error) {
+	g, render, err := RenderWindow(reel, w, profile)
+	if err != nil {
+		return cut.Report{}, err
+	}
+	return cut.Detect(reel, g, w, render), nil
 }
 func Audition(reel *capture.Reel, w register.Window, profile string) ([]byte, error) {
 	_, r, err := RenderWindow(reel, w, profile)

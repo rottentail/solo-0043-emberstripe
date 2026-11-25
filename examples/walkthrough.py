@@ -147,13 +147,56 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'cutpoint':
+        path = '/lightbench/cinder-a/cutpoints?start=1&end=7&profile=bench'
+        data = request(path)
+        assert data['window'] == {'start': 1, 'end': 7} and data['rate'] == 48000
+        assert data['rows_per_frame'] == 2000 and data['fps'] == 24
+        candidates = data['candidates']
+        assert 1 <= len(candidates) <= 5
+        frames = [candidate['frame'] for candidate in candidates]
+        assert frames == sorted(frames) and all(1 < frame < 7 for frame in frames)
+        for candidate in candidates:
+            # A cut candidate is always a picture-frame boundary.
+            assert candidate['picture_row'] == candidate['frame'] * 2000
+            for side in (candidate['pre'], candidate['post']):
+                total = side['readable_rows'] + side['missing_rows'] + side['outside_rows']
+                assert total == 2000
+                assert side['padded_zero_rows'] == side['missing_rows'] + side['outside_rows']
+                assert len(side['rms']) == 2 and len(side['peak']) == 2
+            assert candidate['listen_pre']['end'] == candidate['frame']
+            assert candidate['listen_post']['start'] == candidate['frame']
+            for row in candidate['onset_row']:
+                assert row < 0 or candidate['picture_row'] <= row < candidate['picture_row'] + 2000
+        # Frame 2 is the missing sheet: its post-cut side must report padded zeros,
+        # which a readable-only waveform would otherwise mistake for silence.
+        at_gap = next(candidate for candidate in candidates if candidate['frame'] == 2)
+        assert at_gap['post']['missing_rows'] > 0
+        assert 'post_padded_zero' in at_gap['warnings']
+        assert at_gap['post']['readable_rows'] + at_gap['post']['padded_zero_rows'] == 2000
+        # The negative-lead reel exposes an outside-capture padded side at its first cut.
+        vireo = request('/lightbench/vireo-b/cutpoints?start=0&end=4&profile=bench')
+        first_cut = vireo['candidates'][0]
+        assert first_cut['pre']['outside_rows'] == 135
+        assert 'pre_padded_zero' in first_cut['warnings']
+        assert 'pre_outside_capture' in first_cut['warnings']
+        # Invalid window and unusable profile reuse the window error contract.
+        request(path.replace('end=7', 'end=1'), 400)
+        request(path.replace('profile=bench', 'profile=absent'), 422)
+        request('/lightbench/unknown/cutpoints?start=0&end=2', 404)
+        page = request('/lightbench/cinder-a').decode()
+        assert '画格切点候选' in page and '/light-assets/scripts/main.js' in page
+        main_js = request('/light-assets/scripts/main.js').decode()
+        assert "from './cuts.js'" in main_js
+        return {'candidates': frames, 'gap_frame_warnings': at_gap['warnings'],
+                'outside_rows_at_lead': first_cut['pre']['outside_rows']}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection cutpoint'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

@@ -20,6 +20,12 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
 
+### 选取画格切点
+
+「画格切点候选」在应用窗口内按左右声道各自的活动给出至多 5 个可点击切点，且只落在画格边界（画格行号为每格行数的整数倍），不会建议格内任意行。每张候选卡同时给出切前、切后各一格的证据：可读行数、缺页与卷外补零行数、可读静音行数、左右 RMS 与峰值，以及切后首个越过活动阈值的声槽行。
+
+补零与可听静音严格分开：缺页和卷外在 PCM 中都是零值，但计入 `padded_zero_rows` 并触发补零／卷界警示，不会因为波形好看而被误判为干净切点。两个声槽不同步时，左右活动起点分别列出；切前仍有活动、切后没有活动起点等情况以警示标签说明，操作者据此写明取舍。点候选会把波形、探针定位到同一画格行，并可分别载入切前、切后约两格的听审 WAV；「导出切点决定」把选定画格、取舍说明、两侧证据和左右听审范围写成 JSON 交给剪辑。
+
 ## 从画格检查到交付
 
 在另一个终端运行以下命令。
@@ -35,6 +41,7 @@ curl "$base/captures/cinder-a/trace?frame=0&row=400"
 curl "$base/captures/cinder-a/compare?start=1&end=4&profile=bench&against=soft"
 curl "$base/captures/cinder-a/overlay?frame=2&profile=bench" -o var/check.png
 curl "$base/captures/cinder-a/audition?start=1&end=4&profile=soft" -o var/listen.wav
+curl "$base/lightbench/cinder-a/cutpoints?start=1&end=7&profile=bench"
 curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"
 ```
 

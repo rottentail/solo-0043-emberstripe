@@ -1,0 +1,32 @@
+{{define "cuts"}}
+<section class="detail cuts" aria-labelledby="cuts-title">
+  <div class="section-head">
+    <h2 id="cuts-title">画格切点候选</h2>
+    <span id="cuts-status" class="section-note" role="status">应用画格窗后按声道活动给出切点。</span>
+  </div>
+  <p class="muted small cuts-hint">候选只落在画格边界；补零位置（缺页／卷外）单列证据，不会被当成可听静音。点候选可在波形与探针定位同一画格行。</p>
+  <ul id="cut-list" class="cut-list" aria-label="可点击的切点候选"></ul>
+
+  <div class="cut-listen" id="cut-listen-box" hidden>
+    <div class="cut-listen-head">
+      <span id="cut-listen-label" class="small"></span>
+      <button type="button" id="cut-listen-pre" class="secondary">听切前范围</button>
+      <button type="button" id="cut-listen-post" class="secondary">听切后范围</button>
+    </div>
+    <audio id="cut-listen-media" controls preload="none" aria-label="切点两侧听审范围"></audio>
+    <p id="cut-listen-note" class="muted small"></p>
+  </div>
+
+  <div class="cut-decision" id="cut-decision-box" hidden>
+    <label class="cut-note-label" for="cut-note">取舍说明（交给剪辑）
+      <textarea id="cut-note" rows="3" placeholder="记录为何选这个画格，例如：切前有声槽活动需避开，或一侧为卷外补零…"></textarea>
+    </label>
+    <dl class="readings cut-handoff" id="cut-handoff"></dl>
+    <div class="cut-decision-actions">
+      <button type="button" id="cut-export" class="secondary" disabled>导出切点决定</button>
+      <a id="cut-export-download" class="button secondary" hidden download>下载 JSON</a>
+    </div>
+    <p id="cut-decision-status" class="muted small" role="status"></p>
+  </div>
+</section>
+{{end}}
