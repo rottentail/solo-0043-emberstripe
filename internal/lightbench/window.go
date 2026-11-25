@@ -21,6 +21,7 @@ type windowReadout struct {
 	Window   register.Window `json:"window"`
 	Rate     int             `json:"rate"`
 	Rows     int             `json:"rows_per_frame"`
+	Source   string          `json:"source_sha256"`
 	Profile  gauge.Gauge     `json:"profile"`
 	Frames   []frameCoverage `json:"frames"`
 	Coverage []register.Run  `json:"coverage"`
@@ -43,7 +44,7 @@ func (b *bench) window(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result := windowReadout{
-		Window: window, Rate: register.Rate(reel.Header), Rows: reel.Rows, Profile: calibration,
+		Window: window, Rate: register.Rate(reel.Header), Rows: reel.Rows, Source: reel.Digest, Profile: calibration,
 		Coverage: render.Coverage, Envelope: summarize(render, window.Start*reel.Rows),
 	}
 	for frame := window.Start; frame < window.End; frame++ {

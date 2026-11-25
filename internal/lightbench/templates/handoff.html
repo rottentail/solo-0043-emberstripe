@@ -6,6 +6,14 @@
     <a id="parcel-download" class="button secondary" hidden download>下载交接包</a>
     <button id="verify-button" type="button" class="secondary" hidden>校验交接包</button>
   </div>
+
+  <form id="audit-card-form" class="audit-card-form" aria-label="生成审听卡">
+    <label class="audit-note">交接备注（可选）
+      <input id="audit-note" name="note" type="text" maxlength="500" placeholder="例如：第 2 格入口处有疑似爆点，待下一班复听" disabled>
+    </label>
+    <button id="audit-card-button" type="submit" disabled>生成审听卡</button>
+  </form>
+  <p id="audit-card-status" class="parcel-status" role="status"></p>
   <p id="parcel-status" class="parcel-status" role="status"></p>
 </section>
 {{end}}

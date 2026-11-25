@@ -1,0 +1,46 @@
+{{define "card-page"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emberstripe · 打开审听卡</title>
+  <link rel="stylesheet" href="/light-assets/styles/base.css">
+  <link rel="stylesheet" href="/light-assets/styles/bench.css">
+  <link rel="stylesheet" href="/light-assets/styles/details.css">
+  <link rel="stylesheet" href="/light-assets/styles/audit.css">
+  <script type="module" src="/light-assets/scripts/audit-open.js"></script>
+</head>
+<body>
+  {{template "masthead" .}}
+  <main class="bench card-bench" id="audit-card-page">
+    <section class="detail card-intro" aria-labelledby="card-open-title">
+      <div class="section-head">
+        <h1 id="card-open-title">打开审听卡</h1>
+        <a class="button secondary" href="/">返回工作台</a>
+      </div>
+      <p class="muted">选择上一班保存的 <code>.json</code> 审听卡。系统只按卡内的源字节摘要、包摘要判定出处，不会因为卷名或窗长相同就把新条带当成旧证据。</p>
+      <form id="card-open-form" class="card-open-form">
+        <label class="card-file">审听卡文件
+          <input id="card-file" type="file" accept=".json,application/json" required>
+        </label>
+        <button type="submit">打开并核验出处</button>
+      </form>
+      <p id="card-open-status" class="parcel-status" role="status"></p>
+    </section>
+
+    <section id="card-result" class="detail card-result" hidden aria-live="polite">
+      <div class="section-head">
+        <h2 id="result-title">审听卡出处</h2>
+        <span id="result-badge" class="result-badge"></span>
+      </div>
+      <p id="result-reason" class="result-reason"></p>
+      <dl class="readings" id="result-facts"></dl>
+      <div id="result-proof" class="proof-flags"></div>
+      <div id="result-actions" class="handoff-actions"></div>
+      <div id="result-player" class="card-player" hidden>
+        <audio id="card-audio" controls preload="none" aria-label="冻结包内的双声道声音"></audio>
+      </div>
+    </section>
+  </main>
+</body>
+</html>{{end}}

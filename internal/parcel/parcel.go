@@ -119,6 +119,42 @@ func (s Store) Read(id string) ([]byte, error) {
 	return data, nil
 }
 
+// Sound reads a stored parcel and returns its frozen PCM bytes only after the
+// full parcel verification has passed, so a damaged archive can never be played
+// as if it were the original freeze.
+func (s Store) Sound(id string) ([]byte, error) {
+	data, err := s.Read(id)
+	if err != nil {
+		return nil, err
+	}
+	receipt, err := Verify(data)
+	if err != nil {
+		return nil, err
+	}
+	r, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return nil, err
+	}
+	for _, f := range r.File {
+		if f.Name != "sound.wav" {
+			continue
+		}
+		src, err := f.Open()
+		if err != nil {
+			return nil, err
+		}
+		pcm, readErr := io.ReadAll(io.LimitReader(src, maxBytes+1))
+		if err = errors.Join(readErr, src.Close()); err != nil {
+			return nil, err
+		}
+		if len(pcm) > maxBytes || digest(pcm) != receipt.Index.Audio {
+			return nil, errors.New("frozen audio digest mismatch")
+		}
+		return pcm, nil
+	}
+	return nil, errors.New("frozen audio entry missing")
+}
+
 func Verify(data []byte) (Receipt, error) {
 	if len(data) > maxBytes {
 		return Receipt{}, errors.New("parcel exceeds size limit")

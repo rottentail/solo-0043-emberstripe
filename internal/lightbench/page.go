@@ -65,3 +65,11 @@ func renderPage(w http.ResponseWriter, status int, data pageData) {
 	w.WriteHeader(status)
 	_ = pages.ExecuteTemplate(w, "page", data)
 }
+
+// cardPage is a standalone, always-available screen for reopening a handoff
+// card even when no workable reel is currently registered.
+func (b *bench) cardPage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_ = pages.ExecuteTemplate(w, "card-page", pageData{Names: b.station.Names()})
+}

@@ -51,6 +51,14 @@ func New(s *station.Station) http.Handler {
 		}
 		write(w, 200, v)
 	})
+	mux.HandleFunc("GET /parcels/{id}/sound", func(w http.ResponseWriter, r *http.Request) {
+		pcm, err := s.Store.Sound(r.PathValue("id"))
+		if err != nil {
+			parcelError(w, err)
+			return
+		}
+		binary(w, "audio/wav", pcm)
+	})
 	// Bound concurrent readers so bursts cannot multiply large image renders.
 	slots := make(chan struct{}, 3)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
