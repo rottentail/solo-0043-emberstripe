@@ -14,11 +14,21 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 样例生成器要求目标卷目录尚不存在。`cinder-a` 是 24 格/秒、每格 2000 行、声槽领先 230 行的右移取样案例；`vireo-b` 是 25 格/秒、每格 1920 行、偏移 −135 行的案例。两卷原生 PCM 采样率均为 48 kHz。两卷均含一张缺页和一张 8 位灰阶条带，其余条带是 16 位灰阶。`bench` 和 `soft` 是对比度不同的有效标定，`flat` 的参考窗口缺少对比度，`absent` 的暗场参考页缺失。
 
+`sync-d` 是双声道时差检查片：24 格/秒、每格 500 行（12 kHz 原生采样），左右声槽印同一条短校验序列，右槽固定晚 7 行。序列每 100 行重复一次，另有一段不规则节奏的唯一标记用来打破周期；第 10 格缺页，右槽在第 12 格附近有一段 100 行的单侧削顶。它同时覆盖周期歧义、唯一标记精确判定、缺页和削顶四种核验情形。
+
 ## 浏览器操作
 
 启动后打开 `http://127.0.0.1:7431`。选择扫描卷、画格区间和光学标定，然后应用区间。点击扫描条带、波形或覆盖区间，让画格探针定位到同一行；也可以直接输入画格和行号。画面缺页标记在画格带上，偏移后的声槽缺口显示在波形中。
 
 选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
+
+### 左右时差核验
+
+在右侧「左右时差核验」面板点击「核验当前窗口」，工作台对左右声槽相同的校验序列做位移匹配，估计右槽相对左槽滞后的画格行和毫秒。判定结论分四档：精确（单一候选）、有界（只能约束到一个范围）、周期歧义（多组同分候选）和证据不足。
+
+序列周期重复时，相差整数个周期的位移同样吻合，面板会标出重复周期并说明不能把一个周期的位移当成准确时差，只采用离零最近的候选簇。缺页位置不参与配对，削顶行整体剔除，两者都会在结论里说明为何只能判到某个范围。普通连续音频没有可匹配的校验序列，只会得到证据不足而不是虚假的精确时差。
+
+每条结论列出最多四个支持判断的声音位置（画格行、左右样本和跳变类型）。点击任一位置会把探针定位到该画格行，并让试听跳到同一时间，操作员可以直接听到支撑结论的声音。机器接口 `GET /captures/{name}/synccheck?start&end&profile` 返回完整候选簇、限制代码（`periodic_sequence`、`missing_sheets`、`lane_clipped`、`thin_evidence`、`search_limit`）和证据锚点；可选 `search_rows` 收窄搜索半径。
 
 ## 从画格检查到交付
 
@@ -33,6 +43,7 @@ curl "$base/captures/cinder-a/register?frame=1&row=1770"
 curl "$base/captures/cinder-a/coverage?start=1&end=4"
 curl "$base/captures/cinder-a/trace?frame=0&row=400"
 curl "$base/captures/cinder-a/compare?start=1&end=4&profile=bench&against=soft"
+curl "$base/captures/sync-d/synccheck?start=5&end=9&profile=bench"
 curl "$base/captures/cinder-a/overlay?frame=2&profile=bench" -o var/check.png
 curl "$base/captures/cinder-a/audition?start=1&end=4&profile=soft" -o var/listen.wav
 curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"

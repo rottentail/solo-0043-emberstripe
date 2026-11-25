@@ -1,0 +1,21 @@
+{{define "synccheck"}}
+<section class="detail sync-check" aria-labelledby="sync-title">
+  <div class="section-head"><h2 id="sync-title">左右时差核验</h2><span id="sync-badge" class="section-note" role="status"></span></div>
+  <p class="muted small">对左右声槽相同的校验序列做位移匹配，估计右槽相对左槽滞后的画格行。重复序列、缺页和削顶都会收窄或放宽可判定的范围。</p>
+  <div class="sync-actions">
+    <button type="button" id="sync-button" class="secondary" disabled>核验当前窗口</button>
+    <span id="sync-status" role="status"></span>
+  </div>
+  <div id="sync-result" class="sync-result" hidden>
+    <dl class="readings" id="sync-values">
+      <div><dt>判定结论</dt><dd data-value="verdict">—</dd></div>
+      <div><dt>右槽滞后</dt><dd data-value="lag">—</dd></div>
+      <div><dt>重复周期</dt><dd data-value="period">—</dd></div>
+      <div><dt>比对证据</dt><dd data-value="support">—</dd></div>
+    </dl>
+    <div id="sync-caveats" class="sync-caveats" aria-label="判定范围说明"></div>
+    <div class="sync-evidence-head">支持判断的声音位置（点击回到探针与试听）</div>
+    <div id="sync-evidence" class="sync-evidence"></div>
+  </div>
+</section>
+{{end}}

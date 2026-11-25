@@ -35,7 +35,7 @@ def workflow(base, name, parcels):
         return request(capture+'release?start=1&end=4&profile=soft', 201, 'POST')
 
     if name == 'intake':
-        assert request('/captures') == ['cinder-a', 'vireo-b']
+        assert request('/captures') == ['cinder-a', 'sync-d', 'vireo-b']
         head = get('header')
         assert head['sample_rate'] == 48000
         assert head['available'] == [0, 1, 3, 4, 5, 6]
@@ -147,13 +147,70 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'sync-check':
+        sync = '/captures/sync-d/synccheck'
+
+        def check(window, **extra):
+            query = ''.join(f'&{key}={value}' for key, value in extra.items())
+            return request(f'{sync}?start={window[0]}&end={window[1]}&profile=bench{query}')
+
+        def lags(window):
+            return check(window)['clusters']
+
+        # A purely periodic window admits every whole-period shift; the answer
+        # must stay ambiguous instead of promoting one shift to the exact lag.
+        periodic = check((0, 3))
+        assert periodic['confidence'] == 'ambiguous'
+        assert periodic['best_lag_rows'] == 7 and periodic['repetition_period_rows'] == 100
+        assert periodic['min_lag_rows'] <= 7 <= periodic['max_lag_rows']
+        periodic_lags = [cluster['best_lag'] for cluster in lags((0, 3))]
+        assert 7 in periodic_lags and -93 in periodic_lags and 107 in periodic_lags
+        assert [caveat['code'] for caveat in periodic['caveats']] == ['periodic_sequence']
+        assert periodic['evidence'] and all(anchor['lag'] == 7 for anchor in periodic['evidence'])
+        # The distinctive marker breaks repetition and resolves a single lag.
+        marked = check((5, 9))
+        assert marked['confidence'] == 'exact'
+        assert (marked['min_lag_rows'], marked['best_lag_rows'], marked['max_lag_rows']) == (7, 7, 7)
+        assert marked['repetition_period_rows'] == 0 and not marked['caveats']
+        assert abs(marked['best_lag_ms'] - 7 * 1000 / 12000) < 1e-9
+        # A missing sheet removes evidence and must be named in the verdict.
+        gapped = check((9, 12))
+        assert gapped['confidence'] == 'ambiguous'
+        assert gapped['best_lag_rows'] == 7 and gapped['repetition_period_rows'] == 100
+        assert {'periodic_sequence', 'missing_sheets'} <= {c['code'] for c in gapped['caveats']}
+        assert gapped['readable_rows'] == 1000
+        # One-sided clipping is excluded and reported, never used as evidence.
+        clipped = check((11, 14))
+        assert clipped['clipped_rows_skipped'] == 100
+        assert clipped['best_lag_rows'] == 7
+        assert {'periodic_sequence', 'lane_clipped'} <= {c['code'] for c in clipped['caveats']}
+        assert all(anchor['picture_row'] not in range(6000, 6100) for anchor in clipped['evidence'])
+        # Evidence anchors are addressable picture rows the probe can open.
+        target = marked['evidence'][0]
+        traced = request('/captures/sync-d/trace?frame=%d&row=%d&profile=bench'
+                        % (target['frame'], target['row']))
+        assert traced['status'] == 'readable' and traced['sample'][0] == target['left_sample']
+        # The browser entry returns the same verdict and rejects bad inputs.
+        bench = request('/lightbench/sync-d/synccheck?start=5&end=9&profile=bench')
+        assert bench['sync']['best_lag_rows'] == 7 and bench['rows_per_frame'] == 500
+        request(sync+'?start=5&end=9&profile=flat', 400)
+        request(sync+'?start=9&end=9&profile=bench', 400)
+        request(sync+'?start=5&end=9&search_rows=-1&profile=bench', 400)
+        request('/captures/nope/synccheck?start=0&end=2', 404)
+        return {
+            'periodic_lags': periodic_lags,
+            'exact_lag_rows': marked['best_lag_rows'],
+            'gapped_caveats': [c['code'] for c in gapped['caveats']],
+            'clipped_rows_skipped': clipped['clipped_rows_skipped'],
+            'evidence_anchors': len(marked['evidence']),
+        }
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection sync-check'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

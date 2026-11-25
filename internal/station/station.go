@@ -12,9 +12,14 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
+	"github.com/rottentail/solo-0043-emberstripe/internal/syncheck"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
 	"github.com/rottentail/solo-0043-emberstripe/internal/wave"
 )
+
+// MaxSyncSearchRows bounds how many rows one lane may lag before the check
+// refuses to claim an answer; a full frame is the operational transfer range.
+const MaxSyncSearchRows = 2000
 
 type InvalidRenderingInput struct{ Cause error }
 
@@ -132,6 +137,27 @@ func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 		return nil, err
 	}
 	return view.Overlay(reel, g, frame)
+}
+
+// SyncCheck estimates the left/right lane row offset inside a window. The
+// search radius defaults to one frame's worth of rows and never exceeds the
+// declared operational limit or half of the window itself.
+func SyncCheck(reel *capture.Reel, w register.Window, profile string, requested int) (syncheck.Result, error) {
+	if err := register.Validate(reel.Header, w); err != nil {
+		return syncheck.Result{}, err
+	}
+	g, err := gauge.Measure(reel, profile)
+	if err != nil {
+		return syncheck.Result{}, err
+	}
+	render := readout.Extract(reel, g, w)
+	limit := min(MaxSyncSearchRows, reel.Rows, (w.End-w.Start)*reel.Rows/2)
+	search := reel.Rows
+	if requested > 0 {
+		search = requested
+	}
+	search = min(search, limit)
+	return syncheck.Analyze(reel, render, w, search), nil
 }
 func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
 	g, r, err := RenderWindow(reel, w, profile)

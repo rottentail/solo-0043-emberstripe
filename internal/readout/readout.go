@@ -18,9 +18,10 @@ type Value struct {
 }
 
 type Render struct {
-	Samples  []int16        `json:"-"`
-	Coverage []register.Run `json:"coverage"`
-	Clipped  [2]int         `json:"clipped"`
+	Samples     []int16        `json:"-"`
+	Coverage    []register.Run `json:"coverage"`
+	Clipped     [2]int         `json:"clipped"`
+	ClippedRows [][2]bool      `json:"-"`
 }
 
 type Difference struct {
@@ -56,7 +57,12 @@ func measure(reel *capture.Reel, a register.Address, g gauge.Gauge) (gray [2]flo
 }
 
 func Extract(reel *capture.Reel, g gauge.Gauge, w register.Window) Render {
-	result := Render{Samples: make([]int16, 2*(w.End-w.Start)*reel.Rows), Coverage: register.Coverage(reel, w)}
+	frameCount := w.End - w.Start
+	result := Render{
+		Samples:     make([]int16, 2*frameCount*reel.Rows),
+		Coverage:    register.Coverage(reel, w),
+		ClippedRows: make([][2]bool, frameCount*reel.Rows),
+	}
 	origin := w.Start * reel.Rows
 	for _, run := range result.Coverage {
 		if run.Status != register.Readable {
@@ -65,8 +71,10 @@ func Extract(reel *capture.Reel, g gauge.Gauge, w register.Window) Render {
 		for row := run.Start; row < run.End; row++ {
 			a, _ := register.Locate(reel, row)
 			_, sample, clipped := measure(reel, a, g)
-			offset := (row - origin) * 2
+			index := row - origin
+			offset := index * 2
 			copy(result.Samples[offset:offset+2], sample[:])
+			result.ClippedRows[index] = clipped
 			for lane, over := range clipped {
 				if over {
 					result.Clipped[lane]++

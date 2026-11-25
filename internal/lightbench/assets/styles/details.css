@@ -13,4 +13,27 @@
 .handoff-actions { display: flex; flex-wrap: wrap; gap: .42rem; }
 .parcel-status { grid-column: 1 / -1; color: var(--ember-dark); overflow-wrap: anywhere; }
 .parcel-status:empty { display: none; }
-@media (max-width: 700px) { .handoff { grid-template-columns: minmax(0, 1fr); } }
+.sync-check .small { margin-block: .45rem .55rem; }
+.sync-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; }
+#sync-status { font-size: .78rem; color: var(--ember-dark); min-height: 1.1rem; }
+#sync-status:empty { min-height: 0; }
+.sync-badge { font-size: .72rem; font-weight: 700; padding: .16rem .5rem; border-radius: 1rem; white-space: nowrap; }
+.sync-badge.sync-exact { background: #dcecdd; color: #23502b; }
+.sync-badge.sync-bounded { background: #f4e6cd; color: #7a531a; }
+.sync-badge.sync-ambiguous { background: #f3ddda; color: #84392f; }
+.sync-badge.sync-inconclusive { background: #e6e3da; color: #5c5a50; }
+.sync-caveats { margin-top: .45rem; display: grid; gap: .32rem; }
+.sync-caveat { margin: 0; padding: .42rem .55rem; border-left: 3px solid #b06a5c; background: #faf0ec; font-size: .76rem; color: #5f3a32; line-height: 1.45; }
+.sync-caveat.periodic_sequence { border-left-color: #c08a3e; background: #fbf3e3; color: #6e4d1c; }
+.sync-caveat.thin_evidence, .sync-caveat.search_limit { border-left-color: #8a877a; background: #f2f0e8; color: #55534a; }
+.sync-evidence-head { margin-top: .6rem; font-size: .74rem; color: var(--muted); }
+.sync-evidence { display: grid; gap: .35rem; margin-top: .35rem; }
+.sync-anchor { display: flex; justify-content: space-between; align-items: center; gap: .6rem; width: 100%; text-align: left; padding: .42rem .55rem; background: #f7f4ec; border: 1px solid #e2dccb; border-radius: .3rem; cursor: pointer; }
+.sync-anchor:hover { border-color: var(--ember); background: #fbf0e8; }
+.sync-anchor-position { font: .78rem/1.25 var(--mono); font-weight: 700; color: var(--ink); }
+.sync-anchor-samples { font: .72rem/1.25 var(--mono); color: var(--muted); text-align: right; }
+@media (max-width: 700px) {
+  .handoff { grid-template-columns: minmax(0, 1fr); }
+  .sync-anchor { flex-direction: column; align-items: flex-start; gap: .15rem; }
+  .sync-anchor-samples { text-align: left; }
+}

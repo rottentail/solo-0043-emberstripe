@@ -20,7 +20,7 @@ import (
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
+	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "synccheck": "GET", "release": "POST"} {
 		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
 			reel, ok := s.Reel(r.PathValue("name"))
 			if !ok {
@@ -118,6 +118,14 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		respond(w, v, err)
 	case "compare":
 		v, err := station.Compare(reel, window, profile, query.Get("against"))
+		respond(w, v, err)
+	case "synccheck":
+		requested, _ := strconv.Atoi(query.Get("search_rows"))
+		if requested < 0 {
+			invalid(w, "search_rows must be a non-negative integer")
+			return
+		}
+		v, err := station.SyncCheck(reel, window, profile, requested)
 		respond(w, v, err)
 	case "audition":
 		data, err := station.Audition(reel, window, profile)
