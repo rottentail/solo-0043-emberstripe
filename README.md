@@ -20,6 +20,27 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
 
+## 两份试扫行距对拍
+
+把两份同规格试扫放入同一个扫描目录后，打开 `/lightbench/pair`（也可从任意卷页顶部点「试扫对拍」）。选择 A/B 两卷和共同标定，工作台会提取两个声槽的归一化轮廓与显著起落点，用单调序列匹配估计行偏移，并输出：
+
+- `suspect_insertion` / `suspect_deletion`：B 相对 A 的可疑插行（重复）或丢行（跳行）区间及偏移行数；
+- `focus_a_interval`：双声槽可行边界相交后的收窄范围；没有精确边界时只给 `a_interval` / `b_interval` 范围；
+- `normal_repeated_voiceprint`：两份材料都存在、且整体行偏移稳定的重复声纹；
+- `head_offset`：卷首固定位移，先作为对拍原点扣除，不判为局部送片故障；
+- `missing_sheet`：按 `emulsion-NNNN.png` 是否存在判定的实物缺页，不把缺页零值当作跳行。
+
+每条结论都带 A/B 的 `row-audition` WAV 链接、源页格/行地址和 `/lightbench/{reel}?frame=...&row=...` 深链；页内也可直接打开原页横向投影并移动行标记。分析接口只读，不发布 ZIP、不写扫描目录或既有 `var/parcels`。
+
+```sh
+go run ./cmd/pairsamples -out var/pair-scans
+go run ./cmd/emberstripe -addr 127.0.0.1:7432 -scans var/pair-scans -parcels var/pair-parcels
+curl 'http://127.0.0.1:7432/captures/line-audit?a=trial-a&b=trial-b&profile=bench'
+python3 examples/line_audit_walkthrough.py
+```
+
+`start`/`end` 可按零基画格传入；程序化行窗使用 `start_row`/`end_row`（原始扫描行，半开）。同义入口包括 `/captures/{name}/line-audit?against=...`、`/captures/compare-lines?a=...&b=...`、`/lightbench/pair/analyze` 和 `/lightbench/{reel}/alignment?against=...`。
+
 ## 从画格检查到交付
 
 在另一个终端运行以下命令。

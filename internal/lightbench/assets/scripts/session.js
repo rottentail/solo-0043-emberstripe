@@ -28,6 +28,19 @@ export function windowController(root, onWindow) {
     }
   }
 
+  // Deep links from line-audit conclusions carry frame/row and often an
+  // explicit review window. Fill the form before the initial request.
+  const deep = new URLSearchParams(window.location.search);
+  if (deep.get('start')) form.elements.start.value = deep.get('start');
+  if (deep.get('end')) form.elements.end.value = deep.get('end');
+  if (deep.get('profile')) form.elements.profile.value = deep.get('profile');
+  if (!deep.get('start') && deep.get('frame')) {
+    const frame = Number(deep.get('frame'));
+    const maxEnd = Number(form.elements.end.max || 1);
+    form.elements.start.value = Math.max(0, frame - 2);
+    form.elements.end.value = Math.min(maxEnd, frame + 3);
+  }
+
   form.addEventListener('submit', update);
   return { start: update };
 }

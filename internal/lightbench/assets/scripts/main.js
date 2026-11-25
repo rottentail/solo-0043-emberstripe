@@ -21,8 +21,15 @@ function select(frame, row) {
   inspector.select(frame, row);
 }
 
+const deepLink = new URLSearchParams(window.location.search);
 const session = windowController(root, (data) => {
   for (const panel of [rail, waveform, inspector, audio, compare, parcel]) panel.setWindow(data);
-  select(data.window.start, 0);
+  const frame = Number(deepLink.get('frame'));
+  const row = Number(deepLink.get('row') || 0);
+  if (Number.isInteger(frame) && frame >= data.window.start && frame < data.window.end && row >= 0 && row < data.rows_per_frame) {
+    select(frame, row);
+  } else {
+    select(data.window.start, 0);
+  }
 });
 session.start();

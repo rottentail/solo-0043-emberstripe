@@ -1,0 +1,73 @@
+{{define "pairpage"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emberstripe · 两份试扫行距对拍</title>
+  <link rel="stylesheet" href="/light-assets/styles/base.css">
+  <link rel="stylesheet" href="/light-assets/styles/bench.css">
+  <link rel="stylesheet" href="/light-assets/styles/pair.css">
+  <script type="module" src="/light-assets/scripts/pair.js"></script>
+</head>
+<body>
+  {{template "masthead" .}}
+  <main class="pair-bench" data-a="{{.A}}" data-b="{{.B}}">
+    <section class="pair-heading">
+      <div>
+        <h1>试扫行距对拍</h1>
+        <p class="muted">用两个声槽的共同起落对齐两份同规格试扫，区分可疑插行/丢行、正常重复声纹、卷首偏移和实物缺页。结论只读生成，不改动原卷或已冻结音频。</p>
+      </div>
+      <form id="pair-form" class="pair-form">
+        <label>A 试扫
+          <select name="a" required>
+            {{range .Names}}<option value="{{.}}" {{if eq . $.A}}selected{{end}}>{{.}}</option>{{end}}
+          </select>
+        </label>
+        <label>B 试扫
+          <select name="b" required>
+            {{range .Names}}<option value="{{.}}" {{if eq . $.B}}selected{{end}}>{{.}}</option>{{end}}
+          </select>
+        </label>
+        <label>标定（两卷相同 ID）<input name="profile" placeholder="默认首个可用标定"></label>
+        <label>起始格（可选）<input name="start" type="number" min="0" placeholder="0"></label>
+        <label>截止格（可选）<input name="end" type="number" min="1" placeholder="末格"></label>
+        <button type="submit">开始对拍</button>
+      </form>
+      <p id="pair-status" class="pair-status" role="status">选择两份同规格试扫后开始。</p>
+    </section>
+
+    <section id="pair-summary" class="pair-summary" hidden></section>
+
+    <div class="pair-layout">
+      <section class="findings-column" aria-label="对拍结论">
+        <h2>可怀疑区间与排除项</h2>
+        <div id="pair-findings" class="finding-list"></div>
+      </section>
+      <aside class="source-column" aria-label="原页点查器">
+        <section id="source-viewer" class="source-viewer" hidden>
+          <div class="section-head">
+            <h2 id="source-title">原页投影</h2>
+            <a id="source-workbench" class="button secondary" target="_blank" rel="noopener">在工作台打开</a>
+          </div>
+          <div class="strip pair-strip">
+            <img id="source-image" alt="所选扫描原页的横向投影">
+            <canvas id="source-marker" aria-label="原页行位置标记"></canvas>
+          </div>
+          <p id="source-caption" class="small muted"></p>
+        </section>
+        <section class="pair-help">
+          <h2>怎么读结论</h2>
+          <ul>
+            <li><strong>插行/重复行</strong>：B 相对 A 的行偏移在段后正向增加。</li>
+            <li><strong>丢行/跳行</strong>：偏移负向增加；区间表示丢失内容在 A 中的位置。</li>
+            <li><strong>范围</strong>：重复声纹使多个边界同样相似；双声槽证据相交后可能收窄。</li>
+            <li><strong>卷首偏移</strong>：全段固定位移，不是局部送片故障。</li>
+            <li><strong>实物缺页</strong>：按扫描页是否存在判定，不用零值冒充跳行。</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+    {{if .ReportJSON}}<script id="pair-initial-report" type="application/json">{{.ReportJSON}}</script>{{end}}
+  </main>
+</body>
+</html>{{end}}

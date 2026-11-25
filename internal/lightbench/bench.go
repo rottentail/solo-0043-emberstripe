@@ -29,9 +29,17 @@ func New(s *station.Station) http.Handler {
 	}
 	mux.Handle("GET /light-assets/", http.StripPrefix("/light-assets/", http.FileServerFS(assets)))
 	mux.HandleFunc("GET /{$}", b.home)
+	for _, path := range []string{"/lightbench/pair", "/lightbench/compare-lines", "/lightbench/alignment"} {
+		mux.HandleFunc("GET "+path, b.pairPage)
+	}
+	mux.HandleFunc("GET /lightbench/pair/analyze", b.drawing(b.pairAnalyze))
+	mux.HandleFunc("GET /lightbench/{reel}/alignment", b.drawing(b.reelAlignment))
+	mux.HandleFunc("GET /lightbench/{reel}/line-audit", b.drawing(b.reelAlignment))
+	mux.HandleFunc("GET /lightbench/{reel}/compare-lines", b.drawing(b.reelAlignment))
 	mux.HandleFunc("GET /lightbench/{reel}", b.reelPage)
 	mux.HandleFunc("GET /lightbench/{reel}/window", b.drawing(b.window))
 	mux.HandleFunc("GET /lightbench/{reel}/strip", b.drawing(b.strip))
+	mux.HandleFunc("GET /lightbench/{reel}/sheet", b.drawing(b.sheet))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")

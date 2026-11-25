@@ -25,6 +25,8 @@ Emberstripe 是胶片光学声轨数字化浏览器工作台，供胶片扫描�
 | `GET .../trace` | 查询源位置、两路灰阶、PCM 与越界标记 |
 | `GET .../audition` | 返回按 `start,end` 取样的本机试听 WAV |
 | `GET .../compare` | 对照相同窗内 `profile` 和 `against` 指定的标定 |
+| `GET /captures/line-audit` 或 `GET .../line-audit?against=...` | 对拍两份同规格试扫的双声槽起落，输出插行/丢行、范围证据、卷首偏移、重复声纹和缺页 |
+| `GET .../row-audition` | 按任意半开源行或画格行区间返回本机复听 WAV，供对拍结论使用 |
 | `GET .../overlay` | 在 `frame` 的画面条带旁绘制同步声道活动 |
 | `POST .../release` 和 `GET /parcels/{id}` | 发布并下载冻结 ZIP，索引按包内 PCM 帧标记画格偏移 |
 | `GET /parcels/{id}/verify` | 在读取时校验包、媒体头、索引、覆盖分区和缺失区静音 |
@@ -49,6 +51,7 @@ Emberstripe 是胶片光学声轨数字化浏览器工作台，供胶片扫描�
 | --- | --- |
 | `GET /`、`GET /lightbench/{reel}` | 列出卷，区分未知卷、空目录和无可用标定 |
 | `GET /lightbench/{reel}/window` | 半开窗口内返回画格状态、灰阶端点、精确覆盖区间和有界的双声道包络 |
+| `GET /lightbench/pair`、`GET /lightbench/pair/analyze`、`GET /lightbench/{reel}/alignment` | 两份试扫的行距对拍工作台与只读 JSON 结论；结论提供复听 WAV、源页地址和原页深链 |
 | `GET /lightbench/{reel}/strip?frame=N` | 返回有页画格的横向投影，可按内容标识重用；缺页独立返回 404 |
 
 HTML 由 Go 模板渲染，脚本和样式随 Go 二进制内嵌。浏览器负责定位交互、渲染和播放，采样、覆盖、标定和归档仍由 Go 计算。工作台绘图使用独立的两个并发槽位。独立测试套件延后至后续任务，基线提供公开入口复走和浏览器手工验证路径。

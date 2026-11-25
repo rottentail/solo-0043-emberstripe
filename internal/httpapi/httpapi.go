@@ -20,7 +20,12 @@ import (
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
+	for _, route := range []string{"line-audit", "compare-lines", "pair-audit", "alignment", "line-compare"} {
+		mux.HandleFunc("GET /captures/"+route, func(w http.ResponseWriter, r *http.Request) {
+			serveTopLevelLineAudit(w, r, s)
+		})
+	}
+	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST", "line-audit": "GET", "compare-lines": "GET", "alignment": "GET", "line-compare": "GET", "row-audition": "GET"} {
 		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
 			reel, ok := s.Reel(r.PathValue("name"))
 			if !ok {
@@ -69,6 +74,12 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 	query := r.URL.Query()
 	profile := query.Get("profile")
 	switch action {
+	case "line-audit", "compare-lines", "pair-audit", "alignment", "line-compare":
+		serveReelLineAudit(w, r, s, reel)
+		return
+	case "row-audition":
+		serveRowAudition(w, r, reel)
+		return
 	case "header":
 		write(w, 200, station.Info(reel))
 		return
