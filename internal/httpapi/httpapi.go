@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
+	"github.com/rottentail/solo-0043-emberstripe/internal/impactmap"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
@@ -30,6 +32,17 @@ func New(s *station.Station) http.Handler {
 			serveCapture(w, r, s, reel, action)
 		})
 	}
+	impactPaths := []string{
+		"/impact", "/impact-map", "/impact-maps", "/impactmap", "/impactmaps",
+		"/impact_maps", "/damage-map", "/damage-maps", "/damage_maps",
+		"/handoff", "/handoff/impact-map", "/cross-scan",
+	}
+	for _, path := range impactPaths {
+		mux.HandleFunc("GET "+path, func(w http.ResponseWriter, r *http.Request) { serveImpactMap(w, r, s) })
+		mux.HandleFunc("POST "+path, func(w http.ResponseWriter, r *http.Request) { serveImpactMap(w, r, s) })
+		mux.HandleFunc("PUT "+path, func(w http.ResponseWriter, r *http.Request) { serveImpactMap(w, r, s) })
+	}
+	mux.HandleFunc("POST /captures/impact-map", func(w http.ResponseWriter, r *http.Request) { serveImpactMap(w, r, s) })
 	mux.HandleFunc("GET /parcels/{id}", func(w http.ResponseWriter, r *http.Request) {
 		b, err := s.Store.Read(r.PathValue("id"))
 		if err != nil {
@@ -142,6 +155,46 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		write(w, 201, receipt)
 	}
 }
+
+func serveImpactMap(w http.ResponseWriter, r *http.Request, s *station.Station) {
+	var data []byte
+	if r.Method == http.MethodGet {
+		q := r.URL.Query()
+		surveyText := q.Get("survey")
+		if surveyText == "" {
+			surveyText = q.Get("input")
+		}
+		if surveyText == "" {
+			invalid(w, "POST a survey JSON document, or pass it as the survey query parameter")
+			return
+		}
+		data = []byte(surveyText)
+	} else {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		var err error
+		data, err = io.ReadAll(r.Body)
+		if err != nil {
+			invalid(w, "survey body must be valid JSON and at most 1 MiB")
+			return
+		}
+	}
+	result, err := s.ImpactMap(data)
+	if err != nil {
+		var unknown *impactmap.UnknownReelError
+		if errors.As(err, &unknown) {
+			write(w, 404, map[string]string{"error": err.Error()})
+			return
+		}
+		invalid(w, err.Error())
+		return
+	}
+	if r.URL.Query().Get("format") == "markdown" || r.URL.Query().Get("format") == "md" {
+		binary(w, "text/markdown; charset=utf-8", impactmap.RenderMarkdown(result))
+		return
+	}
+	write(w, 200, result)
+}
+
 func write(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

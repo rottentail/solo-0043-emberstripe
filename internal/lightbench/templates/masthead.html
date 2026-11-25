@@ -7,6 +7,7 @@
       {{range .Names}}
       <a href="/lightbench/{{.}}" {{if $.Reel}}{{if eq . $.Reel.Name}}aria-current="page"{{end}}{{end}}>{{.}}</a>
       {{end}}
+      <a href="/lightbench/impact-map">撕边影响图</a>
     </nav>
     {{end}}
   </div>

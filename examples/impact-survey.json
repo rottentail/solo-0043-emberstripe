@@ -1,0 +1,43 @@
+{
+  "original": "cinder-a",
+  "rescan": "vireo-b",
+  "profile": "bench",
+  "references": [
+    {
+      "id": "k0",
+      "original": { "page": 0, "row": 1000 },
+      "rescan": { "page": 0, "row": 960 }
+    },
+    {
+      "id": "k2",
+      "original": { "page": 2, "row": 1000 },
+      "rescan": { "page": 2, "row": 960 }
+    }
+  ],
+  "marks": [
+    {
+      "id": "left-lane-shift",
+      "note": "页号未挪、行比例为 2000:1920 的可证实左声槽段",
+      "start": { "page": 1, "row": 100 },
+      "end": { "page": 1, "row": 300 },
+      "x0": 72,
+      "x1": 80
+    },
+    {
+      "id": "torn-across-join",
+      "note": "横跨第 1/2 页接页；cinder-a 第 2 页缺失，补扫不得替原扫补证",
+      "start": { "page": 1, "row": 1900 },
+      "end": { "page": 2, "row": 120 },
+      "x0": 72,
+      "x1": 82
+    },
+    {
+      "id": "picture-only",
+      "note": "只压画面列，不碰声槽",
+      "page": 1,
+      "start_row": 400,
+      "end_row": 500,
+      "zone": "picture"
+    }
+  ]
+}

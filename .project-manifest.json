@@ -62,6 +62,11 @@
       "id": "bench-controls",
       "path": "internal/lightbench/assets/scripts",
       "responsibility": "编排浏览器工作窗、探针、双声道绘图、试听和冻结结果"
+    },
+    {
+      "id": "impactmap",
+      "path": "internal/impactmap",
+      "responsibility": "双扫描参照配准、撕边影响分类、页级证据和交接 Markdown"
     }
   ],
   "workflows": [
@@ -318,6 +323,29 @@
         "capture",
         "register",
         "station"
+      ]
+    },
+    {
+      "id": "impact-map",
+      "name": "双扫描撕边影响交接",
+      "entry": "POST /impact-map",
+      "steps": [
+        "读取修复员确认的双扫描参照点和原扫撕边区间",
+        "按页号、页内行和两卷行比例投影到补扫",
+        "分别用各卷声画偏移计算可复听画格行和纯画面范围",
+        "为每条判断附加所属扫描页和摘要，输出回查 cutoff"
+      ],
+      "success": "两卷声槽、可听行、纯画面范围和页证可回查，缺证区间给出原扫确认起点",
+      "failure": "未知卷 404，无效参照或区间 400",
+      "verification": "python3 examples/walkthrough.py impact-map",
+      "module_ids": [
+        "impactmap",
+        "httpapi",
+        "station",
+        "capture",
+        "lightbench",
+        "bench-page",
+        "bench-controls"
       ]
     }
   ],

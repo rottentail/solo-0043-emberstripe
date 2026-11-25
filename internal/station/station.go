@@ -9,6 +9,7 @@ import (
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
+	"github.com/rottentail/solo-0043-emberstripe/internal/impactmap"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
@@ -55,6 +56,19 @@ func (s *Station) Reel(name string) (*capture.Reel, bool) {
 	reel, ok := s.catalog[name]
 	return reel, ok
 }
+
+// Catalog exposes the read-only registered reels to lineage-oriented tools.
+func (s *Station) Catalog() map[string]*capture.Reel { return s.catalog }
+
+// ImpactMap parses a technician survey and builds a two-scan impact map.
+func (s *Station) ImpactMap(data []byte) (*impactmap.ImpactMap, error) {
+	survey, err := impactmap.ParseSurvey(data)
+	if err != nil {
+		return nil, err
+	}
+	return impactmap.Build(s.catalog, survey)
+}
+
 func Info(reel *capture.Reel) CaptureInfo {
 	depths := make(map[int]int, len(reel.Sheets))
 	for frame, sheet := range reel.Sheets {

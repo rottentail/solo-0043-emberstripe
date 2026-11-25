@@ -61,6 +61,10 @@
     {
       "workflow_id": "strip-projection",
       "command": "python3 examples/walkthrough.py strip-projection"
+    },
+    {
+      "workflow_id": "impact-map",
+      "command": "python3 examples/walkthrough.py impact-map"
     }
   ]
 }

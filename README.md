@@ -20,6 +20,49 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
 
+## 两次扫描的撕边影响图
+
+修复员在原扫上圈出撕边后，可用双方认定的参照点建立页号/行号变换。系统不会根据片孔重复纹自动配对；没有参照或落在参照包络外的部分只标为待确认。每条声槽/画面判断都带有所属卷、页号、扫描页摘要和覆盖状态，补扫页的 `proves_original_scan` 恒为 `false`，不能替原扫缺页补证。
+
+```sh
+# 机器 JSON 与可交给同事的 Markdown
+go run ./cmd/impactmap \
+  -scans var/scans \
+  -survey examples/impact-survey.json \
+  -out var/impact-map.json \
+  -markdown var/impact-map.md
+
+# 或通过服务（同时兼容 /impact、/impact-maps、/damage-map 等别名）
+curl -X POST http://127.0.0.1:7431/impact-map \
+  -H 'Content-Type: application/json' \
+  --data @examples/impact-survey.json
+```
+
+浏览器入口为 `GET /lightbench/impact-map`。调查 JSON 的主结构是：
+
+```json
+{
+  "original": "cinder-a",
+  "rescan": "vireo-b",
+  "references": [
+    {"id": "k0", "original": {"page": 0, "row": 1000}, "rescan": {"page": 0, "row": 960}},
+    {"id": "k2", "original": {"page": 2, "row": 1000}, "rescan": {"page": 2, "row": 960}}
+  ],
+  "marks": [
+    {"id": "tear", "start": {"page": 1, "row": 1900}, "end": {"page": 2, "row": 120},
+     "x0": 72, "x1": 82}
+  ]
+}
+```
+
+`start` 包含、`end` 排除，绝对扫描行为 `page × rows_per_frame + row`；一段可因此横跨接页。也可用 `page/start_row/end_row`、`zone: "picture"|"left"|"right"|"sound"|"edge"` 或 `lanes:["left"]`。输出在两卷上分别列出：
+
+- `lane_hits`：实际碰到的左右声槽及列区间；
+- `audible_frame_runs` / `audible_row_count`：按各卷自己的 `lead_rows` 反映射后的画格行，且声源页必须存在；
+- `picture_runs` 与 `picture_only_runs`：画面受影响范围，以及扣除声槽损伤画格行后只剩画面受影响的范围；
+- `corroborated_original_ranges` 与 `confirm_original_from`：参照和两卷页证能证实到哪里，从哪一原扫行起必须回原扫/原页确认；
+- 每个 `evidence` 都可回查到具体卷、页、行段和该扫描页 SHA-256。
+
 ## 从画格检查到交付
 
 在另一个终端运行以下命令。

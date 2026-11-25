@@ -29,6 +29,7 @@ func New(s *station.Station) http.Handler {
 	}
 	mux.Handle("GET /light-assets/", http.StripPrefix("/light-assets/", http.FileServerFS(assets)))
 	mux.HandleFunc("GET /{$}", b.home)
+	mux.HandleFunc("GET /lightbench/impact-map", b.impactPage)
 	mux.HandleFunc("GET /lightbench/{reel}", b.reelPage)
 	mux.HandleFunc("GET /lightbench/{reel}/window", b.drawing(b.window))
 	mux.HandleFunc("GET /lightbench/{reel}/strip", b.drawing(b.strip))

@@ -1,0 +1,106 @@
+.impact-bench {
+  display: block;
+  padding: 20px;
+}
+
+.impact-editor textarea {
+  width: min(1100px, 100%);
+  box-sizing: border-box;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 12px;
+  border: 1px solid var(--line, #3a4654);
+  border-radius: 8px;
+  background: #101720;
+  color: #e8eef6;
+}
+
+.impact-editor .actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 12px 0 24px;
+}
+
+button.secondary {
+  background: #263241;
+}
+
+.segment-card,
+.impact-summary,
+.impact-editor {
+  border: 1px solid var(--line, #334155);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.side-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.side {
+  border: 1px solid #2b3a4d;
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(2, 6, 23, 0.35);
+}
+
+.side-rescan {
+  border-color: #4b5563;
+}
+
+.cutoff {
+  padding: 10px 12px;
+  border-left: 4px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  font-weight: 700;
+}
+
+.run {
+  padding: 8px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.run.status-missing_sheet,
+.run.status-unscanned_segment,
+.run.status-outside_capture {
+  border-left: 3px solid #ef4444;
+}
+
+.evidence {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+
+.evidence li {
+  margin: 6px 0;
+}
+
+.evidence .absent strong,
+.lineage-boundary {
+  color: #fbbf24;
+}
+
+.followups {
+  border-top: 1px solid #334155;
+  margin-top: 12px;
+  padding-top: 8px;
+}
+
+.raw-json pre {
+  max-height: 520px;
+  overflow: auto;
+  font-size: 12px;
+}
+
+.hint,
+.muted {
+  color: #b6c2d2;
+}

@@ -18,15 +18,17 @@ import zipfile
 def workflow(base, name, parcels):
     capture = '/captures/cinder-a/'
 
-    def request(path, expected=200, method='GET'):
+    def request(path, expected=200, method='GET', body=None):
+        data = None if body is None else json.dumps(body).encode()
+        headers = {} if data is None else {'Content-Type': 'application/json'}
         try:
-            response = urlopen(Request(base + path, method=method), timeout=8)
+            response = urlopen(Request(base + path, data=data, headers=headers, method=method), timeout=8)
         except HTTPError as error:
             response = error
         with response:
             assert response.status == expected, (path, response.status, expected)
-            data = response.read()
-            return json.loads(data) if response.headers.get_content_type() == 'application/json' else data
+            payload = response.read()
+            return json.loads(payload) if response.headers.get_content_type() == 'application/json' else payload
 
     def get(action, expected=200):
         return request(capture + action, expected)
@@ -147,13 +149,46 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'impact-map':
+        survey_path = Path(__file__).with_name('impact-survey.json')
+        survey = json.loads(survey_path.read_text(encoding='utf-8'))
+        impact = request('/impact-map', 200, 'POST', survey)
+        assert impact['schema'] == 'emberstripe.impact-map/v1'
+        by_id = {item['id']: item for item in impact['segments']}
+
+        shifted = by_id['left-lane-shift']
+        assert shifted['corroborated_original_ranges'] == [{'start': 2100, 'end': 2300}]
+        assert shifted['original']['audible_frame_runs'] == [{'start': 1870, 'end': 2070}]
+        assert shifted['rescan']['audible_frame_runs'] == [{'start': 2151, 'end': 2343}]
+        assert shifted['original']['lane_hits'][0]['lane'] == 0
+        assert shifted['rescan']['lane_hits'][0]['lane'] == 0
+
+        join = by_id['torn-across-join']
+        assert join['corroborated_original_ranges'] == [{'start': 3900, 'end': 4000}]
+        assert join['confirm_original_from']['absolute_row'] == 4000
+        assert join['original']['audible_frame_runs'] == [{'start': 3670, 'end': 3770}]
+        assert join['rescan']['audible_row_count'] == 212
+        assert any(run['status'] == 'missing_sheet' for lane in join['original']['lane_hits'] for run in lane['frame_runs'])
+        original_evidence = join['original']['lane_hits'][0]['frame_runs'][0]['evidence'][0]
+        rescan_run = join['rescan']['lane_hits'][0]['frame_runs'][0]
+        assert original_evidence['reel'] == 'cinder-a' and original_evidence['proves_original_scan']
+        assert all(not ev['proves_original_scan'] for ev in rescan_run['evidence'])
+
+        picture = by_id['picture-only']
+        assert picture['original']['lane_hits'] == []
+        assert picture['original']['picture_only_runs'][0]['frame_row_start'] == 2400
+        assert picture['rescan']['picture_only_runs'][0]['frame_row_start'] == 2304
+
+        request('/impact-map', 400, 'POST', {'original': 'cinder-a'})
+        request('/impact-map', 404, 'POST', {'original': 'missing-reel', 'rescan': 'vireo-b', 'marks': []})
+        return {'segments': len(impact['segments']), 'join_cutoff': 4000}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection impact-map'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

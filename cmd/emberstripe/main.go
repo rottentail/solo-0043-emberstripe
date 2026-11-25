@@ -35,6 +35,16 @@ func main() {
 	mux.Handle("/captures", api)
 	mux.Handle("/captures/", api)
 	mux.Handle("/parcels/", api)
+	for _, path := range []string{
+		"/impact", "/impact-map", "/impact-maps", "/impactmap", "/impactmaps",
+		"/impact_maps", "/damage-map", "/damage-maps", "/damage_maps",
+		"/handoff", "/cross-scan",
+	} {
+		mux.Handle(path, api)
+		mux.Handle("/api"+path, http.StripPrefix("/api", api))
+	}
+	mux.Handle("/handoff/impact-map", api)
+	mux.Handle("/api/handoff/impact-map", http.StripPrefix("/api", api))
 	mux.Handle("/", lightbench.New(s))
 	server := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 16 << 10}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
