@@ -15,6 +15,10 @@ type Range struct {
 type Gauge struct {
 	Profile string   `json:"profile"`
 	Lanes   [2]Range `json:"lanes"`
+	// Muted lanes have no trustworthy endpoints (for example a failed
+	// cross-device transfer). Their samples stay at zero instead of being
+	// normalized against invented dark/clear values.
+	Muted [2]bool `json:"muted,omitempty"`
 }
 
 func Measure(reel *capture.Reel, id string) (Gauge, error) {

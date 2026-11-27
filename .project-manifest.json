@@ -14,6 +14,11 @@
       "responsibility": "计算和验证暗亮双声道标定"
     },
     {
+      "id": "transfer",
+      "path": "internal/transfer/transfer.go",
+      "responsibility": "按共用中间试条拟合两台设备的响应，逐声道迁移并复核暗亮端点"
+    },
+    {
       "id": "register",
       "path": "internal/register/register.go",
       "responsibility": "画格窗、原生时钟、源地址与覆盖范围"
@@ -318,6 +323,50 @@
         "capture",
         "register",
         "station"
+      ]
+    },
+    {
+      "id": "transfer-check",
+      "name": "跨设备标定转用检查",
+      "entry": "GET /captures/{name}/transfer-check",
+      "steps": [
+        "核对两台扫描卷的画格时钟和声槽列区一致",
+        "逐声道收集两台设备都能读到的共用试条灰阶",
+        "最小二乘拟合线性响应并把参考暗亮端点映射到当前卷量纲",
+        "分别给出可转用、试条不足、端点倒置或端点越界的可复核结论"
+      ],
+      "success": "左右槽独立返回拟合参数、迁移端点和全部共用试条读数",
+      "failure": "几何不一致、参考卷或参考标定无效、试条重复为 400",
+      "verification": "python3 examples/walkthrough.py transfer-check",
+      "module_ids": [
+        "httpapi",
+        "station",
+        "transfer",
+        "gauge",
+        "capture"
+      ]
+    },
+    {
+      "id": "transfer-audition",
+      "name": "试听可转用声槽",
+      "entry": "GET /captures/{name}/transfer-audition",
+      "steps": [
+        "按转用检查结果构造迁移端点，未通过的声道标记为静音",
+        "在当前画格窗渲染双声道 PCM 并打包为固定 WAV",
+        "响应头逐声道标注转用结论供复核"
+      ],
+      "success": "只含通过检查声道的音频，失败声道保持零值且覆盖状态不变",
+      "failure": "没有声道通过检查或窗口非法时为 400",
+      "verification": "python3 examples/walkthrough.py transfer-audition",
+      "module_ids": [
+        "httpapi",
+        "station",
+        "transfer",
+        "gauge",
+        "readout",
+        "wave",
+        "register",
+        "capture"
       ]
     }
   ],

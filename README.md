@@ -14,11 +14,25 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 样例生成器要求目标卷目录尚不存在。`cinder-a` 是 24 格/秒、每格 2000 行、声槽领先 230 行的右移取样案例；`vireo-b` 是 25 格/秒、每格 1920 行、偏移 −135 行的案例。两卷原生 PCM 采样率均为 48 kHz。两卷均含一张缺页和一张 8 位灰阶条带，其余条带是 16 位灰阶。`bench` 和 `soft` 是对比度不同的有效标定，`flat` 的参考窗口缺少对比度，`absent` 的暗场参考页缺失。
 
+`beacon-ref` 与 `beacon-new` 是同一套暗亮标定板在两台设备上的扫描对：两卷几何完全一致，旧卷 `beacon-ref` 的参考区完整可读，新卷 `beacon-new` 末页未扫到，其 `broken` 标定的暗参考板出界。两卷都声明了 `mid-a` 到 `mid-e` 中间级试条，其中 `mid-e` 只在旧卷上有页。新卷左声道对试条保持有序线性响应，右声道在试条区段响应倒置，用于演示左右槽分别判定。
+
 ## 浏览器操作
 
 启动后打开 `http://127.0.0.1:7431`。选择扫描卷、画格区间和光学标定，然后应用区间。点击扫描条带、波形或覆盖区间，让画格探针定位到同一行；也可以直接输入画格和行号。画面缺页标记在画格带上，偏移后的声槽缺口显示在波形中。
 
 选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
+
+## 跨设备标定转用
+
+新卷的参考板出界、本机标定无法使用时，在工作台的「标定转用检查」面板选择参考设备卷、参考标定和两台设备共用的中间级试条。检查逐声道拟合两台设备的线性响应并迁移暗亮端点，左、右声槽分别给出 `transferable`、`insufficient_strips`、`reversed_endpoints` 或 `endpoint_out_of_range` 结论，报告中保留每块试条在两卷上的读数、位置和拟合参数，试条顺序或设备顺序变化都可据此复核。通过检查后可「试听可转用部分」：未通过的声道在 WAV 中保持零值，只听得到独立验证过的声道。
+
+```sh
+base=http://127.0.0.1:7431
+curl "$base/captures/beacon-new/transfer-check?reference=beacon-ref&reference_profile=bench&strip=mid-a&strip=mid-b&strip=mid-c"
+curl "$base/captures/beacon-new/transfer-audition?reference=beacon-ref&reference_profile=bench&strip=mid-a&strip=mid-b&strip=mid-c&start=4&end=6" -o var/transfer.wav
+```
+
+`strip` 可重复给出，也可用逗号分隔的 `strips` 一次给出。两卷必须共享宽度、画格数、每格行数、帧率和声槽列区；试条在两卷中须指向相同画格行矩形，缺页试条跳过并在结论中注明。
 
 ## 从画格检查到交付
 

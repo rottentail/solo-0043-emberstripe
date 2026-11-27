@@ -47,6 +47,11 @@ func measure(reel *capture.Reel, a register.Address, g gauge.Gauge) (gray [2]flo
 	sheet := reel.Sheets[a.Frame]
 	for lane, columns := range reel.Lanes {
 		gray[lane] = gauge.Mean(sheet, columns, capture.Span{X0: a.Row, X1: a.Row + 1})
+		if g.Muted[lane] {
+			// No migrated endpoints: keep the gray reading but leave the lane
+			// silent so only independently verified lanes enter the audition.
+			continue
+		}
 		ref := g.Lanes[lane]
 		unit := (gray[lane] - ref.Dark) / (ref.Clear - ref.Dark)
 		clipped[lane] = unit < 0 || unit > 1

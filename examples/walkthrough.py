@@ -35,7 +35,7 @@ def workflow(base, name, parcels):
         return request(capture+'release?start=1&end=4&profile=soft', 201, 'POST')
 
     if name == 'intake':
-        assert request('/captures') == ['cinder-a', 'vireo-b']
+        assert request('/captures') == ['beacon-new', 'beacon-ref', 'cinder-a', 'vireo-b']
         head = get('header')
         assert head['sample_rate'] == 48000
         assert head['available'] == [0, 1, 3, 4, 5, 6]
@@ -116,12 +116,12 @@ def workflow(base, name, parcels):
         return {'verified_frames': receipt['wave']['sample_frames'], 'tamper_status': 409}
     if name == 'workbench':
         first = request('/').decode()
-        assert 'data-reel="cinder-a"' in first and '画格探针' in first
+        assert 'data-reel="beacon-new"' in first and '画格探针' in first
         second = request('/lightbench/vireo-b').decode()
         assert 'data-reel="vireo-b"' in second and '声画偏移 -135 行' in second
         assert '不可用' in second and '/light-assets/scripts/main.js' in second
         request('/lightbench/unknown', 404)
-        return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True}
+        return {'reels': ['beacon-new', 'beacon-ref', 'cinder-a', 'vireo-b'], 'unusable_profiles_visible': True}
     if name == 'window-inspection':
         path = '/lightbench/cinder-a/window?start=1&end=4&profile=bench'
         data = request(path)
@@ -147,13 +147,65 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'transfer-check':
+        target = '/captures/beacon-new/'
+        # The new reel's own dark board has left the reel: its native fallback fails.
+        request(target+'calibration?profile=broken', 400)
+        check = request(target+'transfer-check?reference=beacon-ref&reference_profile=bench'
+                        '&strip=mid-a&strip=mid-b&strip=mid-c')
+        assert check['reference'] == 'beacon-ref' and check['reference_profile'] == 'bench'
+        assert check['geometry_aligned'] is True
+        left, right = check['lanes']
+        assert left['status'] == 'transferable' and right['status'] == 'reversed_endpoints'
+        assert check['transferable'] == [True, False] and check['usable_lanes'] == 1
+        assert [strip['id'] for strip in left['strips']] == ['mid-a', 'mid-b', 'mid-c']
+        assert left['strips'][0]['patches'] == [
+            {'frame': 1, 'row_start': 0, 'row_end': 40},
+            {'frame': 1, 'row_start': 40, 'row_end': 80},
+        ]
+        assert round(left['fit']['slope'], 6) == 0.9 and round(left['fit']['intercept'], 6) == 2600.0
+        assert left['migrated_endpoints'] == {'dark': 8000.0, 'clear': 52100.0}
+        assert round(right['fit']['slope'], 6) == -0.35
+        # Shared strips are evaluated independently per lane, including skipped sheets.
+        sparse = request(target+'transfer-check?reference=beacon-ref&reference_profile=bench&strip=mid-a')
+        assert {lane['status'] for lane in sparse['lanes']} == {'insufficient_strips'}
+        missing = request(target+'transfer-check?reference=beacon-ref&reference_profile=bench'
+                          '&strip=mid-d&strip=mid-e')
+        assert missing['lanes'][0]['status'] == 'insufficient_strips'
+        assert 'mid-e' in missing['lanes'][0]['reason']
+        # Two devices in reverse order, or strips in reverse order, stay reviewable.
+        reversed_strips = request(target+'transfer-check?reference=beacon-ref&reference_profile=bench'
+                                  '&strip=mid-c&strip=mid-a&strip=mid-b')
+        assert reversed_strips['transferable'] == check['transferable']
+        request(target+'transfer-check?reference=beacon-new&reference_profile=bench&strip=mid-a', 400)
+        request(target+'transfer-check?reference=beacon-ref&reference_profile=bench&strip=mid-a&strip=mid-a', 400)
+        request('/captures/ghost/transfer-check?reference=beacon-ref&reference_profile=bench&strip=mid-a', 404)
+        request('/captures/cinder-a/transfer-check?reference=beacon-ref&reference_profile=bench&strip=mid-a', 400)
+        return {'left': left['status'], 'right': right['status'], 'shared_strips': len(left['strips'])}
+    if name == 'transfer-audition':
+        target = '/captures/beacon-new/'
+        query = 'transfer-audition?reference=beacon-ref&reference_profile=bench&strip=mid-a&strip=mid-b&strip=mid-c&start=4&end=6'
+        data = request(target+query)
+        with wave.open(io.BytesIO(data)) as audio:
+            assert (audio.getnchannels(), audio.getsampwidth(), audio.getframerate(), audio.getnframes()) == (2, 2, 48000, 3200)
+            left_nonzero = right_nonzero = 0
+            for _ in range(audio.getnframes()):
+                l_value, r_value = struct.unpack('<hh', audio.readframes(1))
+                left_nonzero += l_value != 0
+                right_nonzero += r_value != 0
+            assert left_nonzero > 0 and right_nonzero == 0
+        # No lane passes when the shared-strip evidence is too thin.
+        request(target+'transfer-audition?reference=beacon-ref&reference_profile=bench&strip=mid-a&start=4&end=6', 400)
+        page = request('/lightbench/beacon-new').decode()
+        assert '标定转用检查' in page and '试听可转用部分' in page
+        return {'stereo_frames': 3200, 'audible_lanes': 1, 'muted_lanes': 1}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection transfer-check transfer-audition'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

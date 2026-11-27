@@ -1,0 +1,20 @@
+{{define "transfer"}}
+<section class="detail transfer" aria-labelledby="transfer-title">
+  <div class="section-head"><h2 id="transfer-title">标定转用检查</h2><span id="transfer-badge" class="section-note" role="status"></span></div>
+  <p class="muted small">用两台设备都能读到的中间级试条，判断参考卷的暗亮端点能否迁到当前卷；左右槽分别判定。</p>
+  <form id="transfer-form" class="transfer-form" aria-label="标定转用检查">
+    <label>参考设备卷
+      <select name="reference" required>{{range .Names}}{{if ne . $.Reel.Name}}<option value="{{.}}">{{.}}</option>{{end}}{{end}}</select>
+    </label>
+    <label>参考标定<input name="reference_profile" value="bench" required></label>
+    <label class="transfer-strips">共用试条（逗号分隔）<input name="strips" value="mid-a,mid-b,mid-c" required></label>
+    <button type="submit" class="secondary">检查端点迁移</button>
+  </form>
+  <div id="transfer-result" class="transfer-result" aria-live="polite" hidden></div>
+  <div class="transfer-audition">
+    <button type="button" id="transfer-audition-button" class="secondary" disabled>试听可转用部分</button>
+    <audio id="transfer-audition-media" controls preload="none" aria-label="按转用端点渲染的当前窗口试听" hidden></audio>
+    <span id="transfer-audition-status" class="section-note" role="status"></span>
+  </div>
+</section>
+{{end}}

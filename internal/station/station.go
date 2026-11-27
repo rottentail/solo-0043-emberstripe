@@ -12,6 +12,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
+	"github.com/rottentail/solo-0043-emberstripe/internal/transfer"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
 	"github.com/rottentail/solo-0043-emberstripe/internal/wave"
 )
@@ -132,6 +133,50 @@ func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 		return nil, err
 	}
 	return view.Overlay(reel, g, frame)
+}
+
+// TransferCheck evaluates whether the reference reel's calibration endpoints
+// can migrate onto target through the intermediate strips both devices read.
+func (s *Station) TransferCheck(targetName, referenceName, referenceProfile string, stripIDs []string) (transfer.Check, error) {
+	target, ok := s.Reel(targetName)
+	if !ok {
+		return transfer.Check{}, fmt.Errorf("target capture %q unavailable", targetName)
+	}
+	reference, ok := s.Reel(referenceName)
+	if !ok {
+		return transfer.Check{}, fmt.Errorf("reference capture %q unavailable", referenceName)
+	}
+	if targetName == referenceName {
+		return transfer.Check{}, errors.New("transfer requires two distinct captures")
+	}
+	return transfer.Evaluate(target, reference, referenceProfile, stripIDs)
+}
+
+// TransferAudition renders the target window with migrated endpoints. Lanes
+// that failed the transfer check stay muted so the WAV only carries audio from
+// independently verified lanes.
+func (s *Station) TransferAudition(targetName, referenceName, referenceProfile string, stripIDs []string, w register.Window) ([]byte, transfer.Check, error) {
+	target, ok := s.Reel(targetName)
+	if !ok {
+		return nil, transfer.Check{}, fmt.Errorf("target capture %q unavailable", targetName)
+	}
+	reference, ok := s.Reel(referenceName)
+	if !ok {
+		return nil, transfer.Check{}, fmt.Errorf("reference capture %q unavailable", referenceName)
+	}
+	if err := register.Validate(target.Header, w); err != nil {
+		return nil, transfer.Check{}, err
+	}
+	check, err := transfer.Evaluate(target, reference, referenceProfile, stripIDs)
+	if err != nil {
+		return nil, transfer.Check{}, err
+	}
+	if check.UsableLanes == 0 {
+		return nil, check, errors.New("neither lane passed the transfer check")
+	}
+	g := transfer.MigratedGauge(check)
+	render := readout.Extract(target, g, w)
+	return wave.Encode(register.Rate(target.Header), render.Samples), check, nil
 }
 func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
 	g, r, err := RenderWindow(reel, w, profile)

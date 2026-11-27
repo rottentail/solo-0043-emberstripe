@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
@@ -15,12 +17,13 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
+	"github.com/rottentail/solo-0043-emberstripe/internal/transfer"
 )
 
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
+	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST", "transfer-check": "GET", "transfer-audition": "GET"} {
 		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
 			reel, ok := s.Reel(r.PathValue("name"))
 			if !ok {
@@ -104,6 +107,10 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 			respond(w, v, err)
 		}
 		return
+	case "transfer-check":
+		check, err := s.TransferCheck(reel.Name, query.Get("reference"), query.Get("reference_profile"), requestedStrips(query))
+		respond(w, check, err)
+		return
 	}
 	start, a := strconv.Atoi(query.Get("start"))
 	end, b := strconv.Atoi(query.Get("end"))
@@ -127,6 +134,15 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		}
 		w.Header().Set("Content-Type", "audio/wav")
 		http.ServeContent(w, r, "audition.wav", time.Time{}, bytes.NewReader(data))
+	case "transfer-audition":
+		audio, check, err := s.TransferAudition(reel.Name, query.Get("reference"), query.Get("reference_profile"), requestedStrips(query), window)
+		if err != nil {
+			invalid(w, err.Error())
+			return
+		}
+		w.Header().Set("X-Transfer-Lanes", laneVerdictHeader(check))
+		w.Header().Set("Content-Type", "audio/wav")
+		http.ServeContent(w, r, "transfer-audition.wav", time.Time{}, bytes.NewReader(audio))
 	case "release":
 		receipt, err := s.Release(reel, window, profile)
 		if err != nil {
@@ -142,6 +158,39 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		write(w, 201, receipt)
 	}
 }
+
+// requestedStrips accepts repeated ?strip= parameters or one comma-separated
+// ?strips= list so the shared-strip boundary can be reviewed either way.
+func requestedStrips(query url.Values) []string {
+	if strips := query["strip"]; len(strips) > 0 {
+		return strips
+	}
+	return splitCSV(query.Get("strips"))
+}
+
+func splitCSV(value string) []string {
+	if value == "" {
+		return nil
+	}
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if part = strings.TrimSpace(part); part != "" {
+			result = append(result, part)
+		}
+	}
+	return result
+}
+
+func laneVerdictHeader(check transfer.Check) string {
+	labels := [2]string{"left", "right"}
+	parts := make([]string, 2)
+	for lane, verdict := range check.Lanes {
+		parts[lane] = labels[lane] + "=" + verdict.Status
+	}
+	return strings.Join(parts, ", ")
+}
+
 func write(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

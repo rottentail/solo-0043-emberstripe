@@ -61,6 +61,14 @@
     {
       "workflow_id": "strip-projection",
       "command": "python3 examples/walkthrough.py strip-projection"
+    },
+    {
+      "workflow_id": "transfer-check",
+      "command": "python3 examples/walkthrough.py transfer-check"
+    },
+    {
+      "workflow_id": "transfer-audition",
+      "command": "python3 examples/walkthrough.py transfer-audition"
     }
   ]
 }
