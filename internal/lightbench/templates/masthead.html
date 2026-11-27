@@ -10,5 +10,14 @@
     </nav>
     {{end}}
   </div>
+  {{if .Reel}}
+  <div class="tool-strip">
+    <nav class="tool-index" aria-label="卷内工位">
+      <a href="/lightbench/{{.Reel.Name}}" {{if not .TabletActive}}aria-current="page"{{end}}>声轨工作台</a>
+      {{if .Reel.Tablet}}<a href="/lightbench/{{.Reel.Name}}/tablet" {{if .TabletActive}}aria-current="page"{{end}}>试条评估</a>{{end}}
+    </nav>
+    {{if .TabletActive}}<a class="tool-json" href="{{.JSONPath}}?profile={{.Active}}" data-json-link>评估 JSON</a>{{end}}
+  </div>
+  {{end}}
 </header>
 {{end}}

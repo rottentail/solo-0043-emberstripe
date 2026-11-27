@@ -15,14 +15,15 @@ type profileOption struct {
 }
 
 type pageData struct {
-	Names       []string
-	Reel        *capture.Reel
-	Profiles    []profileOption
-	Active      string
-	Alternative bool
-	InitialEnd  int
-	SampleRate  int
-	Available   int
+	Names        []string
+	Reel         *capture.Reel
+	Profiles     []profileOption
+	Active       string
+	Alternative  bool
+	InitialEnd   int
+	SampleRate   int
+	Available    int
+	TabletActive bool
 }
 
 func (b *bench) home(w http.ResponseWriter, r *http.Request) {

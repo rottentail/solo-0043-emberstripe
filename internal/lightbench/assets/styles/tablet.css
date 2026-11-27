@@ -1,0 +1,90 @@
+.tablet-bench { width: min(100% - 2.4rem, 81rem); margin-inline: auto; padding-block: 2rem 3.5rem; }
+.tablet-heading { align-items: flex-end; }
+.title-reel { color: var(--ember); }
+.tablet-form { display: flex; align-items: end; gap: .55rem; }
+.tablet-form label { min-width: 13rem; }
+.tablet-intro { margin-top: .9rem; max-width: 75ch; color: var(--muted); font-size: .9rem; }
+.tablet-intro code, .reel-facts code { font-family: var(--mono); font-size: .92em; }
+
+.legend { display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; margin: 1.1rem 0 1.3rem; padding: .7rem .9rem; border: 1px solid var(--line); border-radius: .45rem; background: var(--surface); font-size: .82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: .4rem; }
+.dot { width: .7rem; height: .7rem; border-radius: 50%; display: inline-block; }
+.dot-distinct { background: #2f7d68; }
+.dot-inseparable { background: #8a8578; }
+.dot-plateau { background: #b07d12; }
+.dot-thin { background: var(--ember); }
+.dot-confound { background: #6b52a3; }
+
+.lane-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.lane-card { background: var(--surface); border: 1px solid var(--line); border-radius: .6rem; padding: 1.05rem 1.1rem 1.2rem; min-width: 0; }
+.lane-card[data-side="left"] { border-top: 4px solid #2f7d68; }
+.lane-card[data-side="right"] { border-top: 4px solid #35608f; }
+.lane-head { display: flex; align-items: baseline; justify-content: space-between; gap: .8rem; flex-wrap: wrap; }
+.lane-head h2 { font-size: 1.2rem; }
+.lane-gauge { display: flex; gap: .8rem; font: .76rem/1.4 var(--mono); color: var(--muted); }
+
+.confirm-zone { margin-top: .9rem; padding: .75rem .85rem; border-radius: .45rem; background: #eef6f1; border: 1px solid #cfe2d8; }
+.confirm-zone h3, .rescan-zone h3 { font-size: .92rem; margin-bottom: .5rem; }
+.range-chips { list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem; }
+.range-chip { display: grid; gap: .1rem; padding: .5rem .65rem; background: #fff; border: 1px solid #b9d6c8; border-left: 4px solid #2f7d68; border-radius: .35rem; }
+.range-chip strong { color: #22604f; }
+.none-line { font-size: .85rem; color: var(--muted); margin: 0; }
+.ok-line { color: #22604f; }
+
+.ladder { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .55rem; }
+.ladder-step { border: 1px solid var(--line); border-radius: .45rem; padding: .6rem .7rem .55rem; background: #fff; }
+.ladder-step.is-plateau { border-color: #e3c98c; background: #fdf8ea; }
+.ladder-step.is-ineligible { border-color: #e4b8ac; background: #fdf1ed; }
+.step-head { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem .6rem; }
+.step-id { font: 700 .78rem/1 var(--mono); background: var(--ink); color: #fff; border-radius: .25rem; padding: .22rem .4rem; }
+.step-label { font-weight: 700; font-size: .92rem; }
+.step-intensity { color: var(--muted); font: .78rem var(--mono); }
+.badge { font-size: .72rem; font-weight: 700; border-radius: 999px; padding: .14rem .55rem; }
+.badge-warn { background: #f6e2c0; color: #7c5310; border: 1px solid #e0bd74; }
+.step-chart { width: 100%; height: 1.5rem; display: block; margin-top: .35rem; }
+.chart-track { fill: #eee8d9; }
+.chart-measure { fill: #4c8f7c; }
+.chart-measure.is-plateau-dark { fill: #3a332b; }
+.chart-measure.is-plateau-clear { fill: #c9a24b; }
+.chart-known { stroke: var(--ember); stroke-width: 1.6; }
+.step-meta { display: flex; flex-wrap: wrap; gap: .2rem .9rem; font: .76rem/1.5 var(--mono); color: var(--muted); }
+.step-meta strong { color: var(--ink); }
+.cov-low { color: var(--ember-dark) !important; }
+
+.pair-verdict { margin-top: .5rem; border-radius: .35rem; padding: .45rem .6rem; border: 1px solid; display: grid; gap: .15rem; }
+.pair-badge { justify-self: start; font-size: .74rem; font-weight: 800; letter-spacing: .02em; border-radius: 999px; padding: .1rem .55rem; color: #fff; }
+.pair-nums { font: .72rem/1.5 var(--mono); opacity: .85; }
+.pair-detail { font-size: .78rem; line-height: 1.45; margin: 0; }
+.verdict-distinct { background: #eef6f1; border-color: #b9d6c8; }
+.verdict-distinct .pair-badge { background: #2f7d68; }
+.verdict-distinct .pair-detail { color: #27604f; }
+.verdict-inseparable { background: #f1f0eb; border-color: #d3cfc2; }
+.verdict-inseparable .pair-badge { background: #8a8578; }
+.verdict-plateau { background: #fbf2da; border-color: #e0c483; }
+.verdict-plateau .pair-badge { background: #b07d12; }
+.verdict-thin_coverage, .verdict-missing { background: #fdeee9; border-color: #e2b3a6; }
+.verdict-thin_coverage .pair-badge, .verdict-missing .pair-badge { background: var(--ember); }
+.verdict-coverage_confound { background: #f1edf9; border-color: #cdbfe8; }
+.verdict-coverage_confound .pair-badge { background: #6b52a3; }
+
+.rescan-zone { margin-top: 1.1rem; padding-top: .85rem; border-top: 2px dashed var(--line); }
+.rescan-zone h3 { color: var(--ember-dark); }
+.rescan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.rescan-item { border-left: 4px solid var(--ember); background: #fdf1ed; border-radius: .3rem; padding: .5rem .7rem; }
+.rescan-item[data-code^="plateau"] { border-left-color: #b07d12; background: #fbf2da; }
+.rescan-item[data-code="coverage_confound"] { border-left-color: #6b52a3; background: #f1edf9; }
+.rescan-item p { font-size: .82rem; margin-top: .15rem; }
+.rescan-ids { margin-bottom: 0; }
+
+.method-card { margin-top: 1.4rem; background: var(--surface); border: 1px solid var(--line); border-radius: .6rem; padding: 1rem 1.2rem; }
+.method-card h2 { font-size: 1.02rem; margin-bottom: .5rem; }
+.method-card ul { margin: 0; padding-left: 1.2rem; display: grid; gap: .4rem; font-size: .85rem; color: var(--muted); }
+.method-card strong { color: var(--ink); }
+.method-card code { font-family: var(--mono); font-size: .92em; }
+
+@media (max-width: 900px) { .lane-grid { grid-template-columns: 1fr; } }
+@media (max-width: 530px) {
+  .tablet-bench { width: calc(100% - 1.4rem); }
+  .tablet-form { width: 100%; }
+  .tablet-form label { min-width: 0; flex: 1; }
+}

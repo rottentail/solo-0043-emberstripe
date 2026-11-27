@@ -12,6 +12,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
+	"github.com/rottentail/solo-0043-emberstripe/internal/tablet"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
 	"github.com/rottentail/solo-0043-emberstripe/internal/wave"
 )
@@ -132,6 +133,18 @@ func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 		return nil, err
 	}
 	return view.Overlay(reel, g, frame)
+}
+
+// Tablet evaluates the reel's registered step strip under one calibration.
+func Tablet(reel *capture.Reel, profile string) (*tablet.Report, error) {
+	if reel.Tablet == nil {
+		return nil, tablet.ErrUndefined
+	}
+	g, err := gauge.Measure(reel, profile)
+	if err != nil {
+		return nil, err
+	}
+	return tablet.Evaluate(reel, g)
 }
 func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
 	g, r, err := RenderWindow(reel, w, profile)

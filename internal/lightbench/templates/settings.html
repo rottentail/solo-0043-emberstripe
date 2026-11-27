@@ -3,6 +3,7 @@
   <div>
     <h1 id="reel-title">{{.Reel.Name}}</h1>
     <p class="reel-facts"><span>{{.Reel.FPS}} 格/秒</span><span>{{.SampleRate}} 赫兹</span><span>{{.Available}} / {{.Reel.Frames}} 格有画面</span><span>声画偏移 {{printf "%+d" .Reel.Lead}} 行</span></p>
+    {{if .Reel.Tablet}}<p class="tablet-entry"><a class="button secondary" href="/lightbench/{{.Reel.Name}}/tablet">试条评估：查看左右各档可辨范围与重扫清单 →</a></p>{{end}}
   </div>
   {{if .Active}}
   <form id="window-form" class="window-form" aria-label="画格窗口">

@@ -15,12 +15,13 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
+	"github.com/rottentail/solo-0043-emberstripe/internal/tablet"
 )
 
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
+	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST", "tablet": "GET"} {
 		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
 			reel, ok := s.Reel(r.PathValue("name"))
 			if !ok {
@@ -75,6 +76,14 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 	case "calibration":
 		g, err := gauge.Measure(reel, profile)
 		respond(w, g, err)
+		return
+	case "tablet":
+		report, err := station.Tablet(reel, profile)
+		if errors.Is(err, tablet.ErrUndefined) {
+			write(w, 404, map[string]string{"error": "capture has no step tablet definition"})
+			return
+		}
+		respond(w, report, err)
 		return
 	case "register", "trace", "overlay":
 		frame, err := strconv.Atoi(query.Get("frame"))

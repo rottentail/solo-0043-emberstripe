@@ -1,0 +1,148 @@
+{{define "tablet"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emberstripe · 试条评估 · {{if .Reel}}{{.Reel.Name}}{{else}}扫描卷{{end}}</title>
+  <link rel="stylesheet" href="/light-assets/styles/base.css">
+  <link rel="stylesheet" href="/light-assets/styles/bench.css">
+  <link rel="stylesheet" href="/light-assets/styles/tablet.css">
+  <script type="module" src="/light-assets/scripts/tablet.js"></script>
+</head>
+<body class="tablet-body">
+  {{template "masthead" .}}
+  <main class="tablet-bench" data-reel="{{.ReelName}}" data-page="tablet">
+    {{if .NotFound}}
+    <header class="tablet-heading"><h1 id="tablet-title">试条评估</h1></header>
+    <p class="empty-line">扫描卷不存在。请从上方卷索引选择已登记的扫描卷。</p>
+    {{else if .Undefined}}
+    <header class="tablet-heading">
+      <h1 id="tablet-title">试条评估 · {{.Reel.Name}}</h1>
+      <p class="reel-facts"><span>这一卷没有 <code>tablet.steps</code> 阶档定义</span></p>
+    </header>
+    <p class="empty-line">该卷不是台阶段试条，缺少每个区间的已知相对强度，无法做相邻档可辨评估。可返回<a href="/lightbench/{{.Reel.Name}}">声轨工作台</a>。</p>
+    {{else}}
+    <header class="work-heading tablet-heading">
+      <div>
+        <h1 id="tablet-title">试条评估 <span class="title-reel">{{.Reel.Name}}</span></h1>
+        {{with .Report}}
+        <p class="reel-facts">
+          <span>{{.StepCount}} 个已知档</span>
+          <span>标定 <strong>{{.Profile}}</strong></span>
+          <span>卷摘要 <code title="{{.Source}}">{{slice .Source 0 12}}</code></span>
+          <span>阈值：≥{{.Thresholds.MinValidRows}} 有效行 · z≥{{.Thresholds.ReliabilityZ}} · 覆盖比&lt;{{.Thresholds.CoverageImbalance}}</span>
+        </p>
+        {{end}}
+      </div>
+      <form method="get" class="tablet-form" aria-label="试条标定选择">
+        <label>当前光学标定
+          <select name="profile" data-profile-select>
+            {{range .Profiles}}<option value="{{.ID}}" {{if .Selected}}selected{{end}} {{if not .Usable}}disabled{{end}}>{{.ID}}{{if not .Usable}} · 不可用{{end}}</option>{{end}}
+          </select>
+        </label>
+        <button type="submit" data-rerun>重新评估</button>
+      </form>
+    </header>
+
+    {{if .ProfileError}}<p class="window-status" data-error role="alert">{{.ProfileError}}</p>{{end}}
+
+    {{with .Report}}
+    <p class="tablet-intro">每个档的已知相对强度来自卷描述 <code>tablet.steps</code>；横刻度中的深色条是当前标定下的实测均值，白刻度线是已知强度。判定只使用有效扫描行，并把缺页、削顶平台和覆盖悬殊单独列为重扫项。评估是卷快照与标定的纯函数，重复打开或点击「重新评估」结果一致；机器可读结果见 <a href="{{$.JSONPath}}?profile={{$.Active}}">评估 JSON</a>。</p>
+
+    <div class="legend" aria-label="判定图例">
+      <span><i class="dot dot-distinct"></i>相邻可辨（可确认）</span>
+      <span><i class="dot dot-inseparable"></i>覆盖正常但不可分</span>
+      <span><i class="dot dot-plateau"></i>裁到平台</span>
+      <span><i class="dot dot-thin"></i>有效行不足／缺页</span>
+      <span><i class="dot dot-confound"></i>覆盖量悬殊</span>
+    </div>
+
+    <div class="lane-grid">
+      {{range .Lanes}}
+      <article class="lane-card" data-side="{{.Side}}" data-lane="{{.Lane}}" aria-labelledby="lane-{{.Side}}-title">
+        <header class="lane-head">
+          <h2 id="lane-{{.Side}}-title">{{.SideZh}}边（{{.Side}}）</h2>
+          <p class="lane-gauge"><span>暗端 {{printf "%.0f" .Dark}}</span><span>亮端 {{printf "%.0f" .Clear}}</span></p>
+        </header>
+
+        <section class="confirm-zone" aria-label="{{.SideZh}}边可确认范围">
+          <h3>可确认范围</h3>
+          {{if .ConfirmedRanges}}
+          <ul class="range-chips">
+            {{range .ConfirmedRanges}}
+            <li class="range-chip" data-confirmed-range data-first="{{.FirstIndex}}" data-last="{{.LastIndex}}">
+              <strong>{{.TitleZh}}可辨</strong>
+              <span class="small muted">{{.FirstID}} – {{.LastID}} · 已知相对强度 {{.IntensityZh}} · {{.Steps}} 档 / {{.Boundaries}} 个相邻边界全部通过</span>
+            </li>
+            {{end}}
+          </ul>
+          {{else}}
+          <p class="none-line" data-no-range>当前标定下没有连续两档能可靠区分。</p>
+          {{end}}
+        </section>
+
+        <ol class="ladder" aria-label="{{.SideZh}}边各档实测与相邻判定">
+          {{range .Rows}}
+          <li class="ladder-step{{if .Step.Plateau}} is-plateau{{end}}{{if not .Step.Eligible}} is-ineligible{{end}}" data-step-id="{{.Step.ID}}" data-index="{{.Step.Index}}"{{if .Step.Plateau}} data-plateau="{{.Step.Plateau}}"{{end}}>
+            <div class="step-head">
+              <span class="step-id">{{.Step.ID}}</span>
+              <span class="step-label">第 {{.Step.Label}} 档</span>
+              <span class="step-intensity">已知 {{.Step.IntensityPct}}%</span>
+              {{range .Step.IssuesZh}}<span class="badge badge-warn">{{.}}</span>{{end}}
+            </div>
+            <svg class="step-chart" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+              <rect class="chart-track" x="0" y="6" width="100" height="8" rx="1.5"></rect>
+              <rect class="chart-measure{{if .Step.Plateau}} is-plateau-{{.Step.Plateau}}{{end}}" x="0" y="6" width="{{.Step.BarWidth}}" height="8" rx="1.5"></rect>
+              <line class="chart-known" x1="{{.Step.KnownMarker}}" y1="2" x2="{{.Step.KnownMarker}}" y2="18"></line>
+            </svg>
+            <div class="step-meta">
+              <span>标定均值 <strong>{{printf "%.3f" .Step.MeanUnit}}</strong></span>
+              <span>灰阶 {{printf "%.0f" .Step.MeanGray}} ±{{printf "%.0f" .Step.StdGray}}</span>
+              <span>覆盖 <strong class="{{if lt .Step.CoveragePct 100}}cov-low{{end}}">{{.Step.ValidRows}}/{{.Step.DeclaredRows}} 行（{{.Step.CoveragePct}}%）</strong></span>
+            </div>
+            {{with .PairAfter}}
+            <div class="pair-verdict verdict-{{.Status}}" data-pair="{{.Index}}" data-verdict="{{.Status}}">
+              <span class="pair-badge">{{.LabelZh}}</span>
+              <span class="pair-nums">Δ={{printf "%.3f" .AbsDelta}} · z={{.Score}} · SE={{printf "%.3f" .StandardError}} · 覆盖比={{.CoverageRatio}}</span>
+              <p class="pair-detail">{{.DetailZh}}</p>
+            </div>
+            {{end}}
+          </li>
+          {{end}}
+        </ol>
+
+        <section class="rescan-zone" aria-label="{{.SideZh}}边需要重扫的地方">
+          <h3>需要重扫／补页（{{len .Rescan}} 项）</h3>
+          {{if .Rescan}}
+          <ul class="rescan-list">
+            {{range .Rescan}}
+            <li class="rescan-item" data-rescan data-code="{{.Code}}">
+              <strong>{{.TitleZh}}</strong>
+              <p>{{.AdviceZh}}</p>
+              <p class="rescan-ids small muted">涉及档：{{range $i, $id := .StepIDs}}{{if $i}}、{{end}}{{$id}}{{end}}</p>
+            </li>
+            {{end}}
+          </ul>
+          {{else}}
+          <p class="none-line ok-line">这一侧没有需要重扫的区间。</p>
+          {{end}}
+        </section>
+      </article>
+      {{end}}
+    </div>
+
+    <section class="method-card" aria-labelledby="method-title">
+      <h2 id="method-title">判定口径与可重复性</h2>
+      <ul>
+        <li><strong>可辨（distinct）</strong>：两档有效行都不少于 {{.Thresholds.MinValidRows}} 行、均未裁到平台、覆盖比小于 {{.Thresholds.CoverageImbalance}} 倍，且 Welch 均值差检验 z ≥ {{.Thresholds.ReliabilityZ}} 同时绝对差 ≥ {{.Thresholds.MinDelta}} 标定单位。</li>
+        <li><strong>裁到平台（plateau）</strong>：一档至少 {{mul100 .Thresholds.PlateauFraction}}% 的有效行标定值越出 [0,1] 同一端，暗部或亮部档位会被压成同一个平台。</li>
+        <li><strong>有效行不足（thin_coverage / missing）</strong>：缺页或卷外吞掉了档位区间，有效行低于置信下限甚至为零，必须补扫对应页。</li>
+        <li><strong>覆盖量悬殊（coverage_confound）</strong>：相邻档有效行数相差 ≥ {{.Thresholds.CoverageImbalance}} 倍，此时表面差值可能来自覆盖偏差而不是强度差，不计入可确认范围，按相近覆盖重扫。</li>
+        <li>评估只读取启动时建立的卷快照，结果绑定卷摘要 <code>{{.Source}}</code> 与标定 <code>{{.Profile}}</code>；相同输入永远得到相同报告。</li>
+      </ul>
+    </section>
+    {{end}}
+    {{end}}
+  </main>
+</body>
+</html>{{end}}

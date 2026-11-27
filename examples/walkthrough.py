@@ -35,7 +35,7 @@ def workflow(base, name, parcels):
         return request(capture+'release?start=1&end=4&profile=soft', 201, 'POST')
 
     if name == 'intake':
-        assert request('/captures') == ['cinder-a', 'vireo-b']
+        assert request('/captures') == ['cinder-a', 'step-tablet', 'vireo-b']
         head = get('header')
         assert head['sample_rate'] == 48000
         assert head['available'] == [0, 1, 3, 4, 5, 6]
@@ -147,13 +147,60 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'tablet':
+        prefix = '/captures/step-tablet/tablet'
+        report = request(prefix + '?profile=bench')
+        assert report['step_count'] == 14 and report['profile'] == 'bench'
+        # Coverage geometry engineered around missing frame 3.
+        by_id = {s['id']: s for s in report['left']['steps']}
+        assert [by_id['s07']['valid_rows'], by_id['s08']['valid_rows'],
+                by_id['s09']['valid_rows'], by_id['s10']['valid_rows']] == [16, 0, 24, 128]
+        assert by_id['s01']['plateau'] == 'dark' and by_id['s14']['plateau'] == 'clear'
+        statuses = {p['status'] for lane in report['lanes'] for p in lane['pairs']}
+        assert {'distinct', 'inseparable', 'plateau', 'thin_coverage', 'missing',
+                'coverage_confound'} <= statuses, statuses
+        # Confirmable ranges differ by side under the same bench calibration.
+        def ranges(side):
+            return [(r['first_id'], r['last_id']) for r in report[side]['confirmed_ranges']]
+        assert ranges('left') == [('s03', 's05'), ('s10', 's12')]
+        assert ranges('right') == [('s04', 's05'), ('s10', 's12')]
+        # Coverage-confounded pair is reported but never confirmed.
+        confound = [p for p in report['left']['pairs'] if p['status'] == 'coverage_confound']
+        assert len(confound) == 1 and (confound[0]['step_a'], confound[0]['step_b']) == ('s09', 's10')
+        assert all(not p['distinct'] for p in confound)
+        rescan_codes = {item['code'] for item in report['rescan']}
+        assert {'thin_coverage', 'missing_sheet', 'coverage_confound',
+                'plateau_dark', 'plateau_clear'} <= rescan_codes
+        # Repeatability: identical snapshot-bound report on repeat.
+        again = request(prefix + '?profile=bench')
+        assert json.dumps(report, sort_keys=True) == json.dumps(again, sort_keys=True)
+        soft = request(prefix + '?profile=soft')
+        assert soft['profile'] == 'soft' and soft['sha256'] == report['sha256']
+        # lightbench JSON twin and server-rendered page.
+        lb = request('/lightbench/step-tablet/tablet/evaluate?profile=bench')
+        assert lb['sha256'] == report['sha256'] and lb['left']['confirmed_ranges']
+        page = request('/lightbench/step-tablet/tablet?profile=bench').decode()
+        for token in ('试条评估', '可确认范围', '需要重扫', 'data-side="left"', 'data-side="right"',
+                      'data-verdict="coverage_confound"', '第 3–5 档', '第 4–5 档', '第 10–12 档',
+                      '/light-assets/scripts/tablet.js'):
+            assert token in page, token
+        # Reels without a tablet sub-resource, unknown reels and bad profiles.
+        request('/captures/cinder-a/tablet', 404)
+        request('/lightbench/cinder-a/tablet', 404)
+        request('/lightbench/no-such-reel/tablet', 404)
+        request(prefix + '?profile=nope', 400)
+        request('/lightbench/step-tablet/tablet/evaluate?profile=nope', 422)
+        observed = {'steps': 14, 'statuses': sorted(statuses),
+                    'left_ranges': ranges('left'), 'right_ranges': ranges('right'),
+                    'rescan_kinds': sorted(rescan_codes)}
+        return observed
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection tablet'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

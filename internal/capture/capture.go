@@ -11,6 +11,7 @@ import (
 	"image/color"
 	"image/png"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -51,6 +52,25 @@ type Header struct {
 	Picture  Span      `json:"picture"`
 	Lanes    [2]Span   `json:"lanes"`
 	Profiles []Profile `json:"profiles"`
+	// Tablet optionally describes a development step strip ("试条"): ordered
+	// intervals on the reel picture clock with known relative intensities.
+	Tablet *Tablet `json:"tablet,omitempty"`
+}
+
+// Tablet is a repeatable step-wedge evaluation sheet.
+type Tablet struct {
+	Steps []TabletStep `json:"steps"`
+}
+
+// TabletStep is one known-density interval ("档"). StartRow and EndRow are
+// zero-based half-open rows on the whole-reel picture clock (frame*Rows+row),
+// so a step may cross frame boundaries and lose coverage to missing sheets.
+type TabletStep struct {
+	ID        string  `json:"id"`
+	Label     string  `json:"label,omitempty"`
+	Intensity float64 `json:"intensity"`
+	StartRow  int     `json:"start_row"`
+	EndRow    int     `json:"end_row"`
 }
 
 type Sheet struct {
@@ -196,6 +216,50 @@ func (h Header) validate(key string) error {
 				return errors.New("gauge patch outside capture")
 			}
 		}
+	}
+	if h.Tablet != nil {
+		if err := h.Tablet.Validate(h.Rows * h.Frames); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+var stepIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,31}$`)
+
+// maxTabletMeasuredRows bounds the row integrations one evaluation can request.
+const maxTabletMeasuredRows = 48 * 4096
+
+// Validate checks step ids, known intensities, clock intervals and row budget.
+func (t Tablet) Validate(globalRows int) error {
+	if len(t.Steps) < 2 || len(t.Steps) > 48 {
+		return errors.New("tablet expects 2–48 steps")
+	}
+	seenStep := make(map[string]bool)
+	previousEnd := 0
+	measured := 0
+	for i, step := range t.Steps {
+		if !stepIDPattern.MatchString(step.ID) || seenStep[step.ID] {
+			return fmt.Errorf("tablet step %d has invalid or duplicate id", i)
+		}
+		seenStep[step.ID] = true
+		if math.IsNaN(step.Intensity) || math.IsInf(step.Intensity, 0) || step.Intensity < 0 || step.Intensity > 1 {
+			return fmt.Errorf("tablet step %s intensity must be finite within 0..1", step.ID)
+		}
+		if step.StartRow < 0 || step.EndRow <= step.StartRow || step.EndRow > globalRows {
+			return fmt.Errorf("tablet step %s interval outside capture clock", step.ID)
+		}
+		if step.StartRow < previousEnd {
+			return fmt.Errorf("tablet step %s intervals must be ordered and non-overlapping", step.ID)
+		}
+		if len(step.Label) > 16 {
+			return fmt.Errorf("tablet step %s label too long", step.ID)
+		}
+		previousEnd = step.EndRow
+		measured += step.EndRow - step.StartRow
+	}
+	if measured > maxTabletMeasuredRows {
+		return errors.New("tablet declares too many measured rows")
 	}
 	return nil
 }
