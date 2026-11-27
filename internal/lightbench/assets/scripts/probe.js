@@ -1,10 +1,13 @@
 import { captureURL, compactNumber, request, statusName } from './client.js';
 
-export function probe(root, onPosition) {
+export function probe(root, onPosition, onRelocate) {
   const form = root.querySelector('#probe-form');
   const badge = root.querySelector('#probe-badge');
   const readings = root.querySelector('#probe-values');
-  let data, pending;
+  const carry = root.querySelector('#probe-carry');
+  const carryNote = root.querySelector('#probe-carry-note');
+  const carryButton = root.querySelector('#probe-relocate');
+  let data, pending, target;
 
   function value(key, text = '—') {
     readings.querySelector(`[data-value="${key}"]`).textContent = text;
@@ -12,11 +15,19 @@ export function probe(root, onPosition) {
   function clear() {
     for (const key of ['position', 'source', 'gray', 'sample', 'clipped']) value(key);
   }
+  function dropCarry() {
+    target = undefined;
+    carry.hidden = true;
+    carryButton.hidden = true;
+  }
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!data) return;
     onPosition(form.elements.frame.valueAsNumber, form.elements.row.valueAsNumber);
+  });
+  carryButton.addEventListener('click', () => {
+    if (target) onRelocate(target.frame, target.row);
   });
 
   return {
@@ -25,9 +36,26 @@ export function probe(root, onPosition) {
       form.elements.frame.min = data.window.start;
       form.elements.frame.max = data.window.end - 1;
       form.elements.row.max = data.rows_per_frame - 1;
-      form.querySelector('button').disabled = false;
+      form.querySelector('button[type="submit"]').disabled = false;
+      dropCarry();
+    },
+    // carry explains why the previous probe row did not follow the window and
+    // offers one action to move to the closest visible picture row.
+    carry(plan, landing) {
+      dropCarry();
+      if (!plan?.lostSelection) return;
+      const lost = `${plan.lostSelection.frame} 格 ${plan.lostSelection.row} 行`;
+      let text = `原探针位置 ${lost} 不在新窗口，现为 ${landing.frame} 格 ${landing.row} 行。`;
+      if (plan.nearestSelection) {
+        target = plan.nearestSelection;
+        carryButton.textContent = `定位到最近的 ${target.frame} 格 ${target.row} 行`;
+        carryButton.hidden = false;
+      }
+      carry.hidden = false;
+      carryNote.textContent = text;
     },
     async select(frame, row) {
+      dropCarry();
       pending?.abort();
       const controller = new AbortController();
       pending = controller;

@@ -117,6 +117,9 @@ def workflow(base, name, parcels):
     if name == 'workbench':
         first = request('/').decode()
         assert 'data-reel="cinder-a"' in first and '画格探针' in first
+        assert 'id="probe-carry"' in first and 'id="audition-relocate"' in first
+        session = request('/light-assets/scripts/session.js').decode()
+        assert 'planWindowCarry' in session and 'AbortController' in session
         second = request('/lightbench/vireo-b').decode()
         assert 'data-reel="vireo-b"' in second and '声画偏移 -135 行' in second
         assert '不可用' in second and '/light-assets/scripts/main.js' in second

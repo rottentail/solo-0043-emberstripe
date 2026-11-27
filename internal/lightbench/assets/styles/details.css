@@ -6,6 +6,9 @@
 .readings dt { color: var(--muted); font-size: .77rem; }
 .readings dd { margin: 0; font: .78rem/1.3 var(--mono); text-align: right; overflow-wrap: anywhere; }
 .compare-result { display: block; margin-top: .55rem; color: var(--muted); font-size: .8rem; }
+.probe-carry { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem .5rem; margin-top: .5rem; padding: .4rem .5rem; border-left: 3px solid var(--signal); background: #fbf0e8; }
+.probe-carry-note { color: var(--ember-dark); font-size: .79rem; }
+.probe-carry button { min-height: 1.9rem; padding: .18rem .5rem; font-size: .76rem; }
 .compare-result:empty { display: none; }
 .compare-result p { margin-top: .2rem; }
 .handoff { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; margin-top: .8rem; align-items: center; }

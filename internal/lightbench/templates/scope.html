@@ -9,6 +9,11 @@
     <span class="readable">可读</span><span class="missing">声槽缺页</span><span class="outside">移出卷界</span>
   </div>
   <div id="coverage-list" class="coverage-list" aria-label="声槽覆盖区间"></div>
-  <div class="audition"><button type="button" id="audition-button" disabled>载入试听</button><audio id="audition-media" controls preload="none" aria-label="当前区间的双声道试听" hidden></audio><span id="audition-status" role="status"></span></div>
+  <div class="audition">
+    <button type="button" id="audition-button" disabled>载入试听</button>
+    <button type="button" id="audition-relocate" class="secondary small" hidden>定位到最近画格行</button>
+    <audio id="audition-media" controls preload="none" aria-label="当前区间的双声道试听" hidden></audio>
+    <span id="audition-status" role="status"></span>
+  </div>
 </section>
 {{end}}

@@ -24,4 +24,5 @@
 .coverage-list button:hover { border-color: var(--signal); }
 .audition { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; margin-top: .55rem; border-top: 1px solid #4b4d43; padding-top: .66rem; }
 .audition audio { height: 2.35rem; max-width: 100%; }
+.audition button.secondary.small { min-height: 1.9rem; padding: .18rem .5rem; font-size: .74rem; }
 .audition span { color: #dddacb; font-size: .75rem; }

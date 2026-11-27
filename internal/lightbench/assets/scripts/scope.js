@@ -10,6 +10,7 @@ export function scope(root, onPosition) {
   let data, cursor, playhead;
   const first = () => data.window.start * data.rows_per_frame;
   const length = () => (data.window.end - data.window.start) * data.rows_per_frame;
+  const visible = (absolute) => Number.isFinite(absolute) && absolute >= first() && absolute < first() + length();
 
   function locate(absolute) {
     onPosition(Math.floor(absolute / data.rows_per_frame), absolute % data.rows_per_frame);
@@ -48,8 +49,10 @@ export function scope(root, onPosition) {
       }
       paint.restore();
     }
-    if (cursor !== undefined) vertical(paint, Math.max(1, x(cursor + .5)), height, '#f6a069');
-    if (playhead !== undefined) vertical(paint, x(playhead), height, '#fbf5e6', true);
+    // A carried cursor or playhead outside this window is not drawn; the probe
+    // panel names it and offers the relocation instead.
+    if (visible(cursor)) vertical(paint, Math.max(1, x(cursor + .5)), height, '#f6a069');
+    if (visible(playhead)) vertical(paint, x(playhead), height, '#fbf5e6', true);
   }
 
   canvas.addEventListener('click', (event) => {

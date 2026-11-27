@@ -6,6 +6,10 @@
     <label>画格行<input name="row" type="number" min="0" value="0" required></label>
     <button type="submit" class="secondary" disabled>定位</button>
   </form>
+  <div id="probe-carry" class="probe-carry" hidden>
+    <p id="probe-carry-note" class="probe-carry-note" role="status"></p>
+    <button type="button" id="probe-relocate" class="secondary small" hidden>定位到最近画格行</button>
+  </div>
   <dl class="readings" id="probe-values">
     <div><dt>画格时钟</dt><dd data-value="position">—</dd></div>
     <div><dt>源声槽</dt><dd data-value="source">—</dd></div>
