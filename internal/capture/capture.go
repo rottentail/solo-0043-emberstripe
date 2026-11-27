@@ -41,16 +41,26 @@ type Profile struct {
 	Dark  Patch  `json:"dark"`
 	Clear Patch  `json:"clear"`
 }
+
+// PatrolSegment marks a frame range the workstation trusts as a static
+// background or a known modulated passage for the weak-change inspection.
+type PatrolSegment struct {
+	ID    string `json:"id"`
+	Kind  string `json:"kind"`
+	Start int    `json:"start_frame"`
+	End   int    `json:"end_frame"`
+}
 type Header struct {
-	Name     string    `json:"name"`
-	Width    int       `json:"width"`
-	Rows     int       `json:"rows_per_frame"`
-	FPS      int       `json:"fps"`
-	Frames   int       `json:"frames"`
-	Lead     int       `json:"lead_rows"`
-	Picture  Span      `json:"picture"`
-	Lanes    [2]Span   `json:"lanes"`
-	Profiles []Profile `json:"profiles"`
+	Name     string          `json:"name"`
+	Width    int             `json:"width"`
+	Rows     int             `json:"rows_per_frame"`
+	FPS      int             `json:"fps"`
+	Frames   int             `json:"frames"`
+	Lead     int             `json:"lead_rows"`
+	Picture  Span            `json:"picture"`
+	Lanes    [2]Span         `json:"lanes"`
+	Profiles []Profile       `json:"profiles"`
+	Patrols  []PatrolSegment `json:"patrols,omitempty"`
 }
 
 type Sheet struct {
@@ -196,6 +206,24 @@ func (h Header) validate(key string) error {
 				return errors.New("gauge patch outside capture")
 			}
 		}
+	}
+	if len(h.Patrols) > 32 {
+		return errors.New("at most 32 patrol segments")
+	}
+	patrolSeen := make(map[string]bool)
+	previous := -1
+	for _, segment := range h.Patrols {
+		if !namePattern.MatchString(segment.ID) || patrolSeen[segment.ID] {
+			return errors.New("invalid or duplicate patrol segment id")
+		}
+		patrolSeen[segment.ID] = true
+		if segment.Kind != "static" && segment.Kind != "modulated" {
+			return errors.New("patrol segment kind must be static or modulated")
+		}
+		if segment.Start < 0 || segment.End <= segment.Start || segment.End > h.Frames || segment.Start < previous {
+			return errors.New("patrol segment frames must be ordered, half-open and inside the capture")
+		}
+		previous = segment.End
 	}
 	return nil
 }

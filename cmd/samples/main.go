@@ -43,6 +43,11 @@ func generate(dir, name string, lead, rows, fps, gap int) error {
 		{ID: "soft", Dark: patch(1, 0, 36), Clear: patch(1, 36, 72)},
 		{ID: "flat", Dark: patch(0, 0, 18), Clear: patch(0, 18, 36)},
 		{ID: "absent", Dark: patch(gap, 0, 36), Clear: patch(0, 36, 72)},
+	}, Patrols: []capture.PatrolSegment{
+		{ID: "quiet-step", Kind: "static", Start: 0, End: 2},
+		{ID: "tone-hold", Kind: "modulated", Start: 3, End: 5},
+		{ID: "hot-edge", Kind: "modulated", Start: 5, End: 6},
+		{ID: "squeezed-tone", Kind: "modulated", Start: 6, End: 7},
 	}}
 	raw, err := json.MarshalIndent(h, "", "  ")
 	if err != nil {
@@ -90,6 +95,17 @@ func generate(dir, name string, lead, rows, fps, gap int) error {
 						}
 						if frame == 5 && y >= 120 && y < 155 && lane == 1 {
 							intensity = 64000
+						}
+						// A squeezed lane keeps moving but only spans a narrow
+						// optical band: it tracks a trend, not faint changes.
+						if frame == 6 && lane == 0 {
+							if y%2 == 0 {
+								intensity = uint16(dark + 12000)
+							} else {
+								intensity = uint16(dark + 6000)
+							}
+							img.Set(x, y, color.Gray16{Y: intensity})
+							continue
 						}
 					}
 				}

@@ -20,7 +20,7 @@ import (
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
+	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "patrol": "GET", "release": "POST"} {
 		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
 			reel, ok := s.Reel(r.PathValue("name"))
 			if !ok {
@@ -75,6 +75,10 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 	case "calibration":
 		g, err := gauge.Measure(reel, profile)
 		respond(w, g, err)
+		return
+	case "patrol":
+		report, err := station.Patrol(reel, profile)
+		respond(w, report, err)
 		return
 	case "register", "trace", "overlay":
 		frame, err := strconv.Atoi(query.Get("frame"))

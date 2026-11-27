@@ -147,13 +147,46 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'patrol':
+        report = get('patrol?profile=bench')
+        assert report['capture'] == 'cinder-a' and report['profile'] == 'bench'
+        by_id = {item['segment']['id']: item for item in report['segments']}
+        assert set(by_id) == {'quiet-step', 'tone-hold', 'hot-edge', 'squeezed-tone'}
+        # A trusted static background with a stair violates its own assumption.
+        quiet = by_id['quiet-step']
+        assert quiet['verdict'] == 'failed'
+        assert all(any(f['rule'] == 'background_step' and f['severity'] == 'fail' for f in lane['findings'])
+                   for lane in quiet['lanes'])
+        # A clipped lane is pinned to a platform; the other lane still resolves.
+        tone = by_id['tone-hold']
+        assert tone['lanes'][0]['verdict'] == 'healthy' and tone['lanes'][1]['verdict'] == 'failed'
+        assert tone['lanes'][1]['findings'][0]['rule'] == 'clipped_platform'
+        # A squeezed lane still moves but can only follow a trend.
+        squeezed = by_id['squeezed-tone']
+        assert squeezed['lanes'][0]['verdict'] == 'trend_only'
+        finding = squeezed['lanes'][0]['findings'][0]
+        assert finding['rule'] == 'lane_plateau' and finding['severity'] == 'trend'
+        assert finding['review_window']['start'] <= finding['frame'] < finding['review_window']['end']
+        # Findings carry clickable regions and never count missing rows as content.
+        for item in report['segments']:
+            for lane in item['lanes']:
+                assert lane['readable_rows'] >= 0
+                for f in lane['findings']:
+                    assert f['readable_rows'] == lane['readable_rows']
+                    assert f['review_window']['start'] < f['review_window']['end']
+        get('patrol?profile=flat', 400)
+        request('/captures/nope/patrol', 404)
+        bench = request('/lightbench/cinder-a/patrol?profile=bench')
+        assert bench['verdict'] == report['verdict']
+        request('/lightbench/cinder-a/patrol?profile=flat', 422)
+        return {'overall': report['verdict'], 'segments': len(report['segments'])}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection patrol'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

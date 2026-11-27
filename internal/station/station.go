@@ -10,6 +10,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
+	"github.com/rottentail/solo-0043-emberstripe/internal/patrol"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
@@ -132,6 +133,24 @@ func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 		return nil, err
 	}
 	return view.Overlay(reel, g, frame)
+}
+
+// Patrol runs the weak-change inspection over the reel's marked segments.
+func Patrol(reel *capture.Reel, profile string) (patrol.Report, error) {
+	g, err := gauge.Measure(reel, profile)
+	if err != nil {
+		return patrol.Report{}, err
+	}
+	segments := make([]patrol.Segment, 0, len(reel.Patrols))
+	for _, marked := range reel.Patrols {
+		segments = append(segments, patrol.Segment{ID: marked.ID, Kind: marked.Kind, Start: marked.Start, End: marked.End})
+	}
+	if len(segments) == 0 {
+		return patrol.Report{}, errors.New("capture declares no patrol segments")
+	}
+	return patrol.Run(reel, g, segments, func(a register.Address) ([2]int16, [2]bool) {
+		return readout.MeasureAt(reel, g, a)
+	})
 }
 func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
 	g, r, err := RenderWindow(reel, w, profile)

@@ -62,6 +62,11 @@
       "id": "bench-controls",
       "path": "internal/lightbench/assets/scripts",
       "responsibility": "编排浏览器工作窗、探针、双声道绘图、试听和冻结结果"
+    },
+    {
+      "id": "patrol",
+      "path": "internal/patrol",
+      "responsibility": "按标记的静态背景与调制片段判定微弱变化是否可听清、仅可追踪趋势或不成立"
     }
   ],
   "workflows": [
@@ -318,6 +323,31 @@
         "capture",
         "register",
         "station"
+      ]
+    },
+    {
+      "id": "patrol",
+      "name": "微弱变化巡检",
+      "entry": "GET /captures/{name}/patrol",
+      "steps": [
+        "读取卷内标记的静态背景与确定调制片段",
+        "逐声槽统计可读行、电平数、变化占比与削顶平台",
+        "将不成立的判断锚定到可复查的画格行和有界窗口"
+      ],
+      "success": "逐片段返回可听清、仅可追踪趋势或判断不成立，复查区域可点回工作台",
+      "failure": "不可用标定返回 400，未标记片段的卷返回 400",
+      "verification": "python3 examples/walkthrough.py patrol",
+      "module_ids": [
+        "httpapi",
+        "lightbench",
+        "bench-page",
+        "bench-controls",
+        "station",
+        "gauge",
+        "register",
+        "readout",
+        "capture",
+        "patrol"
       ]
     }
   ],

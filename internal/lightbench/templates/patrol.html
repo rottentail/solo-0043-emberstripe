@@ -1,0 +1,13 @@
+{{define "patrol"}}
+<section class="patrol detail" aria-labelledby="patrol-title">
+  <div class="section-head">
+    <h2 id="patrol-title">微弱变化巡检</h2>
+    <span id="patrol-summary" class="section-note">用标好的静态背景与确定调制片段，检查两声槽扫描后是否还能听清微弱变化。</span>
+  </div>
+  <div class="patrol-actions">
+    <button id="patrol-run" type="button" disabled>运行巡检</button>
+    <span id="patrol-status" class="patrol-state" role="status"></span>
+  </div>
+  <div id="patrol-report" class="patrol-report" hidden></div>
+</section>
+{{end}}

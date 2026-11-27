@@ -14,11 +14,15 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 样例生成器要求目标卷目录尚不存在。`cinder-a` 是 24 格/秒、每格 2000 行、声槽领先 230 行的右移取样案例；`vireo-b` 是 25 格/秒、每格 1920 行、偏移 −135 行的案例。两卷原生 PCM 采样率均为 48 kHz。两卷均含一张缺页和一张 8 位灰阶条带，其余条带是 16 位灰阶。`bench` 和 `soft` 是对比度不同的有效标定，`flat` 的参考窗口缺少对比度，`absent` 的暗场参考页缺失。
 
+每卷在 `strip.json` 的 `patrols` 中标记巡检片段，`kind` 为 `static`（工位确认的静态背景）或 `modulated`（确定含调制的片段），区间按画格半开、有序且互不重叠。巡检用这些标记检查两声槽在本次扫描后是否仍能分辨微弱变化：静态背景出现相邻台阶或中值漂移即判定背景自带台阶；调制片段出现连续削顶平台即判定该槽被削平；有效电平过少但仍有变化时降级为「仅可追踪趋势」，可读行不足则判定有效内容过短。每条不成立的判断都带可点回的画格行和有界复查窗，缺页与卷外行不计入有效内容。
+
 ## 浏览器操作
 
 启动后打开 `http://127.0.0.1:7431`。选择扫描卷、画格区间和光学标定，然后应用区间。点击扫描条带、波形或覆盖区间，让画格探针定位到同一行；也可以直接输入画格和行号。画面缺页标记在画格带上，偏移后的声槽缺口显示在波形中。
 
 选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
+
+「微弱变化巡检」按卷内标记片段独立运行，不依赖当前应用窗口。报告逐片段、逐声槽给出「可听清 / 仅可追踪趋势 / 判断不成立」三档结论，列出电平数、变化占比和削顶行数；每条不成立的判断都附「复查」按钮，点击后先装载该问题对应的有界画格窗，再把探针定位到触发规则的确切画格行，供同事回到对应区域核对。
 
 ## 从画格检查到交付
 
@@ -33,6 +37,7 @@ curl "$base/captures/cinder-a/register?frame=1&row=1770"
 curl "$base/captures/cinder-a/coverage?start=1&end=4"
 curl "$base/captures/cinder-a/trace?frame=0&row=400"
 curl "$base/captures/cinder-a/compare?start=1&end=4&profile=bench&against=soft"
+curl "$base/captures/cinder-a/patrol?profile=bench"
 curl "$base/captures/cinder-a/overlay?frame=2&profile=bench" -o var/check.png
 curl "$base/captures/cinder-a/audition?start=1&end=4&profile=soft" -o var/listen.wav
 curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"

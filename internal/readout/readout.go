@@ -55,6 +55,13 @@ func measure(reel *capture.Reel, a register.Address, g gauge.Gauge) (gray [2]flo
 	return
 }
 
+// MeasureAt evaluates one readable source address under the given calibration.
+// It shares the normalization and clip policy used by full window extraction.
+func MeasureAt(reel *capture.Reel, g gauge.Gauge, a register.Address) ([2]int16, [2]bool) {
+	_, pcm, clipped := measure(reel, a, g)
+	return pcm, clipped
+}
+
 func Extract(reel *capture.Reel, g gauge.Gauge, w register.Window) Render {
 	result := Render{Samples: make([]int16, 2*(w.End-w.Start)*reel.Rows), Coverage: register.Coverage(reel, w)}
 	origin := w.Start * reel.Rows

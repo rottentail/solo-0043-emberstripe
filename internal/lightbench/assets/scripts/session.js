@@ -29,5 +29,12 @@ export function windowController(root, onWindow) {
   }
 
   form.addEventListener('submit', update);
-  return { start: update };
+  return {
+    start: update,
+    async applyWindow(start, end) {
+      form.elements.start.value = start;
+      form.elements.end.value = end;
+      await update();
+    },
+  };
 }
