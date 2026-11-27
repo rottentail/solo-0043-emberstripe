@@ -62,6 +62,11 @@
       "id": "bench-controls",
       "path": "internal/lightbench/assets/scripts",
       "responsibility": "编排浏览器工作窗、探针、双声道绘图、试听和冻结结果"
+    },
+    {
+      "id": "seam",
+      "path": "internal/seam",
+      "responsibility": "判定相邻扫描页的整页曝光变动、画面切换与证据不足边界，并分别给出画面与偏移声槽定位"
     }
   ],
   "workflows": [
@@ -312,6 +317,28 @@
       "failure": "非法画格与扫描缺失分别返回 400 和 404",
       "verification": "python3 examples/walkthrough.py strip-projection",
       "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "bench-page",
+        "capture",
+        "register",
+        "station"
+      ]
+    },
+    {
+      "id": "seam-inspection",
+      "name": "检查扫描页接缝的曝光与声画定位",
+      "entry": "GET /lightbench/{reel}/seams",
+      "steps": [
+        "逐对比较相邻页画面列区的整页均值与行剖面结构",
+        "区分整页曝光变动、正常画面切换和证据不足三类边界",
+        "按声画偏移分别解析画面源页与实际听到的声槽源页"
+      ],
+      "success": "三类边界都保留，缺页和声画不同位置可分别跳回源页与听到位置",
+      "failure": "未知卷返回 404，单页卷返回空接缝列表",
+      "verification": "python3 examples/walkthrough.py seam-inspection",
+      "module_ids": [
+        "seam",
         "lightbench",
         "bench-controls",
         "bench-page",

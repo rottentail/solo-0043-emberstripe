@@ -13,4 +13,20 @@
 .handoff-actions { display: flex; flex-wrap: wrap; gap: .42rem; }
 .parcel-status { grid-column: 1 / -1; color: var(--ember-dark); overflow-wrap: anywhere; }
 .parcel-status:empty { display: none; }
+.seams-section { margin-top: .8rem; }
+.seams-hint { margin: .55rem 0 .7rem; }
+.seams-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+.seam-item { border: 1px solid var(--line); border-left-width: .32rem; border-radius: .32rem; padding: .6rem .7rem; background: #fbf8f0; }
+.seam-exposure_shift { border-left-color: var(--ember); }
+.seam-picture_cut { border-left-color: #4c7a6b; }
+.seam-inconclusive { border-left-color: #9a9384; }
+.seam-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+.seam-title { font-weight: 700; font: .86rem/1.3 var(--mono); }
+.seam-badge { font-size: .74rem; font-weight: 650; padding: .16rem .5rem; border-radius: 999px; background: #ede8dc; color: var(--ink); }
+.seam-exposure_shift .seam-badge { background: #f3d8cd; color: var(--ember-dark); }
+.seam-picture_cut .seam-badge { background: #d7e7df; color: #2f5d50; }
+.seam-inconclusive .seam-badge { background: #e6e2d6; color: var(--muted); }
+.seam-metrics, .seam-reason, .seam-sound { font-size: .79rem; margin-top: .32rem; }
+.seam-jumps { display: flex; flex-wrap: wrap; gap: .42rem; margin-top: .55rem; }
+.seam-jump { min-height: 2rem; font-size: .76rem; padding: .2rem .6rem; }
 @media (max-width: 700px) { .handoff { grid-template-columns: minmax(0, 1fr); } }

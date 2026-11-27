@@ -12,6 +12,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
+	"github.com/rottentail/solo-0043-emberstripe/internal/seam"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
 	"github.com/rottentail/solo-0043-emberstripe/internal/wave"
 )
@@ -89,6 +90,12 @@ func Coverage(reel *capture.Reel, w register.Window) ([]register.Run, error) {
 		return nil, err
 	}
 	return register.Coverage(reel, w), nil
+}
+
+// Seams inspects every internal picture-page boundary and keeps the offset
+// sound-clock location so picture and audible evidence can be reviewed apart.
+func Seams(reel *capture.Reel) seam.Report {
+	return seam.Inspect(reel)
 }
 
 // RenderWindow resolves a calibration and extracts a window on the native picture clock.

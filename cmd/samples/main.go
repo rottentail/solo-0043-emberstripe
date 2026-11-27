@@ -62,9 +62,19 @@ func generate(dir, name string, lead, rows, fps, gap int) error {
 		}
 		for y := 0; y < h.Rows; y++ {
 			for x := 0; x < h.Width; x++ {
-				intensity := uint16((x*271+y*59+frame*1079)%48300 + 8000)
-				if x < h.Picture.X1 && ((x+frame*5)%25 < 4 || y%500 < 16) {
-					intensity = 57000
+				// Frame 6 reuses frame 5's picture content so its only picture
+				// difference is a uniform exposure change, not new subject matter.
+				contentFrame := min(frame, 5)
+				intensity := uint16((x*271+y*59+contentFrame*1079)%48300 + 8000)
+				if x < h.Picture.X1 {
+					// Frame 5 adds a persistent high-contrast band so the 4→5
+					// page seam reads as a content cut, not an exposure shift.
+					if frame >= 5 && (x-h.Picture.X0)%h.Picture.Width() < 9 {
+						intensity = 63000
+					}
+					if (x+contentFrame*5)%25 < 4 || y%500 < 16 {
+						intensity = 57000
+					}
 				}
 				for lane, band := range h.Lanes {
 					if x < band.X0 || x >= band.X1 {
@@ -92,6 +102,12 @@ func generate(dir, name string, lead, rows, fps, gap int) error {
 							intensity = 64000
 						}
 					}
+				}
+				// Frame 6 reuses the frame-5 picture structure but darkens the
+				// whole picture block uniformly, modelling a scanner exposure
+				// change; the sound lanes keep their own generated levels.
+				if frame == 6 && x < h.Picture.X1 {
+					intensity = uint16((uint32(intensity)*72 + 50) / 100)
 				}
 				img.Set(x, y, color.Gray16{Y: intensity})
 			}

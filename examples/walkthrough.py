@@ -147,13 +147,54 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'seam-inspection':
+        report = request('/lightbench/cinder-a/seams')
+        assert report['lead_rows'] == 230 and report['rows_per_frame'] == 2000
+        assert len(report['seams']) == 6
+        by_after = {seam['after_frame']: seam for seam in report['seams']}
+        # Three verdict classes are all retained, none is collapsed away.
+        assert report['counts'] == {'exposure_shift': 1, 'picture_cut': 3, 'inconclusive': 2}
+        exposure = by_after[5]
+        assert exposure['decision'] == 'exposure_shift'
+        assert exposure['picture_level_delta'] < -0.1 and exposure['structure_delta'] < 0.05
+        assert by_after[4]['decision'] == 'picture_cut'
+        # Missing pages stay inconclusive and still expose both locators.
+        gap = by_after[1]
+        assert gap['decision'] == 'inconclusive'
+        assert gap['picture_locator']['status'] == 'missing_sheet'
+        assert gap['sound_locator']['heard_at']['status'] == 'missing_sheet'
+        # Positive lead: at picture frame N's boundary the audible lanes have
+        # already advanced into source page N at row == lead, while the picture
+        # locator still points at frame N row 0 — the two locations diverge.
+        for seam in report['seams']:
+            target = seam['after_frame'] + 1
+            assert seam['picture_locator']['frame'] == target
+            heard = seam['sound_locator']['heard_at']
+            assert heard['frame'] == target and heard['row'] == 230
+        # Negative lead: sound lags, so each boundary is still heard on the
+        # previous source page at row rows_per_frame + lead.
+        shifted = request('/lightbench/vireo-b/seams')
+        assert shifted['lead_rows'] == -135
+        assert shifted['counts']['exposure_shift'] == 1
+        for seam in shifted['seams']:
+            heard = seam['sound_locator']['heard_at']
+            assert heard['status'] != 'outside_capture'
+            assert heard['frame'] == seam['after_frame'] and heard['row'] == 1785
+        # Both reels keep an exposure-shift verdict backed by numeric evidence.
+        request('/lightbench/unknown/seams', 404)
+        return {
+            'verdicts': report['counts'],
+            'gap_picture': gap['picture_locator']['frame'],
+            'gap_heard_source': gap['sound_locator']['heard_at']['frame'],
+            'negative_lead_exposure': shifted['counts']['exposure_shift'],
+        }
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection seam-inspection'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
