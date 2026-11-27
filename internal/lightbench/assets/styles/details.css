@@ -8,9 +8,19 @@
 .compare-result { display: block; margin-top: .55rem; color: var(--muted); font-size: .8rem; }
 .compare-result:empty { display: none; }
 .compare-result p { margin-top: .2rem; }
-.handoff { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; margin-top: .8rem; align-items: center; }
+.handoff { display: grid; grid-template-columns: minmax(0, 1fr); gap: .6rem; margin-top: .8rem; }
 .handoff p { margin-top: .25rem; font-size: .84rem; }
+.handoff-heading { min-width: 0; }
+.review-progress { display: grid; gap: .45rem; padding: .55rem .6rem; border: 1px solid var(--line); border-radius: .35rem; background: var(--paper); }
+.review-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .7rem; }
+.review-head h3 { font-size: .92rem; font-weight: 720; }
+.review-head p { margin: 0; }
+.review-ranges { display: flex; flex-wrap: wrap; gap: .35rem; }
+.review-ranges:empty::after { content: '还没有听过的可读范围。'; color: var(--muted); font-size: .8rem; }
+.review-range { min-height: 2rem; padding: .2rem .55rem; font: .76rem/1.25 var(--mono); }
+.review-verdict { margin: 0; font-size: .82rem; color: var(--muted); }
+.review-verdict[data-state="ready"] { color: #2f5d43; font-weight: 620; }
+.review-verdict[data-state="stale"] { color: var(--ember-dark); font-weight: 620; }
 .handoff-actions { display: flex; flex-wrap: wrap; gap: .42rem; }
-.parcel-status { grid-column: 1 / -1; color: var(--ember-dark); overflow-wrap: anywhere; }
+.parcel-status { color: var(--ember-dark); overflow-wrap: anywhere; }
 .parcel-status:empty { display: none; }
-@media (max-width: 700px) { .handoff { grid-template-columns: minmax(0, 1fr); } }

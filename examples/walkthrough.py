@@ -120,8 +120,19 @@ def workflow(base, name, parcels):
         second = request('/lightbench/vireo-b').decode()
         assert 'data-reel="vireo-b"' in second and '声画偏移 -135 行' in second
         assert '不可用' in second and '/light-assets/scripts/main.js' in second
+        # The reviewable listening progress is rendered before the freeze action.
+        assert '听审进度' in second and 'review-progress' in second
+        assert 'id="release-button"' in second
+        assert second.index('review-progress') < second.index('release-button')
+        # The embedded modules turn actual playback into readable heard ranges,
+        # excluding seeks and stalls and keeping missing/outside rows unheard.
+        review_source = request('/light-assets/scripts/review.js').decode()
+        audition_source = request('/light-assets/scripts/audition.js').decode()
+        assert "status === 'readable'" in review_source
+        assert "addEventListener('seeking'" in audition_source
+        assert "addEventListener('waiting'" in audition_source
         request('/lightbench/unknown', 404)
-        return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True}
+        return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True, 'review_progress_panel': True}
     if name == 'window-inspection':
         path = '/lightbench/cinder-a/window?start=1&end=4&profile=bench'
         data = request(path)

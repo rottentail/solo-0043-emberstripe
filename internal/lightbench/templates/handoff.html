@@ -1,6 +1,11 @@
 {{define "handoff"}}
 <section class="detail handoff" aria-labelledby="handoff-title">
-  <div><h2 id="handoff-title">冻结交接</h2><p id="handoff-scope" class="muted">载入画格窗后可以冻结交接包。</p></div>
+  <div class="handoff-heading"><h2 id="handoff-title">冻结交接</h2><p id="handoff-scope" class="muted">载入画格窗后可以冻结交接包。</p></div>
+  <div id="review-progress" class="review-progress" hidden aria-labelledby="review-title">
+    <div class="review-head"><h3 id="review-title">听审进度</h3><p id="review-detail" class="muted small"></p></div>
+    <div id="review-ranges" class="review-ranges" aria-label="已实际听过的可读画格行区间"></div>
+    <p id="review-verdict" class="review-verdict" role="status" data-state="idle"></p>
+  </div>
   <div class="handoff-actions">
     <button id="release-button" type="button" disabled>冻结交接包</button>
     <a id="parcel-download" class="button secondary" hidden download>下载交接包</a>
