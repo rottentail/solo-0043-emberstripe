@@ -1,5 +1,6 @@
 import { benchURL, compactNumber } from './client.js';
 import { context, fraction, vertical } from './canvas.js';
+import { fragment } from './fragment.js';
 
 export function film(root, onPosition) {
   const rail = root.querySelector('#film-rail');
@@ -7,6 +8,7 @@ export function film(root, onPosition) {
   const marker = root.querySelector('#strip-marker');
   const placeholder = root.querySelector('#strip-status');
   const summary = root.querySelector('#frame-summary');
+  const magnifier = fragment(root, onPosition);
   let data, selected, row;
   let buttons = new Map();
 
@@ -42,6 +44,7 @@ export function film(root, onPosition) {
         return button;
       });
       rail.replaceChildren(...elements);
+      magnifier.setWindow(windowData);
     },
     select(frame, nextRow) {
       row = nextRow;
@@ -62,10 +65,11 @@ export function film(root, onPosition) {
           picture.src = benchURL(data.reel, 'strip', { frame });
         } else {
           picture.removeAttribute('src');
-          placeholder.textContent = '此画格没有画面扫描页';
+          placeholder.textContent = '此画格没有画面扫描页，声槽检查可继续';
         }
       }
       draw();
+      magnifier.select(frame, nextRow);
     },
   };
 }

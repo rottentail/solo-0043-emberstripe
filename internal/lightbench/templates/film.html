@@ -7,5 +7,40 @@
     <p id="strip-status" class="strip-status">选择画格查看扫描</p>
     <canvas id="strip-marker" aria-label="点击条带定位画格行"></canvas>
   </div>
+  <div class="fragment-tools">
+    <label>局部行数
+      <select id="fragment-span" aria-label="局部片段包含的扫描行数">
+        <option value="16">16 行</option>
+        <option value="32">32 行</option>
+        <option value="64" selected>64 行</option>
+        <option value="128">128 行</option>
+        <option value="256">256 行</option>
+      </select>
+    </label>
+    <button type="button" id="fragment-open" class="secondary" disabled>查看选中行附近局部片段</button>
+  </div>
+  <div id="fragment-panel" class="fragment-panel" hidden>
+    <div class="section-head">
+      <h3>局部片段</h3>
+      <span id="fragment-caption" class="section-note"></span>
+    </div>
+    <div class="fragment-plot">
+      <img id="fragment-image" alt="选中行附近放大后的局部灰阶片段" hidden>
+      <p id="fragment-status" class="strip-status" hidden></p>
+      <canvas id="fragment-marker" aria-label="点击局部片段边缘也可定位到准确画格行"></canvas>
+    </div>
+    <div class="fragment-scale" aria-hidden="true">
+      <span id="fragment-scale-first"></span>
+      <span id="fragment-scale-last"></span>
+    </div>
+    <dl class="fragment-readings" id="fragment-readings">
+      <div><dt>源页位深</dt><dd id="fragment-depth">—</dd></div>
+      <div><dt>选中行</dt><dd id="fragment-row">—</dd></div>
+      <div><dt>真实亮度（16 位标度）</dt><dd id="fragment-native">—</dd></div>
+      <div><dt>8 位显示亮度</dt><dd id="fragment-display">—</dd></div>
+      <div><dt>低位细节</dt><dd id="fragment-quantized">—</dd></div>
+    </dl>
+    <p id="fragment-sound" class="fragment-sound" role="status"></p>
+  </div>
 </section>
 {{end}}

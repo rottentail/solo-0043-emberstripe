@@ -147,13 +147,41 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'fragment-inspection':
+        prefix = '/lightbench/cinder-a/fragment?frame='
+        deep = request(prefix+'1&row=400')
+        assert deep['frame'] == 1 and deep['depth'] == 16
+        assert (deep['row_start'], deep['row_end'], deep['selected_row']) == (368, 432, 400)
+        assert len(deep['rows']) == 64 and deep['rows'][0]['row'] == 368
+        for item in deep['rows']:
+            assert 0 <= item['displayed_gray'] <= 255
+            assert item['displayed_gray'] == item['native_gray'] // 257
+            assert item['quantized_away'] == (item['native_gray'] != item['displayed_gray'] * 257)
+        assert any(item['quantized_away'] for item in deep['rows'])
+        edge = request(prefix+'1&row=2&span=16')
+        assert (edge['row_start'], edge['row_end']) == (0, 16)
+        eight = request(prefix+'4&row=100&span=32')
+        assert eight['depth'] == 8 and len(eight['rows']) == 32
+        for item in eight['rows']:
+            assert item['native_gray'] // 257 == item['displayed_gray']
+            # Averaged 8-bit pixels stay within one 8-bit step of the shade shown.
+            assert abs(item['native_gray'] - item['displayed_gray'] * 257) < 257
+        picture = request('/lightbench/cinder-a/fragment-image?frame=4&row=100&span=32')
+        assert picture[:8] == b'\x89PNG\r\n\x1a\n'
+        assert struct.unpack('>II', picture[16:24]) == (eight['image_columns'], 32)
+        request(prefix+'2&row=0', 404)
+        request(prefix+'7&row=0', 400)
+        request(prefix+'1&row=2000', 400)
+        request(prefix+'1&row=0&span=257', 400)
+        request('/lightbench/cinder-a/fragment-image?frame=2&row=0', 404)
+        return {'depth': 16, 'rows': len(deep['rows']), 'missing_status': 404}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection fragment-inspection'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
