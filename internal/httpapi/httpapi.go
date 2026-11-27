@@ -5,11 +5,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/rottentail/solo-0043-emberstripe/internal/annotation"
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
@@ -50,6 +52,88 @@ func New(s *station.Station) http.Handler {
 			return
 		}
 		write(w, 200, v)
+	})
+	mux.HandleFunc("GET /captures/{name}/annotations", func(w http.ResponseWriter, r *http.Request) {
+		reel, ok := s.Reel(r.PathValue("name"))
+		if !ok {
+			write(w, 404, map[string]string{"error": "capture unavailable"})
+			return
+		}
+		data, err := s.Annotations(reel)
+		if err != nil {
+			annotationError(w, err)
+			return
+		}
+		binary(w, "application/json", data)
+	})
+	mux.HandleFunc("POST /captures/{name}/annotations", func(w http.ResponseWriter, r *http.Request) {
+		reel, ok := s.Reel(r.PathValue("name"))
+		if !ok {
+			write(w, 404, map[string]string{"error": "capture unavailable"})
+			return
+		}
+		body, err := readBody(w, r)
+		if err != nil {
+			invalid(w, "意见文档读取失败或超过大小上限。")
+			return
+		}
+		doc, err := s.ImportAnnotations(reel, body)
+		if err != nil {
+			annotationError(w, err)
+			return
+		}
+		write(w, 200, doc)
+	})
+	mux.HandleFunc("GET /captures/{name}/annotations/projection", func(w http.ResponseWriter, r *http.Request) {
+		reel, ok := s.Reel(r.PathValue("name"))
+		if !ok {
+			write(w, 404, map[string]string{"error": "capture unavailable"})
+			return
+		}
+		var hypothesis *int
+		if raw := r.URL.Query().Get("lead"); raw != "" {
+			lead, err := strconv.Atoi(raw)
+			if err != nil {
+				invalid(w, "偏移假设须为整数行数。")
+				return
+			}
+			hypothesis = &lead
+		}
+		report, err := s.ProjectAnnotations(reel, hypothesis)
+		if err != nil {
+			annotationError(w, err)
+			return
+		}
+		write(w, 200, report)
+	})
+	mux.HandleFunc("POST /parcels/{id}/annotations", func(w http.ResponseWriter, r *http.Request) {
+		b, err := s.Store.Read(r.PathValue("id"))
+		if err != nil {
+			parcelError(w, err)
+			return
+		}
+		receipt, err := parcel.Verify(b)
+		if err != nil {
+			parcelError(w, err)
+			return
+		}
+		body, err := readBody(w, r)
+		if err != nil {
+			invalid(w, "意见文档读取失败或超过大小上限。")
+			return
+		}
+		doc, err := annotation.Parse(body)
+		if err != nil {
+			annotationError(w, err)
+			return
+		}
+		if doc.Capture == receipt.Index.Capture {
+			if err := doc.ReconcileRows(receipt.Index.Rows); err != nil {
+				annotationError(w, err)
+				return
+			}
+		}
+		write(w, 200, annotation.CheckParcel(doc, receipt.ID, receipt.Index))
 	})
 	// Bound concurrent readers so bursts cannot multiply large image renders.
 	slots := make(chan struct{}, 3)
@@ -154,6 +238,25 @@ func binary(w http.ResponseWriter, kind string, b []byte) {
 }
 func invalid(w http.ResponseWriter, message string) {
 	write(w, 400, map[string]string{"error": message})
+}
+
+func readBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
+	return io.ReadAll(http.MaxBytesReader(w, r.Body, annotation.Limit+1))
+}
+
+func annotationError(w http.ResponseWriter, err error) {
+	var corrupt *annotation.Corrupt
+	var invalidInput *annotation.Invalid
+	switch {
+	case errors.As(err, &corrupt):
+		write(w, 409, map[string]string{"error": "已存意见文件未通过校验，请重新导入。"})
+	case errors.As(err, &invalidInput):
+		invalid(w, err.Error())
+	case os.IsNotExist(err):
+		write(w, 404, map[string]string{"error": "尚未导入意见文件。"})
+	default:
+		write(w, 500, map[string]string{"error": "意见文件暂时不可用。"})
+	}
 }
 func respond(w http.ResponseWriter, value any, err error) {
 	if err != nil {

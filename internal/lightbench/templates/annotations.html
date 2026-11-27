@@ -1,0 +1,15 @@
+{{define "annotations"}}
+<section class="detail annotations" aria-labelledby="annotations-title" data-lead="{{.Reel.Lead}}">
+  <div class="section-head"><h2 id="annotations-title">意见标记</h2><span id="annotations-badge" class="section-note">正在读取意见文件…</span></div>
+  <div class="annotation-actions">
+    <label class="button secondary">导入意见文件<input id="annotation-file" type="file" accept="application/json,.json" hidden></label>
+    <a id="annotation-export" class="button secondary" hidden download>回写意见文件</a>
+  </div>
+  <form id="hypothesis-form" class="hypothesis-form" aria-label="按偏移假设核对意见位置">
+    <label>偏移假设（行）<input name="lead" type="number" step="1" required></label>
+    <button type="submit" class="secondary">核对</button>
+  </form>
+  <p id="annotation-status" class="muted small" role="status"></p>
+  <ul id="annotation-list" class="annotation-list"></ul>
+</section>
+{{end}}

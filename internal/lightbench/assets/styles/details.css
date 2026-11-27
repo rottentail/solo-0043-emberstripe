@@ -14,3 +14,14 @@
 .parcel-status { grid-column: 1 / -1; color: var(--ember-dark); overflow-wrap: anywhere; }
 .parcel-status:empty { display: none; }
 @media (max-width: 700px) { .handoff { grid-template-columns: minmax(0, 1fr); } }
+.annotations { margin-top: .8rem; }
+.annotation-actions { display: flex; flex-wrap: wrap; gap: .42rem; margin-top: .55rem; }
+.annotation-actions .button { font-size: .9rem; }
+.hypothesis-form { display: grid; grid-template-columns: minmax(6rem, 10rem) auto; gap: .42rem; align-items: end; margin-top: .55rem; }
+#annotation-status { margin-top: .5rem; }
+#annotation-status:empty { display: none; }
+.annotation-list { list-style: none; margin: .5rem 0 0; padding: 0; }
+.annotation-list:empty { display: none; }
+.annotation-list li { border-top: 1px solid #ede8db; padding: .38rem 0; }
+.marker-head { font: .78rem/1.35 var(--mono); }
+.marker-note { margin-top: .12rem; color: var(--muted); font-size: .78rem; }

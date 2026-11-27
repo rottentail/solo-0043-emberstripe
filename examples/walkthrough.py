@@ -18,9 +18,10 @@ import zipfile
 def workflow(base, name, parcels):
     capture = '/captures/cinder-a/'
 
-    def request(path, expected=200, method='GET'):
+    def request(path, expected=200, method='GET', payload=None):
+        data = json.dumps(payload).encode() if payload is not None else None
         try:
-            response = urlopen(Request(base + path, method=method), timeout=8)
+            response = urlopen(Request(base + path, data=data, method=method), timeout=8)
         except HTTPError as error:
             response = error
         with response:
@@ -147,13 +148,95 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'annotations':
+        path = capture + 'annotations'
+        request(path, 404)
+        doc = {
+            'version': 1, 'capture': 'cinder-a',
+            'markers': [
+                {'id': 'fix-0000', 'anchor': 'frame', 'frame': 0, 'row': 400, 'origin': '修复台', 'note': '画面划痕待修'},
+                {'id': 'fix-0002', 'anchor': 'frame', 'frame': 2, 'row': 10, 'note': '修复台说的第 2 格'},
+                {'id': 'fix-0009', 'anchor': 'frame', 'frame': 9, 'row': 0, 'note': '卷外画格意见'},
+                {'id': 'dev-0000', 'anchor': 'source', 'frame': 0, 'row': 100, 'origin': '扫描设备', 'note': '片头前的设备标记'},
+                {'id': 'dev-0001', 'anchor': 'source', 'frame': 1, 'row': 100, 'note': '源第 1 页行 100'},
+                {'id': 'dev-0002', 'anchor': 'source', 'frame': 2, 'row': 10, 'note': '设备说的第 2 格'},
+            ],
+        }
+        stored = request(path, 200, 'POST', doc)
+        assert stored['lead_rows'] == 230 and len(stored['source_sha256']) == 64
+        assert request(path) == stored
+        projected = request(path + '/projection')
+        assert projected['registered_lead_rows'] == 230 and projected['hypothesis_lead_rows'] == 230
+        assert projected['capture_mismatch'] is False
+        markers = {m['id']: m for m in projected['markers']}
+        assert all(m['disposition'] == 'stays' for m in projected['markers'])
+        assert (markers['fix-0000']['status'], markers['fix-0000']['verifiable']) == ('readable', 'content')
+        assert (markers['fix-0002']['status'], markers['fix-0002']['verifiable']) == ('missing_sheet', 'position_only')
+        assert markers['fix-0009']['picture'] == {'frame': 9, 'row': 0} and markers['fix-0009']['verifiable'] == 'anchor_only'
+        assert markers['dev-0000']['picture_row'] == -130 and markers['dev-0000']['verifiable'] == 'anchor_only'
+        assert markers['dev-0000']['registered'] == {'frame': -1, 'row': 1870}
+        assert markers['dev-0001']['picture'] == {'frame': 0, 'row': 1870} and markers['dev-0001']['status'] == 'readable'
+        assert markers['dev-0002']['picture'] == {'frame': 1, 'row': 1780} and markers['dev-0002']['status'] == 'missing_sheet'
+        shifted = request(path + '/projection?lead=90')
+        moved = {m['id']: m for m in shifted['markers']}
+        assert [m['id'] for m in shifted['markers'] if m['disposition'] == 'moves'] == ['dev-0000', 'dev-0001']
+        assert moved['dev-0000']['picture'] == {'frame': 0, 'row': 10} and moved['dev-0000']['verifiable'] == 'content'
+        assert moved['dev-0001']['picture'] == {'frame': 1, 'row': 10}
+        assert moved['fix-0002']['disposition'] == 'stays' and moved['fix-0002']['picture'] == {'frame': 2, 'row': 10}
+        assert moved['fix-0009']['verifiable'] == 'anchor_only'
+        request(path + '/projection?lead=14001', 400)
+        request(path + '/projection?lead=up', 400)
+        request('/captures/nope/annotations', 404)
+        request(path, 400, 'POST', dict(doc, markers=[dict(doc['markers'][0], anchor='side')]))
+        request(path, 400, 'POST', dict(doc, capture='vireo-b'))
+        request(path, 400, 'POST', dict(doc, markers=[dict(doc['markers'][0], row=2000)]))
+        request(path, 200, 'POST', dict(doc, source_sha256='0' * 64))
+        assert request(path + '/projection')['capture_mismatch'] is True
+        request(path, 200, 'POST', doc)
+        return {'markers': len(stored['markers']), 'moved_under_lead_90': 2}
+    if name == 'parcel-annotations':
+        receipt = release()
+        path = '/parcels/' + receipt['id'] + '/annotations'
+        doc = {
+            'version': 1, 'capture': 'cinder-a',
+            'source_sha256': receipt['index']['source_sha256'], 'lead_rows': 230,
+            'markers': [
+                {'id': 'fix-0001', 'anchor': 'frame', 'frame': 1, 'row': 100, 'note': '窗内可读'},
+                {'id': 'fix-0002', 'anchor': 'frame', 'frame': 2, 'row': 500, 'note': '缺页段'},
+                {'id': 'fix-0005', 'anchor': 'frame', 'frame': 5, 'row': 0, 'note': '窗外'},
+                {'id': 'dev-0000', 'anchor': 'source', 'frame': 0, 'row': 100, 'note': '片头前'},
+            ],
+        }
+        report = request(path, 200, 'POST', doc)
+        assert report['capture_match'] is True and report['window'] == {'start': 1, 'end': 4}
+        markers = {m['id']: m for m in report['markers']}
+        assert markers['fix-0001']['verifiable'] == 'content' and markers['fix-0001']['sample'] == 100
+        assert (markers['fix-0001']['status'], markers['fix-0001']['picture']) == ('readable', {'frame': 1, 'row': 100})
+        assert markers['fix-0002']['verifiable'] == 'silence' and markers['fix-0002']['status'] == 'missing_sheet'
+        assert markers['fix-0002']['sample'] == 2500
+        assert markers['fix-0005']['verifiable'] == 'none' and markers['fix-0005']['status'] == 'outside_window'
+        assert 'sample' not in markers['fix-0005']
+        assert markers['dev-0000']['picture_row'] == -130 and markers['dev-0000']['status'] == 'outside_window'
+        mismatch = request(path, 200, 'POST', dict(doc, capture='vireo-b'))
+        assert mismatch['capture_match'] is False
+        assert all(m['verifiable'] == 'none' and m['status'] == 'capture_mismatch' for m in mismatch['markers'])
+        request(path, 400, 'POST', dict(doc, markers=[dict(doc['markers'][0], row=2500)]))
+        request('/parcels/' + 'f' * 64 + '/annotations', 404, 'POST', doc)
+        blob = parcels / (receipt['id'] + '.zip')
+        good = blob.read_bytes()
+        blob.write_bytes(bytes([good[0] ^ 1]) + good[1:])
+        try:
+            request(path, 409, 'POST', doc)
+        finally:
+            blob.write_bytes(good)
+        return {'parcel': receipt['id'], 'verifiable': [m['verifiable'] for m in report['markers']]}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection annotations parcel-annotations'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
@@ -161,10 +244,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix='emberstripe-') as tmp:
         root = Path(tmp)
         binary = root / 'emberstripe'
-        scans, parcels = root/'scans', root/'parcels'
+        scans, parcels, notes = root/'scans', root/'parcels', root/'annotations'
         subprocess.run(['go', 'build', '-o', binary, './cmd/emberstripe'], check=True, timeout=35)
         subprocess.run(['go', 'run', './cmd/samples', '-out', scans], check=True, timeout=35)
-        with subprocess.Popen([binary, '-addr', '127.0.0.1:0', '-scans', scans, '-parcels', parcels], stderr=subprocess.PIPE, text=True) as server:
+        with subprocess.Popen([binary, '-addr', '127.0.0.1:0', '-scans', scans, '-parcels', parcels, '-annotations', notes], stderr=subprocess.PIPE, text=True) as server:
             try:
                 readable, _, _ = select.select([server.stderr], [], [], 8)
                 assert readable, 'station did not start'

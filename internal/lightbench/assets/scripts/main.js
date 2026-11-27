@@ -5,6 +5,7 @@ import { probe } from './probe.js';
 import { audition } from './audition.js';
 import { comparison } from './comparison.js';
 import { handoff } from './handoff.js';
+import { annotations } from './annotations.js';
 
 const root = document.querySelector('main[data-reel]');
 const rail = film(root, select);
@@ -13,6 +14,7 @@ const inspector = probe(root, select);
 const audio = audition(root, waveform.playback);
 const compare = comparison(root);
 const parcel = handoff(root);
+annotations(root);
 
 function select(frame, row) {
   rail.select(frame, row);

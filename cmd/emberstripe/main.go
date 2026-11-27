@@ -21,8 +21,9 @@ func main() {
 	addr := flag.String("addr", "127.0.0.1:7431", "station listen address")
 	scans := flag.String("scans", "var/scans", "catalog of optical scans")
 	output := flag.String("parcels", "var/parcels", "parcel output directory")
+	notes := flag.String("annotations", "var/annotations", "annotation write-back directory")
 	flag.Parse()
-	s, err := station.Open(*scans, *output)
+	s, err := station.Open(*scans, *output, *notes)
 	if err != nil {
 		log.Fatal(err)
 	}

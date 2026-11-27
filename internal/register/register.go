@@ -38,8 +38,14 @@ func Validate(h capture.Header, w Window) error {
 
 func Rate(h capture.Header) int { return h.Rows * h.FPS }
 
-func Locate(reel *capture.Reel, pictureRow int) (Address, string) {
-	source := pictureRow + reel.Lead
+// LocateWith resolves a picture row under an arbitrary lead hypothesis.
+// Rows outside the picture clock or mapped outside the source extent are
+// both reported as outside the capture.
+func LocateWith(reel *capture.Reel, lead, pictureRow int) (Address, string) {
+	if total := reel.Rows * reel.Frames; pictureRow < 0 || pictureRow >= total {
+		return Address{}, Outside
+	}
+	source := pictureRow + lead
 	if source < 0 || source >= reel.Rows*reel.Frames {
 		return Address{}, Outside
 	}
@@ -48,6 +54,10 @@ func Locate(reel *capture.Reel, pictureRow int) (Address, string) {
 		return a, Missing
 	}
 	return a, Readable
+}
+
+func Locate(reel *capture.Reel, pictureRow int) (Address, string) {
+	return LocateWith(reel, reel.Lead, pictureRow)
 }
 
 func Coverage(reel *capture.Reel, w Window) []Run {

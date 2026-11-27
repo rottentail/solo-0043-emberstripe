@@ -9,7 +9,7 @@ Emberstripe 从胶片扫描工位交来的灰度 PNG 条带中读取双声道可
 ```sh
 go build ./...
 go run ./cmd/samples -out var/scans
-go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parcels
+go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parcels -annotations var/annotations
 ```
 
 样例生成器要求目标卷目录尚不存在。`cinder-a` 是 24 格/秒、每格 2000 行、声槽领先 230 行的右移取样案例；`vireo-b` 是 25 格/秒、每格 1920 行、偏移 −135 行的案例。两卷原生 PCM 采样率均为 48 kHz。两卷均含一张缺页和一张 8 位灰阶条带，其余条带是 16 位灰阶。`bench` 和 `soft` 是对比度不同的有效标定，`flat` 的参考窗口缺少对比度，`absent` 的暗场参考页缺失。
@@ -39,6 +39,30 @@ curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"
 ```
 
 发布返回的 `Location` 可下载 ZIP，追加 `/verify` 得到完整性、时钟和覆盖检查结果。包内 `sound.wav` 是交错 16 位立体声，`register.json` 包含画格到包内 PCM 帧的索引，以及以卷内画格行为单位的实际声槽覆盖、标定值和字节摘要。索引里的画面摘要取自登记的扫描页，原图可向扫描工位调取。相同卷、画格窗和标定重复发布会得到同一标识。
+
+## 意见标记
+
+修复意见按画格落、设备意见按源扫描行落，两方可能都写「第 2 格」。意见标记层把两类锚点原样保存在一份可导入、可回写的 JSON 文档里（`anchor` 为 `frame` 或 `source`），工位只在投影时派生位置，不改写原始坐标。
+
+```json
+{
+  "version": 1,
+  "capture": "cinder-a",
+  "markers": [
+    {"id": "fix-0002", "anchor": "frame", "frame": 2, "row": 10, "note": "修复台说的第 2 格"},
+    {"id": "dev-0002", "anchor": "source", "frame": 2, "row": 10, "note": "设备说的第 2 格"}
+  ]
+}
+```
+
+```sh
+curl -X POST "$base/captures/cinder-a/annotations" --data-binary @var/opinions.json
+curl "$base/captures/cinder-a/annotations/projection?lead=90"
+curl "$base/captures/cinder-a/annotations" -o var/writeback.json
+curl -X POST "$base/parcels/<包标识>/annotations" --data-binary @var/opinions.json
+```
+
+导入即原子写入工位意见目录，`GET` 原样回写。投影按画格比较每条意见在登记偏移与假设偏移下的位置：`stays` 留在原画格，`moves` 应随假设移动；落点复用可读、缺页、卷外三态，卷外位置标记 `anchor_only`，表示只剩原始锚点可核实。仅凭交接包核对时，窗内可读段可核实内容、缺页与卷外段可核实包内静音、窗外或卷不符的标记不可核实。
 
 `start` 包含起点、`end` 排除终点，二者都是零基画格号。`frame`、`row` 也是零基。以 `cinder-a` 为例，画格 1 的第 1770 行使用第 2 页的第 0 行声槽。第 2 页未扫描，试听 WAV 在相应位置保留双声道零值。区间有音频零值时，以 `coverage` 区分缺页、越出卷界和可读样本。`overlay` 左侧是该画格的画面灰度条带，右侧两个带分别表示映射到同一画格行的左／右声音。亮橙表示样本位置，亮红表示超出标定范围，暗红底表示该带没有输入材料。
 

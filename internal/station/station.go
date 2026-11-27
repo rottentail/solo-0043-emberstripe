@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/rottentail/solo-0043-emberstripe/internal/annotation"
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
@@ -24,6 +25,7 @@ func (e *InvalidRenderingInput) Unwrap() error { return e.Cause }
 type Station struct {
 	catalog map[string]*capture.Reel
 	Store   parcel.Store
+	Notes   annotation.Store
 }
 type CaptureInfo struct {
 	capture.Header
@@ -33,7 +35,7 @@ type CaptureInfo struct {
 	Rate      int         `json:"sample_rate"`
 }
 
-func Open(scans, releases string) (*Station, error) {
+func Open(scans, releases, notes string) (*Station, error) {
 	catalog, err := capture.LoadCatalog(scans)
 	if err != nil {
 		return nil, err
@@ -41,7 +43,10 @@ func Open(scans, releases string) (*Station, error) {
 	if err := os.MkdirAll(releases, 0750); err != nil {
 		return nil, err
 	}
-	return &Station{catalog: catalog, Store: parcel.Store{Root: releases}}, nil
+	if err := os.MkdirAll(notes, 0750); err != nil {
+		return nil, err
+	}
+	return &Station{catalog: catalog, Store: parcel.Store{Root: releases}, Notes: annotation.Store{Root: notes}}, nil
 }
 func (s *Station) Names() []string {
 	names := make([]string, 0, len(s.catalog))
@@ -147,4 +152,53 @@ func (s *Station) Release(reel *capture.Reel, w register.Window, profile string)
 		return parcel.Receipt{}, fmt.Errorf("publish sound parcel: %w", err)
 	}
 	return receipt, nil
+}
+
+// ImportAnnotations validates an exchanged document against the capture and
+// atomically replaces the stored write-back copy.
+func (s *Station) ImportAnnotations(reel *capture.Reel, data []byte) (*annotation.Document, error) {
+	doc, err := annotation.Parse(data)
+	if err != nil {
+		return nil, err
+	}
+	if err := doc.Reconcile(reel.Header); err != nil {
+		return nil, err
+	}
+	doc.Bind(reel.Header, reel.Digest)
+	if err := s.Notes.Write(reel.Name, doc); err != nil {
+		return nil, fmt.Errorf("store annotations: %w", err)
+	}
+	return doc, nil
+}
+
+// Annotations returns the stored write-back document exactly as imported.
+func (s *Station) Annotations(reel *capture.Reel) ([]byte, error) {
+	data, err := s.Notes.Read(reel.Name)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := annotation.Parse(data); err != nil {
+		return nil, &annotation.Corrupt{Cause: err}
+	}
+	return data, nil
+}
+
+// ProjectAnnotations resolves the stored markers under an offset hypothesis.
+func (s *Station) ProjectAnnotations(reel *capture.Reel, hypothesis *int) (*annotation.Report, error) {
+	data, err := s.Notes.Read(reel.Name)
+	if err != nil {
+		return nil, err
+	}
+	doc, err := annotation.Parse(data)
+	if err != nil {
+		return nil, &annotation.Corrupt{Cause: err}
+	}
+	if err := doc.Reconcile(reel.Header); err != nil {
+		return nil, &annotation.Corrupt{Cause: err}
+	}
+	lead := reel.Lead
+	if hypothesis != nil {
+		lead = *hypothesis
+	}
+	return annotation.Project(reel, doc, lead)
 }
