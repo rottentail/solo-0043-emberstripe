@@ -50,3 +50,17 @@ python3 examples/walkthrough.py release
 ```
 
 独立单元与浏览器回归测试套件延后至后续任务。上面的复走检查使用同一个 Go 服务，通过 HTTP 观察页面、WAV、PNG、JSON、ZIP 和失败状态。
+
+## 听审会复查清单
+
+`examples/listening_review.py` 是听审会现场的复查清单工具，只用 Python 标准库，不依赖工位服务。会前把需要两段原声相互印证的位置登记为候选对照，每对的两侧各自带不可少的前后文行；会中逐条记录实际播放——提前结束、跳过、跳到末尾、换标定重听、缺页补零都如实登记，只有真正播到的可读行才算证据。一段播放若恰好满足另一对的一侧，下一轮就只补另一侧。随时可问下一段该听什么；会后报告哪些判断仍只听到一边。候选清单只是计划，结论只来自实际播放事件。
+
+```sh
+python3 examples/listening_review.py demo                    # 用样例卷演示完整流程
+python3 examples/listening_review.py init --dir var/review   # 写出可编辑的材料与候选清单
+python3 examples/listening_review.py next   --materials var/review/materials.json --plan var/review/plan.json --session var/review/session.json
+python3 examples/listening_review.py play   --materials var/review/materials.json --plan var/review/plan.json --session var/review/session.json --reel cinder-a --profile bench --start 1640 --end 1960
+python3 examples/listening_review.py report --materials var/review/materials.json --plan var/review/plan.json --session var/review/session.json
+```
+
+演示与 `init` 写出的材料和 `cmd/samples` 生成的两卷一致（cinder-a 缺源页 2、vireo-b 缺源页 3，可用标定 bench/soft），画格行、缺页与卷外的判定沿用 `register` 的约定。
