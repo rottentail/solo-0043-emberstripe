@@ -41,7 +41,12 @@
     {
       "id": "station",
       "path": "internal/station/station.go",
-      "responsibility": "协调卷目录、取样与归档工作流"
+      "responsibility": "协调卷目录、取样、跨扫描读光与归档工作流"
+    },
+    {
+      "id": "relight",
+      "path": "internal/relight/relight.go",
+      "responsibility": "跨扫描读光记录、原始灰度范围和逐材料逐查看区判定"
     },
     {
       "id": "httpapi",
@@ -318,6 +323,27 @@
         "capture",
         "register",
         "station"
+      ]
+    },
+    {
+      "id": "relight",
+      "name": "复核补扫曝光验收线",
+      "entry": "GET /relight/records/{id}",
+      "steps": [
+        "绑定原扫描与补扫并校验条带几何一致",
+        "对片基、中间试条和参考在画面、左右槽、片边分别积分原始读数",
+        "按容差逐格判定沿用、单独核对或材料不足，并汇总整卷放行结论"
+      ],
+      "success": "局部对上不会整卷放行，原始范围和位深可复算",
+      "failure": "未知记录 404，无法绑定登记卷的记录拒绝载入",
+      "verification": "python3 examples/walkthrough.py relight",
+      "module_ids": [
+        "relight",
+        "httpapi",
+        "station",
+        "capture",
+        "lightbench",
+        "bench-page"
       ]
     }
   ],

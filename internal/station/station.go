@@ -12,6 +12,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
+	"github.com/rottentail/solo-0043-emberstripe/internal/relight"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
 	"github.com/rottentail/solo-0043-emberstripe/internal/wave"
 )
@@ -23,6 +24,7 @@ func (e *InvalidRenderingInput) Unwrap() error { return e.Cause }
 
 type Station struct {
 	catalog map[string]*capture.Reel
+	relight []relight.Record
 	Store   parcel.Store
 }
 type CaptureInfo struct {
@@ -33,15 +35,19 @@ type CaptureInfo struct {
 	Rate      int         `json:"sample_rate"`
 }
 
-func Open(scans, releases string) (*Station, error) {
+func Open(scans, records, releases string) (*Station, error) {
 	catalog, err := capture.LoadCatalog(scans)
+	if err != nil {
+		return nil, err
+	}
+	lightRecords, err := relight.Load(records, catalog)
 	if err != nil {
 		return nil, err
 	}
 	if err := os.MkdirAll(releases, 0750); err != nil {
 		return nil, err
 	}
-	return &Station{catalog: catalog, Store: parcel.Store{Root: releases}}, nil
+	return &Station{catalog: catalog, relight: lightRecords, Store: parcel.Store{Root: releases}}, nil
 }
 func (s *Station) Names() []string {
 	names := make([]string, 0, len(s.catalog))
@@ -54,6 +60,19 @@ func (s *Station) Names() []string {
 func (s *Station) Reel(name string) (*capture.Reel, bool) {
 	reel, ok := s.catalog[name]
 	return reel, ok
+}
+
+// RelightRecords exposes the evaluated cross-scan light-reading records.
+func (s *Station) RelightRecords() []relight.Record { return s.relight }
+
+// RelightRecord returns one evaluated record by its manifest id.
+func (s *Station) RelightRecord(id string) (relight.Record, bool) {
+	for _, record := range s.relight {
+		if record.ID == id {
+			return record, true
+		}
+	}
+	return relight.Record{}, false
 }
 func Info(reel *capture.Reel) CaptureInfo {
 	depths := make(map[int]int, len(reel.Sheets))

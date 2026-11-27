@@ -4,6 +4,7 @@
     <a class="identity" href="/" aria-label="Emberstripe 工作台首页"><span class="optical-mark" aria-hidden="true"></span><span>Emberstripe<small>胶片声轨工作台</small></span></a>
     {{if .Names}}
     <nav class="reel-index" aria-label="扫描卷索引">
+      <a href="/lightbench/relight">读光复核</a>
       {{range .Names}}
       <a href="/lightbench/{{.}}" {{if $.Reel}}{{if eq . $.Reel.Name}}aria-current="page"{{end}}{{end}}>{{.}}</a>
       {{end}}

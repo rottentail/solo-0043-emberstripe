@@ -23,14 +23,19 @@ const pixelBudget = 16 << 20
 
 var namePattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,47}$`)
 
+// ValidName reports whether key follows the catalog naming convention.
+func ValidName(key string) bool { return namePattern.MatchString(key) }
+
 // Span is a half-open strip of columns.
 type Span struct {
 	X0 int `json:"x0"`
 	X1 int `json:"x1"`
 }
 
-func (s Span) Width() int            { return s.X1 - s.X0 }
-func (s Span) inside(width int) bool { return s.X0 >= 0 && s.X1 > s.X0 && s.X1 <= width }
+func (s Span) Width() int { return s.X1 - s.X0 }
+
+// Inside reports whether the span fits within a strip of the given width.
+func (s Span) Inside(width int) bool { return s.X0 >= 0 && s.X1 > s.X0 && s.X1 <= width }
 
 type Patch struct {
 	Frame int  `json:"frame"`
@@ -179,7 +184,7 @@ func (h Header) validate(key string) error {
 	if h.Lead < -h.Rows*h.Frames || h.Lead > h.Rows*h.Frames {
 		return errors.New("lead outside capture envelope")
 	}
-	if !h.Picture.inside(h.Width) || !h.Lanes[0].inside(h.Width) || !h.Lanes[1].inside(h.Width) || h.Picture.X1 > h.Lanes[0].X0 || h.Lanes[0].X1 > h.Lanes[1].X0 {
+	if !h.Picture.Inside(h.Width) || !h.Lanes[0].Inside(h.Width) || !h.Lanes[1].Inside(h.Width) || h.Picture.X1 > h.Lanes[0].X0 || h.Lanes[0].X1 > h.Lanes[1].X0 {
 		return errors.New("picture, left and right spans must be ordered and disjoint")
 	}
 	if len(h.Profiles) == 0 || len(h.Profiles) > 12 {
@@ -192,7 +197,7 @@ func (h Header) validate(key string) error {
 		}
 		seen[p.ID] = true
 		for _, patch := range []Patch{p.Dark, p.Clear} {
-			if patch.Frame < 0 || patch.Frame >= h.Frames || !patch.Rows.inside(h.Rows) {
+			if patch.Frame < 0 || patch.Frame >= h.Frames || !patch.Rows.Inside(h.Rows) {
 				return errors.New("gauge patch outside capture")
 			}
 		}

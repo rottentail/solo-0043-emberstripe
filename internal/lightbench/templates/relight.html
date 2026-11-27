@@ -1,0 +1,109 @@
+{{define "relight"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emberstripe · 跨扫描读光记录</title>
+  <link rel="stylesheet" href="/light-assets/styles/base.css">
+  <link rel="stylesheet" href="/light-assets/styles/bench.css">
+  <link rel="stylesheet" href="/light-assets/styles/relight.css">
+</head>
+<body>
+  {{template "masthead" .}}
+  <main class="bench relight-bench" data-page="relight">
+    <section class="work-heading">
+      <div>
+        <h1>跨扫描读光记录</h1>
+        <p class="reel-facts"><span>对照原扫描与补扫的同一块片基、中间试条和标定参考</span><span>原始范围按 16 位共同刻度保留，可复算</span></p>
+      </div>
+    </section>
+    <p class="relight-rule">只有全部材料、全部查看区都对得上时，整卷才能沿用上次的曝光验收线；任一槽或材料对不上，只能局部放行，材料缺口则暂缓判断。</p>
+    {{if not .Records}}
+    <p class="empty-line">暂无读光记录。请在记录目录放入两份扫描共同登记的 JSON 后重启工位。</p>
+    {{end}}
+    {{range .Records}}
+    <section class="relight-record" data-id="{{.ID}}">
+      <header class="relight-head">
+        <div>
+          <h2>{{.ID}}</h2>
+          <p class="muted small">{{.Original}} → {{.Rescan}} · 容差 ±{{.Tolerance}}（16 位灰度）</p>
+        </div>
+        <span class="verdict verdict-{{.Verdict}}">{{index $.VerdictLabels .Verdict}}</span>
+      </header>
+      {{if not .GeometryMatch}}
+      <p class="relight-warn">两份扫描的条带几何不一致，读数不可直接对照。</p>
+      {{end}}
+      <p class="relight-release release-{{.Verdict}}">
+        {{if .Release}}整卷可沿用同一曝光验收线。
+        {{else if eq .Verdict "diverged"}}整卷不得沿用同一验收线：下列分区需单独核对后仅作局部放行。
+        {{else}}整卷不得放行：存在材料不足的分区，补齐材料后再判断。{{end}}
+      </p>
+
+      <div class="zone-summary" aria-label="分区汇总结论">
+        {{range .ZoneVerdicts}}
+        <span class="zone-chip verdict-{{.Verdict}}">{{index $.ZoneLabels .Zone}} · {{index $.VerdictLabels .Verdict}}</span>
+        {{end}}
+      </div>
+
+      <div class="matrix-scroll">
+      <table class="relight-matrix">
+        <thead>
+          <tr><th>材料</th><th>结论</th>{{range $.ZoneOrder}}<th>{{index $.ZoneLabels .}}</th>{{end}}</tr>
+        </thead>
+        <tbody>
+          {{range .Materials}}
+          <tr>
+            <th scope="row">{{index $.MaterialLabels .Material}}</th>
+            <td><span class="verdict verdict-{{.Verdict}}">{{index $.VerdictLabels .Verdict}}</span></td>
+            {{range .Cells}}
+            <td>
+              <span class="cell verdict-{{.Verdict}}">{{index $.VerdictLabels .Verdict}}</span>
+              <dl class="cell-readings">
+                {{if .Original.Available}}
+                <dt>原扫 范围</dt><dd>{{.Original.Scale16Min}}–{{.Original.Scale16Max}} · 均 {{printf "%.1f" .Original.Mean16}} · {{.Original.Depth}} 位</dd>
+                {{else}}<dt>原扫</dt><dd class="missing-reason">{{.Original.Reason}}</dd>{{end}}
+                {{if .Rescan.Available}}
+                <dt>补扫 范围</dt><dd>{{.Rescan.Scale16Min}}–{{.Rescan.Scale16Max}} · 均 {{printf "%.1f" .Rescan.Mean16}} · {{.Rescan.Depth}} 位</dd>
+                {{else}}<dt>补扫</dt><dd class="missing-reason">{{.Rescan.Reason}}</dd>{{end}}
+                {{if and .Original.Available .Rescan.Available}}
+                <dt>范围差</dt><dd>{{.MinDelta}} / {{.MaxDelta}}</dd>
+                <dt>均值差</dt><dd>{{.MeanDelta}}</dd>
+                {{end}}
+                {{if .Reasons}}<dt>原因</dt><dd>{{range .Reasons}}{{.}} {{end}}</dd>{{end}}
+              </dl>
+            </td>
+            {{end}}
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      </div>
+
+      <details class="raw-details">
+        <summary>查看可复算的原始读数（行列、像素数、原生位深范围、源页摘要）</summary>
+        {{range .Materials}}
+        <h3>{{index $.MaterialLabels .Material}}</h3>
+        {{range .Cells}}
+        <table class="raw-table">
+          <caption>{{index $.ZoneLabels .Zone}} · {{index $.VerdictLabels .Verdict}}</caption>
+          <thead><tr><th>扫描</th><th>画格</th><th>行区间</th><th>列区间</th><th>位深</th><th>像素数</th><th>原生最小</th><th>原生最大</th><th>16 位最小</th><th>16 位最大</th><th>16 位均值</th><th>源页摘要</th></tr></thead>
+          <tbody>
+            <tr><td>原扫</td>{{template "raw-reading" .Original}}</tr>
+            <tr><td>补扫</td>{{template "raw-reading" .Rescan}}</tr>
+          </tbody>
+        </table>
+        {{end}}
+        {{end}}
+      </details>
+    </section>
+    {{end}}
+  </main>
+</body>
+</html>{{end}}
+
+{{define "raw-reading"}}
+{{if .Available}}
+<td>{{.Frame}}</td><td>{{.Rows.X0}}–{{.Rows.X1}}</td><td>{{.Columns.X0}}–{{.Columns.X1}}</td><td>{{.Depth}}</td><td>{{.Samples}}</td><td>{{.NativeMin}}</td><td>{{.NativeMax}}</td><td>{{.Scale16Min}}</td><td>{{.Scale16Max}}</td><td>{{printf "%.2f" .Mean16}}</td><td class="digest">{{.Sheet}}</td>
+{{else}}
+<td colspan="11" class="missing">{{.Reason}}</td>
+{{end}}{{end}}

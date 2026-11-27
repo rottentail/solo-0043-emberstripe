@@ -35,7 +35,7 @@ def workflow(base, name, parcels):
         return request(capture+'release?start=1&end=4&profile=soft', 201, 'POST')
 
     if name == 'intake':
-        assert request('/captures') == ['cinder-a', 'vireo-b']
+        assert request('/captures') == ['cinder-a', 'cinder-a-rescan', 'vireo-b']
         head = get('header')
         assert head['sample_rate'] == 48000
         assert head['available'] == [0, 1, 3, 4, 5, 6]
@@ -147,13 +147,79 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'relight':
+        listing = request('/relight/records')
+        assert [item['id'] for item in listing] == [
+            'relight-aligned', 'relight-corner', 'relight-diverged', 'relight-gap']
+        for item in listing:
+            assert item['geometry_match'] is True
+            assert item['whole_reel_release_allowed'] == (item['verdict'] == 'aligned')
+            assert [zone['zone'] for zone in item['zone_verdicts']] == [
+                'picture', 'left-lane', 'right-lane', 'film-edge']
+            assert [mat['material'] for mat in item['materials']] == [
+                'clear-base', 'middle-strip', 'reference']
+            for mat in item['materials']:
+                assert len(mat['cells']) == 4
+                for cell in mat['cells']:
+                    for scan in ('original', 'rescan'):
+                        reading = cell[scan]
+                        if reading['available']:
+                            assert reading['samples'] > 0 and reading['depth'] in (8, 16)
+                            assert reading['scale16_min'] <= reading['mean_gray16'] <= reading['scale16_max']
+                            if reading['depth'] == 16:
+                                assert reading['native_min'] == reading['scale16_min']
+                            else:
+                                assert reading['native_max'] <= 255
+        aligned = request('/relight/records/relight-aligned')
+        assert aligned['verdict'] == 'aligned' and aligned['whole_reel_release_allowed'] is True
+        assert all(zone['verdict'] == 'aligned' for zone in aligned['zone_verdicts'])
+        assert all(cell['verdict'] == 'aligned'
+                   for mat in aligned['materials'] for cell in mat['cells'])
+
+        diverged = request('/relight/records/relight-diverged')
+        assert diverged['verdict'] == 'diverged' and diverged['whole_reel_release_allowed'] is False
+        strip = next(mat for mat in diverged['materials'] if mat['material'] == 'middle-strip')
+        right = next(cell for cell in strip['cells'] if cell['zone'] == 'right-lane')
+        assert right['verdict'] == 'diverged' and abs(right['mean_delta_gray16']) > 256
+        edge = next(cell for cell in strip['cells'] if cell['zone'] == 'film-edge')
+        assert edge['verdict'] == 'aligned'
+        zone_map = {zone['zone']: zone['verdict'] for zone in diverged['zone_verdicts']}
+        assert zone_map['right-lane'] == 'diverged' and zone_map['film-edge'] == 'aligned'
+
+        gap = request('/relight/records/relight-gap')
+        assert gap['verdict'] == 'insufficient' and gap['whole_reel_release_allowed'] is False
+        gap_strip = next(mat for mat in gap['materials'] if mat['material'] == 'middle-strip')
+        for cell in gap_strip['cells']:
+            assert cell['verdict'] == 'insufficient'
+            assert cell['original']['available'] is False
+            assert cell['original']['reason'] == 'missing_sheet'
+
+        corner = request('/relight/records/relight-corner')
+        assert corner['verdict'] == 'insufficient' and corner['whole_reel_release_allowed'] is False
+        corner_ref = next(mat for mat in corner['materials'] if mat['material'] == 'reference')
+        cells = {cell['zone']: cell for cell in corner_ref['cells']}
+        assert cells['left-lane']['verdict'] == 'insufficient'
+        assert cells['left-lane']['original']['reason'] == 'damaged_corner'
+        assert cells['right-lane']['verdict'] == 'aligned'
+        for zone in ('picture', 'right-lane', 'film-edge'):
+            assert cells[zone]['original']['available'] is True
+        corner_map = {zone['zone']: zone['verdict'] for zone in corner['zone_verdicts']}
+        assert corner_map['left-lane'] == 'insufficient' and corner_map['right-lane'] == 'aligned'
+
+        request('/relight/records/nope', 404)
+
+        page = request('/lightbench/relight').decode()
+        assert '跨扫描读光记录' in page
+        assert '整卷不得沿用同一验收线' in page
+        assert '可复算的原始读数' in page
+        return {'records': len(listing), 'release_allowed': aligned['whole_reel_release_allowed']}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection relight'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
@@ -161,10 +227,12 @@ def main():
     with tempfile.TemporaryDirectory(prefix='emberstripe-') as tmp:
         root = Path(tmp)
         binary = root / 'emberstripe'
-        scans, parcels = root/'scans', root/'parcels'
+        scans, parcels, records = root/'scans', root/'parcels', root/'relight'
         subprocess.run(['go', 'build', '-o', binary, './cmd/emberstripe'], check=True, timeout=35)
-        subprocess.run(['go', 'run', './cmd/samples', '-out', scans], check=True, timeout=35)
-        with subprocess.Popen([binary, '-addr', '127.0.0.1:0', '-scans', scans, '-parcels', parcels], stderr=subprocess.PIPE, text=True) as server:
+        subprocess.run(['go', 'run', './cmd/samples', '-out', scans, '-records', records], check=True, timeout=35)
+        with subprocess.Popen([binary, '-addr', '127.0.0.1:0', '-scans', scans,
+                               '-records', records, '-parcels', parcels],
+                              stderr=subprocess.PIPE, text=True) as server:
             try:
                 readable, _, _ = select.select([server.stderr], [], [], 8)
                 assert readable, 'station did not start'

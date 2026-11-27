@@ -51,6 +51,17 @@ func New(s *station.Station) http.Handler {
 		}
 		write(w, 200, v)
 	})
+	mux.HandleFunc("GET /relight/records", func(w http.ResponseWriter, r *http.Request) {
+		write(w, 200, s.RelightRecords())
+	})
+	mux.HandleFunc("GET /relight/records/{id}", func(w http.ResponseWriter, r *http.Request) {
+		record, ok := s.RelightRecord(r.PathValue("id"))
+		if !ok {
+			write(w, 404, map[string]string{"error": "relight record unavailable"})
+			return
+		}
+		write(w, 200, record)
+	})
 	// Bound concurrent readers so bursts cannot multiply large image renders.
 	slots := make(chan struct{}, 3)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
