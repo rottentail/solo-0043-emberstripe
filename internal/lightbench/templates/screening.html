@@ -1,0 +1,26 @@
+{{define "screening"}}
+<section class="screening" aria-labelledby="screening-title">
+  <div class="section-head">
+    <h2 id="screening-title">试映出口</h2>
+    <span id="screening-clock" class="section-note">按放映帧率预览当前画格窗</span>
+  </div>
+  <form id="screening-form" class="screening-form" aria-label="试映放映设置">
+    <label>放映帧率<input name="fps" type="number" min="16" max="60" step="1" value="{{.Reel.FPS}}" required></label>
+    <label>输出采样率<input name="rate" type="number" min="8000" max="96000" step="100" value="{{.SampleRate}}" required></label>
+    <button type="submit" class="secondary">载入试映</button>
+  </form>
+  <p id="screening-status" class="screening-status" role="status">试映会按放映帧率重排当前窗口，原卷采样时钟不变。</p>
+  <canvas id="screening-axis" class="screening-axis" aria-label="试映时间轴，点击定位试映样本"></canvas>
+  <div class="screening-legend" aria-label="试映轴图例">
+    <span class="readable">可读</span><span class="conversion">转换边缘</span><span class="missing">声槽缺页</span><span class="outside">移出卷界</span>
+  </div>
+  <audio id="screening-media" controls preload="none" aria-label="按放映帧率的试映音频" hidden></audio>
+  <dl class="readings screening-readings" id="screening-readings">
+    <div><dt>试映样本</dt><dd data-value="sample">—</dd></div>
+    <div><dt>对应画格</dt><dd data-value="frame">—</dd></div>
+    <div><dt>覆盖状态</dt><dd data-value="status">—</dd></div>
+    <div><dt>源声槽行</dt><dd data-value="source">—</dd></div>
+    <div><dt>试映／原声采样</dt><dd data-value="pcm">—</dd></div>
+  </dl>
+</section>
+{{end}}

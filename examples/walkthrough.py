@@ -147,13 +147,41 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'preview':
+        # A 25 Hz projection clock on a 24 Hz source: frame spans must tile
+        # exactly, with no frame lost between adjacent windows.
+        clock = get('preview-clock?start=1&end=4&fps=25&rate=44100')
+        assert clock['source_fps'] == 24 and clock['presentation_fps'] == 25
+        assert (clock['first_sample'], clock['last_sample'], clock['samples']) == (1764, 7056, 5292)
+        assert clock['identity'] is False and clock['conversion_edge_samples'] == 2
+        data = get('preview?start=1&end=4&fps=25&rate=44100')
+        with wave.open(io.BytesIO(data)) as audio:
+            assert (audio.getnchannels(), audio.getsampwidth(), audio.getframerate(), audio.getnframes()) == (2, 2, 44100, 5292)
+            audio.setpos(1561)
+            assert audio.readframes(1) == bytes(4)          # conversion edge is silent
+            assert audio.readframes(1763) == bytes(1763*4)  # missing sheet stays a gap
+            assert audio.readframes(1) == bytes(4)          # rising conversion edge
+        parts = [get(f'preview?start={f}&end={f+1}&fps=25&rate=44100')[44:] for f in range(1, 4)]
+        assert b''.join(parts) == data[44:]
+        # An identity projection reuses the native picture clock byte for byte.
+        identity = get('preview?start=1&end=4&fps=24&rate=48000')
+        assert identity == get('audition?start=1&end=4')
+        edge = request('/lightbench/cinder-a/preview/sample?start=1&end=4&fps=25&rate=44100&sample=1764')
+        assert edge['sample']['frame'] == 1 and edge['sample']['source'] == {'frame': 1, 'row': 230}
+        boundary = request('/lightbench/cinder-a/preview/sample?start=1&end=4&fps=25&rate=44100&sample=3325')['sample']
+        assert boundary['status'] == 'conversion_edge' and boundary['from'] == 'readable' and boundary['to'] == 'missing_sheet'
+        assert boundary['preview_sample'] == [0, 0]
+        get('preview?start=1&end=4&fps=61&rate=44100', 400)
+        get('preview?start=1&end=4&fps=25&rate=7000', 400)
+        request('/captures/nope/preview?start=1&end=4&fps=25&rate=44100', 404)
+        return {'presentation_samples': 5292, 'conversion_edges': 2, 'identity': True}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection preview'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

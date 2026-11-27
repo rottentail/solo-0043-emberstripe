@@ -32,6 +32,8 @@ func New(s *station.Station) http.Handler {
 	mux.HandleFunc("GET /lightbench/{reel}", b.reelPage)
 	mux.HandleFunc("GET /lightbench/{reel}/window", b.drawing(b.window))
 	mux.HandleFunc("GET /lightbench/{reel}/strip", b.drawing(b.strip))
+	mux.HandleFunc("GET /lightbench/{reel}/preview", b.drawing(b.previewAxis))
+	mux.HandleFunc("GET /lightbench/{reel}/preview/sample", b.drawing(b.previewClock))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")

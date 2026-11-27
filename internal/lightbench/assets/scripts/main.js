@@ -3,6 +3,7 @@ import { film } from './film.js';
 import { scope } from './scope.js';
 import { probe } from './probe.js';
 import { audition } from './audition.js';
+import { screening } from './screening.js';
 import { comparison } from './comparison.js';
 import { handoff } from './handoff.js';
 
@@ -11,6 +12,7 @@ const rail = film(root, select);
 const waveform = scope(root, select);
 const inspector = probe(root, select);
 const audio = audition(root, waveform.playback);
+const screener = screening(root);
 const compare = comparison(root);
 const parcel = handoff(root);
 
@@ -19,10 +21,11 @@ function select(frame, row) {
   waveform.select(frame, row);
   audio.select(frame, row);
   inspector.select(frame, row);
+  screener.select(frame, row);
 }
 
 const session = windowController(root, (data) => {
-  for (const panel of [rail, waveform, inspector, audio, compare, parcel]) panel.setWindow(data);
+  for (const panel of [rail, waveform, inspector, audio, screener, compare, parcel]) panel.setWindow(data);
   select(data.window.start, 0);
 });
 session.start();

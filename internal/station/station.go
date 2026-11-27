@@ -10,6 +10,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
+	"github.com/rottentail/solo-0043-emberstripe/internal/preview"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/view"
@@ -108,6 +109,45 @@ func Audition(reel *capture.Reel, w register.Window, profile string) ([]byte, er
 		return nil, err
 	}
 	return wave.Encode(register.Rate(reel.Header), r.Samples), nil
+}
+
+// Preview extracts the applied picture window and resamples it onto the
+// presentation clock. The native render stays the source of truth; the
+// preview only changes how its rows are spaced in time.
+func Preview(reel *capture.Reel, w register.Window, profile string, opts preview.Options) (preview.Result, error) {
+	_, native, err := RenderWindow(reel, w, profile)
+	if err != nil {
+		return preview.Result{}, err
+	}
+	return preview.Render(reel, w, native, opts)
+}
+
+// PreviewReport bundles the clock, coverage, picture placement and one
+// sample's explanation, so the browser can draw the preview axis and locate a
+// cursor against it in a single request. It uses the same Layout as the WAV
+// and measures only the one source row the sample carries.
+func PreviewReport(reel *capture.Reel, w register.Window, profile string, opts preview.Options, at int) (map[string]any, error) {
+	g, err := gauge.Measure(reel, profile)
+	if err != nil {
+		return nil, err
+	}
+	result, err := preview.Layout(reel, w, opts)
+	if err != nil {
+		return nil, err
+	}
+	report, err := preview.InspectRow(reel, w, g, opts, at, result)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"clock": result.Clock, "coverage": result.Coverage, "pictures": result.Pictures, "sample": report}, nil
+}
+
+func PreviewSound(reel *capture.Reel, w register.Window, profile string, opts preview.Options) (preview.Result, []byte, error) {
+	result, err := Preview(reel, w, profile, opts)
+	if err != nil {
+		return preview.Result{}, nil, err
+	}
+	return result, wave.Encode(opts.Rate, result.Samples), nil
 }
 func Compare(reel *capture.Reel, w register.Window, a, b string) (map[string]any, error) {
 	if b == "" {

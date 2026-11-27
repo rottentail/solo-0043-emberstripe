@@ -319,6 +319,30 @@
         "register",
         "station"
       ]
+    },
+    {
+      "id": "preview",
+      "name": "按放映帧率试映",
+      "entry": "GET /captures/{name}/preview",
+      "steps": [
+        "把绝对画格号映射为输出样本边界，窗口间不累积误差",
+        "按放映时钟重采样行，保留缺页缺口并标出转换边缘",
+        "用同一时钟把试映样本还原为画格和源声槽"
+      ],
+      "success": "非整除速率比下相邻窗续接无丢帧，缺口与转换边缘可分辨，原卷时钟不变",
+      "failure": "非法帧率或采样率为 400，未知卷为 404",
+      "verification": "python3 examples/walkthrough.py preview",
+      "module_ids": [
+        "httpapi",
+        "station",
+        "preview",
+        "register",
+        "readout",
+        "wave",
+        "gauge",
+        "lightbench",
+        "bench-controls"
+      ]
     }
   ],
   "complexity": {

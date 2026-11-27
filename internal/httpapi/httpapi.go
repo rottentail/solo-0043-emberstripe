@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
+	"github.com/rottentail/solo-0043-emberstripe/internal/preview"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
 )
@@ -20,7 +22,7 @@ import (
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
+	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST", "preview": "GET", "preview-trace": "GET", "preview-clock": "GET"} {
 		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
 			reel, ok := s.Reel(r.PathValue("name"))
 			if !ok {
@@ -112,6 +114,23 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		return
 	}
 	window := register.Window{Start: start, End: end}
+	if action == "preview" || action == "preview-trace" {
+		servePreview(w, r, reel, window, profile, action)
+		return
+	}
+	if action == "preview-clock" {
+		opts, ok := previewOptions(w, query)
+		if !ok {
+			return
+		}
+		result, err := preview.Layout(reel, window, opts)
+		if err != nil {
+			invalid(w, err.Error())
+			return
+		}
+		write(w, 200, result.Clock)
+		return
+	}
 	switch action {
 	case "coverage":
 		v, err := station.Coverage(reel, window)
@@ -142,6 +161,46 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		write(w, 201, receipt)
 	}
 }
+func servePreview(w http.ResponseWriter, r *http.Request, reel *capture.Reel, window register.Window, profile, action string) {
+	query := r.URL.Query()
+	opts, ok := previewOptions(w, query)
+	if !ok {
+		return
+	}
+	if action == "preview-trace" {
+		at, err := strconv.Atoi(query.Get("sample"))
+		if err != nil {
+			invalid(w, "sample must be an integer preview sample index")
+			return
+		}
+		v, err := station.PreviewReport(reel, window, profile, opts, at)
+		respond(w, v, err)
+		return
+	}
+	_, data, err := station.PreviewSound(reel, window, profile, opts)
+	if err != nil {
+		invalid(w, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "audio/wav")
+	http.ServeContent(w, r, "preview.wav", time.Time{}, bytes.NewReader(data))
+}
+
+func previewOptions(w http.ResponseWriter, query url.Values) (preview.Options, bool) {
+	fps, fpsErr := strconv.Atoi(query.Get("fps"))
+	rate, rateErr := strconv.Atoi(query.Get("rate"))
+	if fpsErr != nil || rateErr != nil {
+		invalid(w, "fps and rate must be integer projection settings")
+		return preview.Options{}, false
+	}
+	opts := preview.Options{FPS: fps, Rate: rate}
+	if err := opts.Validate(); err != nil {
+		invalid(w, err.Error())
+		return preview.Options{}, false
+	}
+	return opts, true
+}
+
 func write(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
