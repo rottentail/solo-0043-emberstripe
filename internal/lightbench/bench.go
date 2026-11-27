@@ -27,7 +27,7 @@ func New(s *station.Station) http.Handler {
 	if err != nil {
 		panic(err)
 	}
-	mux.Handle("GET /light-assets/", http.StripPrefix("/light-assets/", http.FileServerFS(assets)))
+	mux.Handle("GET /light-assets/", http.StripPrefix("/light-assets/", noStale(http.FileServerFS(assets))))
 	mux.HandleFunc("GET /{$}", b.home)
 	mux.HandleFunc("GET /lightbench/{reel}", b.reelPage)
 	mux.HandleFunc("GET /lightbench/{reel}/window", b.drawing(b.window))
@@ -50,4 +50,13 @@ func (b *bench) drawing(next http.HandlerFunc) http.HandlerFunc {
 			problem(w, http.StatusServiceUnavailable, "工位正在绘制其他画格，请稍后重试。")
 		}
 	}
+}
+
+// noStale keeps revalidated embedded assets from being served from a stale
+// browser cache after the binary changes, without disabling conditional GETs.
+func noStale(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache")
+		next.ServeHTTP(w, r)
+	})
 }

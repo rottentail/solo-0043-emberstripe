@@ -59,6 +59,10 @@
       "command": "python3 examples/walkthrough.py window-inspection"
     },
     {
+      "workflow_id": "scope-zoom",
+      "command": "python3 examples/walkthrough.py scope-zoom"
+    },
+    {
       "workflow_id": "strip-projection",
       "command": "python3 examples/walkthrough.py strip-projection"
     }

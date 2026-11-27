@@ -14,6 +14,10 @@
 .lane-labels { display: grid; grid-template-rows: 1fr 1fr; color: #d6d4c2; font-size: .72rem; }
 .lane-labels span { align-self: center; }
 #waveform { width: 100%; height: 8.3rem; background: #1b201e; border-radius: .18rem; }
+.scope-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
+.scope-toolbar button { min-height: 1.72rem; padding: .14rem .55rem; color: #e9e3d0; background: #333832; border-color: #67685d; font-size: .72rem; font-weight: 500; }
+.scope-toolbar button:hover:not(:disabled) { border-color: var(--signal); }
+.scope-view { margin-right: auto; color: #dddacb; font: .73rem/1.2 var(--mono); }
 .scope-legend { display: flex; flex-wrap: wrap; gap: .55rem .9rem; margin: .45rem 0; color: #dddacb; font-size: .73rem; }
 .scope-legend span::before { display: inline-block; width: .6rem; height: .6rem; margin-right: .28rem; border-radius: .13rem; content: ''; }
 .scope-legend .readable::before { background: #8fba9b; }

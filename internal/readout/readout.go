@@ -43,6 +43,18 @@ func Trace(reel *capture.Reel, g gauge.Gauge, row int) Value {
 	return value
 }
 
+// Peek measures one picture row without materializing a whole render. It
+// reports false when the row has no readable source so callers never mistake
+// pad zeroes for measured extrema.
+func Peek(reel *capture.Reel, g gauge.Gauge, row int) ([2]int16, bool) {
+	a, status := register.Locate(reel, row)
+	if status != register.Readable {
+		return [2]int16{}, false
+	}
+	_, sample, _ := measure(reel, a, g)
+	return sample, true
+}
+
 func measure(reel *capture.Reel, a register.Address, g gauge.Gauge) (gray [2]float64, pcm [2]int16, clipped [2]bool) {
 	sheet := reel.Sheets[a.Frame]
 	for lane, columns := range reel.Lanes {

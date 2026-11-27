@@ -3,7 +3,13 @@
   <div class="section-head"><h2 id="scope-title">双声道光学读数</h2><span id="scope-clock" class="section-note"></span></div>
   <div class="scope-plot">
     <div class="lane-labels" aria-hidden="true"><span>左</span><span>右</span></div>
-    <canvas id="waveform" aria-label="双声道波形，点击定位画格行"></canvas>
+    <canvas id="waveform" aria-label="双声道波形，点击定位画格行，按住 Ctrl 滚轮缩放局部"></canvas>
+  </div>
+  <div class="scope-toolbar" role="group" aria-label="波形局部缩放">
+    <span id="scope-view" class="scope-view">整窗</span>
+    <button type="button" id="zoom-out" class="secondary" aria-label="缩小波形范围">缩小</button>
+    <button type="button" id="zoom-in" class="secondary" aria-label="放大波形范围">放大</button>
+    <button type="button" id="zoom-reset" class="secondary" aria-label="回到整窗" disabled>整窗</button>
   </div>
   <div class="scope-legend" aria-label="取样覆盖图例">
     <span class="readable">可读</span><span class="missing">声槽缺页</span><span class="outside">移出卷界</span>

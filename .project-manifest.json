@@ -285,11 +285,33 @@
       "steps": [
         "验证零基半开窗口与光学标定",
         "按画格行输出声槽包络及扫描页状态",
+        "按覆盖边界切分分桶并记录极值所在画格行",
         "在浏览器同步条带、波形与画格探针"
       ],
-      "success": "每条覆盖区间和左右极值归属到同一画格时钟",
+      "success": "每条覆盖区间和左右极值归属到同一画格时钟，缺口处的尖峰不被画到另一侧",
       "failure": "无效区间或不可用标定保留前次浏览器结果",
       "verification": "python3 examples/walkthrough.py window-inspection",
+      "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "station",
+        "register",
+        "gauge",
+        "readout"
+      ]
+    },
+    {
+      "id": "scope-zoom",
+      "name": "局部缩放波形并回溯极值行",
+      "entry": "GET /lightbench/{reel}/window?start_row=&end_row=",
+      "steps": [
+        "把同一已应用窗口重采样到当前缩放的行区间",
+        "按覆盖边界切分分桶，记录每个极值所在的绝对画格行",
+        "把点击位置按当前局部区间换算回画格和行"
+      ],
+      "success": "尖峰落在真实可发生的行，靠近缺口的极值可追溯到产生它的画格行",
+      "failure": "局部区间越出已应用窗口或格式非法返回 400",
+      "verification": "python3 examples/walkthrough.py scope-zoom",
       "module_ids": [
         "lightbench",
         "bench-controls",

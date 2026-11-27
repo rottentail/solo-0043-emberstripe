@@ -127,17 +127,51 @@ def workflow(base, name, parcels):
         data = request(path)
         assert data['coverage'] == get('coverage?start=1&end=4')
         assert data['rate'] == 48000 and data['rows_per_frame'] == 2000
+        assert data['detail'] == {'start': 2000, 'end': 8000}
         assert [(frame['depth'], frame['readable'], frame['missing']) for frame in data['frames']] == [
             (16, 1770, 230), (0, 230, 1770), (16, 2000, 0)]
         bins = data['envelope']
         assert bins[0]['start'] == 2000 and bins[-1]['end'] == 8000
         assert sum(item['readable'] for item in bins) == 4000
         assert any(item['readable'] == 0 for item in bins)
-        assert any(0 < item['readable'] < item['end'] - item['start'] for item in bins)
+        # No bin may straddle a coverage boundary: a readable bin covers only
+        # readable rows, so its extreme can be drawn on the rows that made it.
+        assert all(item['readable'] in (0, item['end'] - item['start']) for item in bins)
         assert any(item['min'] != item['max'] for item in bins if item['readable'])
         request(path.replace('profile=bench', 'profile=absent'), 422)
         request(path.replace('end=4', 'end=1'), 400)
-        return {'coverage_runs': len(data['coverage']), 'readable_rows': 4000, 'envelope_bins': len(bins)}
+        return {'coverage_runs': len(data['coverage']), 'readable_rows': 4000, 'envelope_bins': len(bins), 'detail': data['detail']}
+    if name == 'scope-zoom':
+        path = '/lightbench/cinder-a/window?start=1&end=4&profile=bench'
+        runs = request('/captures/cinder-a/coverage?start=1&end=4')
+        edges = {run['picture_row_start'] for run in runs} | {run['picture_row_end'] for run in runs}
+        full = request(path)
+        for bin in full['envelope']:
+            assert not any(bin['start'] < edge < bin['end'] for edge in edges), bin
+            if bin['readable']:
+                assert all(row >= 0 for row in bin['min_row'] + bin['max_row'])
+                assert all(bin['start'] <= row < bin['end'] for row in bin['min_row'] + bin['max_row'])
+        # A local interval re-bins the same window and stays across the gap edge.
+        zoom = request(path + '&start_row=3740&end_row=3800')
+        assert zoom['detail'] == {'start': 3740, 'end': 3800}
+        assert zoom['coverage'] == full['coverage']
+        assert zoom['envelope'][0]['start'] == 3740 and zoom['envelope'][-1]['end'] == 3800
+        assert sum(bin['readable'] for bin in zoom['envelope']) == 30
+        # The gap itself is visible and contributes no measured extremum.
+        gaps = [bin for bin in zoom['envelope'] if not bin['readable']]
+        assert gaps and all(bin['max_row'] == [-1, -1] for bin in gaps)
+        assert all(bin['start'] >= 3770 for bin in gaps), gaps
+        # Narrowing must not widen the payload: no raw PCM in the reply.
+        assert set(zoom) == set(full)
+        assert len(json.dumps(zoom)) <= 2 * len(json.dumps(full)) + 4096
+        # An extreme at the readable side of the gap names the true row.
+        last = max((bin for bin in zoom['envelope'] if bin['readable']), key=lambda bin: bin['end'])
+        assert last['end'] == 3770
+        request(path + '&start_row=1900&end_row=2000', 400)
+        request(path + '&start_row=2000&end_row=8001', 400)
+        request(path + '&start_row=4000&end_row=4000', 400)
+        request(path + '&start_row=bad&end_row=4000', 400)
+        return {'whole_bins': len(full['envelope']), 'zoom_bins': len(zoom['envelope']), 'gap_bins': len(gaps)}
     if name == 'strip-projection':
         prefix = '/lightbench/cinder-a/strip?frame='
         original = request(prefix+'1')
@@ -153,7 +187,7 @@ def workflow(base, name, parcels):
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection scope-zoom strip-projection'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
