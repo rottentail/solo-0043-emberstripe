@@ -1,0 +1,37 @@
+{{define "blind-sheet"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emberstripe · 盲听答卷 {{.ID}}</title>
+  <link rel="stylesheet" href="/light-assets/styles/base.css">
+  <link rel="stylesheet" href="/light-assets/styles/bench.css">
+  <link rel="stylesheet" href="/light-assets/styles/blind.css">
+  <script type="module" src="/light-assets/scripts/blind-sheet.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="identity" href="/"><span class="optical-mark" aria-hidden="true"></span><span>Emberstripe<small>盲听听审答卷</small></span></a>
+      <nav class="reel-index" aria-label="工位索引">
+        <a href="/blind">答卷管理</a>
+        <a href="/lightbench/{{.Capture}}">{{.Capture}} 工作台</a>
+      </nav>
+    </div>
+  </header>
+  <main class="bench blind-review" data-sheet="{{.ID}}">
+    <section class="blind-panel">
+      <h1>盲听答卷</h1>
+      <p class="mono-cell muted sheet-id">{{.ID}}</p>
+      <form id="reviewer-form" class="reviewer-form">
+        <label>听审员标识
+          <input id="reviewer-id" name="reviewer" type="text" pattern="[a-z0-9][a-z0-9\-]{1,47}" placeholder="如 listener-01" required>
+        </label>
+        <button type="submit" class="secondary">载入我的答案</button>
+      </form>
+      <p id="reviewer-status" class="window-status" role="status">在同一台或换一台设备输入相同听审员标识，即可继续作答并核对已有选择。</p>
+    </section>
+    <div id="window-list" class="window-list" aria-live="polite"></div>
+  </main>
+</body>
+</html>{{end}}

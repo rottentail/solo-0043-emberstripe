@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/rottentail/solo-0043-emberstripe/internal/blind"
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
@@ -24,6 +25,7 @@ func (e *InvalidRenderingInput) Unwrap() error { return e.Cause }
 type Station struct {
 	catalog map[string]*capture.Reel
 	Store   parcel.Store
+	Blind   *blind.Store
 }
 type CaptureInfo struct {
 	capture.Header
@@ -33,15 +35,21 @@ type CaptureInfo struct {
 	Rate      int         `json:"sample_rate"`
 }
 
-func Open(scans, releases string) (*Station, error) {
+func Open(scans, releases, blindRoot string) (*Station, error) {
 	catalog, err := capture.LoadCatalog(scans)
 	if err != nil {
 		return nil, err
 	}
-	if err := os.MkdirAll(releases, 0750); err != nil {
-		return nil, err
+	for _, dir := range []string{releases, blindRoot} {
+		if err := os.MkdirAll(dir, 0750); err != nil {
+			return nil, err
+		}
 	}
-	return &Station{catalog: catalog, Store: parcel.Store{Root: releases}}, nil
+	return &Station{
+		catalog: catalog,
+		Store:   parcel.Store{Root: releases},
+		Blind:   &blind.Store{Root: blindRoot},
+	}, nil
 }
 func (s *Station) Names() []string {
 	names := make([]string, 0, len(s.catalog))

@@ -29,5 +29,14 @@ export function windowController(root, onWindow) {
   }
 
   form.addEventListener('submit', update);
+
+  // Unblind results link back with ?start=&end=&profile=; prefill so the
+  // reviewer lands on the exact disputed picture window.
+  for (const [name, input] of [['start', form.elements.start], ['end', form.elements.end], ['profile', form.elements.profile]]) {
+    const value = new URLSearchParams(location.search).get(name);
+    if (value !== null && input && (input.tagName !== 'SELECT' || Array.from(input.options).some((option) => option.value === value))) {
+      input.value = value;
+    }
+  }
   return { start: update };
 }

@@ -17,7 +17,10 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
 )
 
+type apiHandlers struct{ station *station.Station }
+
 func New(s *station.Station) http.Handler {
+	h := &apiHandlers{station: s}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
 	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
@@ -51,6 +54,12 @@ func New(s *station.Station) http.Handler {
 		}
 		write(w, 200, v)
 	})
+	mux.HandleFunc("POST /captures/{name}/blind-sheets", h.createBlindSheet)
+	mux.HandleFunc("GET /blind-sheets", h.listBlindSheets)
+	mux.HandleFunc("GET /blind-sheets/{id}", h.getBlindSheet)
+	mux.HandleFunc("GET /blind-sheets/{id}/option", h.blindOption)
+	mux.HandleFunc("PUT /blind-sheets/{id}/answers", h.answerBlindSheet)
+	mux.HandleFunc("POST /blind-sheets/{id}/unblind", h.unblindSheet)
 	// Bound concurrent readers so bursts cannot multiply large image renders.
 	slots := make(chan struct{}, 3)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

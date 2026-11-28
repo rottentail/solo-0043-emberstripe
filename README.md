@@ -9,7 +9,7 @@ Emberstripe 从胶片扫描工位交来的灰度 PNG 条带中读取双声道可
 ```sh
 go build ./...
 go run ./cmd/samples -out var/scans
-go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parcels
+go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parcels -blind var/blind
 ```
 
 样例生成器要求目标卷目录尚不存在。`cinder-a` 是 24 格/秒、每格 2000 行、声槽领先 230 行的右移取样案例；`vireo-b` 是 25 格/秒、每格 1920 行、偏移 −135 行的案例。两卷原生 PCM 采样率均为 48 kHz。两卷均含一张缺页和一张 8 位灰阶条带，其余条带是 16 位灰阶。`bench` 和 `soft` 是对比度不同的有效标定，`flat` 的参考窗口缺少对比度，`absent` 的暗场参考页缺失。
@@ -47,6 +47,13 @@ curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"
 ```sh
 python3 examples/walkthrough.py all
 python3 examples/walkthrough.py release
+python3 examples/walkthrough.py blind-listening
 ```
+
+## 盲听听审答卷
+
+打开 `http://127.0.0.1:7431/blind` 建立答卷：为每个听审窗选择同一画格位置的两个有效标定。没有共同可听区的窗会在建档时被拒绝（422），不会发给听审员。选项 A/B 的顺序由答卷种子按 HMAC-SHA256 对每窗确定性置换，任何设备上重建出的顺序和每段范围都一致；答卷按试验内容 SHA-256 寻址，重复建立同一请求得到同一标识。
+
+听审员在 `/blind/sheets/{id}` 输入自己的听审员标识后作答，页面只显示 A/B 两个中性选项和覆盖范围，不暴露标定名称。同一标识在另一台设备上可继续作答并核对已选项；同一窗重发幂等、改答覆盖，多位听审员的答案分别保存。解盲在管理页或 `POST /blind-sheets/{id}/unblind` 进行：A/B 被映射回真实标定，听审员偏好不一致的窗标记为分歧，并给出回到工作台原卷画格的链接。若卷源摘要变化、标定失效或覆盖与建档时不再对应，答卷被隔离并注明原因；原卷移出登记目录时已记录偏好仍可解码，但不能再渲染选项音频（409）。
 
 独立单元与浏览器回归测试套件延后至后续任务。上面的复走检查使用同一个 Go 服务，通过 HTTP 观察页面、WAV、PNG、JSON、ZIP 和失败状态。

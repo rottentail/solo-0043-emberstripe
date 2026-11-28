@@ -21,8 +21,9 @@ func main() {
 	addr := flag.String("addr", "127.0.0.1:7431", "station listen address")
 	scans := flag.String("scans", "var/scans", "catalog of optical scans")
 	output := flag.String("parcels", "var/parcels", "parcel output directory")
+	blindRoot := flag.String("blind", "var/blind", "blind listening sheet directory")
 	flag.Parse()
-	s, err := station.Open(*scans, *output)
+	s, err := station.Open(*scans, *output, *blindRoot)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,6 +36,8 @@ func main() {
 	mux.Handle("/captures", api)
 	mux.Handle("/captures/", api)
 	mux.Handle("/parcels/", api)
+	mux.Handle("/blind-sheets", api)
+	mux.Handle("/blind-sheets/", api)
 	mux.Handle("/", lightbench.New(s))
 	server := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 16 << 10}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

@@ -18,9 +18,10 @@ import zipfile
 def workflow(base, name, parcels):
     capture = '/captures/cinder-a/'
 
-    def request(path, expected=200, method='GET'):
+    def request(path, expected=200, method='GET', body=None):
+        headers = {'Content-Type': 'application/json'} if body is not None else {}
         try:
-            response = urlopen(Request(base + path, method=method), timeout=8)
+            response = urlopen(Request(base + path, data=body, headers=headers, method=method), timeout=8)
         except HTTPError as error:
             response = error
         with response:
@@ -147,13 +148,61 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'blind-listening':
+        body = json.dumps({'capture': 'cinder-a', 'windows': [
+            {'start': 1, 'end': 4, 'profile': 'bench', 'against': 'soft'},
+            {'start': 0, 'end': 2, 'profile': 'bench', 'against': 'soft'}]}).encode()
+        created = request('/captures/cinder-a/blind-sheets', 201, 'POST', body)
+        assert created['windows'][0]['options'] == ['A', 'B']
+        assert 'profiles' not in json.dumps(created), 'public sheet must hide profile identities'
+        sheet_id = created['id']
+        # Rebuilding the same trial is idempotent and content-addressed.
+        assert request('/captures/cinder-a/blind-sheets', 201, 'POST', body)['id'] == sheet_id
+        # Two usable profiles with no shared readable row are rejected.
+        bad = json.dumps({'capture': 'cinder-a', 'windows': [
+            {'start': 1, 'end': 2, 'profile': 'bench', 'against': 'bench'}]}).encode()
+        request('/captures/cinder-a/blind-sheets', 400, 'POST', bad)
+        # Option audio is served by neutral letter and matches a real WAV.
+        option = request(f'/blind-sheets/{sheet_id}/option?window=0&option=A')
+        with wave.open(io.BytesIO(option)) as audio:
+            assert (audio.getnchannels(), audio.getframerate(), audio.getnframes()) == (2, 48000, 6000)
+        request(f'/blind-sheets/{sheet_id}/option?window=0&option=C', 400)
+        # Two reviewers disagree on window 0; each sees only their own answers.
+        first = json.dumps({'window': 0, 'option': 'A', 'reviewer': 'listener-01'}).encode()
+        second = json.dumps({'window': 0, 'option': 'B', 'reviewer': 'listener-02'}).encode()
+        request(f'/blind-sheets/{sheet_id}/answers', 200, 'PUT', first)
+        request(f'/blind-sheets/{sheet_id}/answers', 200, 'PUT', second)
+        mine = request(f'/blind-sheets/{sheet_id}?reviewer=listener-01')
+        assert mine['windows'][0]['answers'] == [{'reviewer': 'listener-01', 'option': 'A'}]
+        request(f'/blind-sheets/{sheet_id}?reviewer=Bad+Name', 400)
+        # Unblinding maps A/B back to profiles and flags the disagreement.
+        decoded = request(f'/blind-sheets/{sheet_id}/unblind', 200, 'POST')
+        assert decoded['status'] == 'unblinded' and not decoded.get('quarantine_reasons')
+        window0 = decoded['windows'][0]
+        assert window0['disagreement'] is True
+        chosen = {p['reviewer']: p['profile'] for p in window0['preferences']}
+        assert chosen['listener-01'] == window0['option_a_profile']
+        assert chosen['listener-02'] == window0['option_b_profile']
+        assert window0['workbench_url'].startswith('/lightbench/cinder-a?start=1&end=4&profile=')
+        # A sheet that is no longer open rejects further answers.
+        request(f'/blind-sheets/{sheet_id}/answers', 400, 'PUT', first)
+        # Unknown and malformed sheet ids are 404.
+        request('/blind-sheets/' + 'f' * 64, 404)
+        request('/blind-sheets/abc123', 404)
+        # The browser pages and their assets are reachable.
+        admin = request('/blind').decode()
+        assert '建立盲听答卷' in admin and 'blind-reels' in admin
+        review = request(f'/blind/sheets/{sheet_id}').decode()
+        assert '听审员标识' in review and sheet_id in review
+        request('/blind/sheets/' + 'f' * 64, 404)
+        return {'sheet': sheet_id[:12], 'disagreement_window': 0, 'status': decoded['status']}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection blind-listening'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
@@ -161,10 +210,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix='emberstripe-') as tmp:
         root = Path(tmp)
         binary = root / 'emberstripe'
-        scans, parcels = root/'scans', root/'parcels'
+        scans, parcels, blind_dir = root/'scans', root/'parcels', root/'blind'
         subprocess.run(['go', 'build', '-o', binary, './cmd/emberstripe'], check=True, timeout=35)
         subprocess.run(['go', 'run', './cmd/samples', '-out', scans], check=True, timeout=35)
-        with subprocess.Popen([binary, '-addr', '127.0.0.1:0', '-scans', scans, '-parcels', parcels], stderr=subprocess.PIPE, text=True) as server:
+        with subprocess.Popen([binary, '-addr', '127.0.0.1:0', '-scans', scans, '-parcels', parcels, '-blind', blind_dir], stderr=subprocess.PIPE, text=True) as server:
             try:
                 readable, _, _ = select.select([server.stderr], [], [], 8)
                 assert readable, 'station did not start'

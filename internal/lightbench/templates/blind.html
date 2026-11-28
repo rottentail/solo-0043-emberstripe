@@ -1,0 +1,69 @@
+{{define "blind"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emberstripe · 盲听听审</title>
+  <link rel="stylesheet" href="/light-assets/styles/base.css">
+  <link rel="stylesheet" href="/light-assets/styles/bench.css">
+  <link rel="stylesheet" href="/light-assets/styles/blind.css">
+  <script type="module" src="/light-assets/scripts/blind-admin.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="identity" href="/"><span class="optical-mark" aria-hidden="true"></span><span>Emberstripe<small>盲听听审答卷</small></span></a>
+      <nav class="reel-index" aria-label="工位索引">
+        {{range .Names}}<a href="/lightbench/{{.}}">{{.}}</a>{{end}}
+        <a href="/blind" aria-current="page">盲听听审</a>
+      </nav>
+    </div>
+  </header>
+  <main class="bench blind-admin">
+    <script id="blind-reels" type="application/json">{{.ReelOptions}}</script>
+    <section class="blind-panel" aria-labelledby="build-title">
+      <h1 id="build-title">建立盲听答卷</h1>
+      <p class="muted">每窗选择同一画格位置的两个有效标定。没有共同可听区的窗不会被接受，选项 A/B 顺序由服务端按答卷种子固定，任何设备都一致。</p>
+      <form id="blind-build-form" class="blind-form">
+        <label>扫描卷
+          <select id="blind-capture" name="capture" required></select>
+        </label>
+        <label>起始画格<input name="start" type="number" min="0" value="1" required></label>
+        <label>截止画格（不含）<input name="end" type="number" min="1" value="4" required></label>
+        <label>标定甲<select id="blind-profile-a" name="profile" required></select></label>
+        <label>标定乙<select id="blind-profile-b" name="against" required></select></label>
+        <label>答卷种子（可留空）<input name="seed" type="text" placeholder="留空则随卷快照固定" autocomplete="off"></label>
+        <button type="submit">生成答卷</button>
+      </form>
+      <p id="blind-build-status" class="window-status" role="status"></p>
+    </section>
+
+    <section class="blind-panel" aria-labelledby="sheets-title">
+      <h2 id="sheets-title">已有答卷</h2>
+      <div class="table-wrap">
+        <table class="blind-table">
+          <thead><tr><th>答卷标识</th><th>扫描卷</th><th>窗数</th><th>听审员</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+          {{range .Sheets}}
+            <tr>
+              <td class="mono-cell">{{.ID}}</td>
+              <td>{{.Capture}}</td>
+              <td>{{.Windows}}</td>
+              <td>{{if .Reviewers}}{{range $i, $r := .Reviewers}}{{if $i}}、{{end}}{{$r}}{{end}}{{else}}<span class="muted">暂无</span>{{end}}</td>
+              <td><span class="status-pill status-{{.Status}}">{{.Status}}</span></td>
+              <td class="row-actions">
+                <a class="button secondary" href="/blind/sheets/{{.ID}}">打开答卷</a>
+                <button type="button" class="secondary unblind-button" data-sheet="{{.ID}}">解盲</button>
+              </td>
+            </tr>
+          {{else}}
+            <tr><td colspan="6" class="muted">还没有答卷。先用上方表单建立一份。</td></tr>
+          {{end}}
+          </tbody>
+        </table>
+      </div>
+      <pre id="unblind-result" class="unblind-output" hidden></pre>
+    </section>
+  </main>
+</body>
+</html>{{end}}
