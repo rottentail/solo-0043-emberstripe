@@ -7,9 +7,10 @@ import { comparison } from './comparison.js';
 import { handoff } from './handoff.js';
 
 const root = document.querySelector('main[data-reel]');
-const rail = film(root, select);
-const waveform = scope(root, select);
 const inspector = probe(root, select);
+const ledger = inspector.ledger;
+const rail = film(root, select, ledger);
+const waveform = scope(root, select);
 const audio = audition(root, waveform.playback);
 const compare = comparison(root);
 const parcel = handoff(root);
@@ -23,6 +24,15 @@ function select(frame, row) {
 
 const session = windowController(root, (data) => {
   for (const panel of [rail, waveform, inspector, audio, compare, parcel]) panel.setWindow(data);
-  select(data.window.start, 0);
+  // Keep the current position when it still lies in the new window; switching
+  // windows must not discard evidence that remains valid for this picture row.
+  const context = ledger.context();
+  const keep = context && context.frame !== null
+    && data.window.start <= context.frame && context.frame < data.window.end;
+  if (keep) {
+    select(context.frame, context.row);
+  } else {
+    select(data.window.start, 0);
+  }
 });
 session.start();

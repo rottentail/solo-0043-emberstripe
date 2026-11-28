@@ -5,6 +5,23 @@
 .readings > div { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; border-top: 1px solid #ede8db; padding: .4rem 0; }
 .readings dt { color: var(--muted); font-size: .77rem; }
 .readings dd { margin: 0; font: .78rem/1.3 var(--mono); text-align: right; overflow-wrap: anywhere; }
+.evidence { margin-top: .7rem; border-top: 1px solid #ede8db; padding-top: .6rem; }
+.evidence-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.evidence-head h3 { font-size: .9rem; font-weight: 700; }
+.evidence-head button { min-height: 1.9rem; padding: .2rem .6rem; font-size: .76rem; }
+.evidence-ledger { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; gap: .38rem; }
+.evidence-ledger li { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; font-size: .78rem; border: 1px solid var(--line); border-radius: .3rem; padding: .34rem .5rem; background: #fbf8f1; }
+.evidence-ledger li[data-state="verified"] { border-color: #b9cdbc; background: #f2f7f2; }
+.evidence-ledger li[data-state="absent"] { border-color: #ddd3c2; background: #f6f2e8; }
+.evidence-ledger li[data-state="failed"] { border-color: #d8b0a4; background: #fbf0ec; }
+.evidence-ledger li[data-state="stale"] { border-color: #e2c89a; background: #fbf5e8; }
+.evidence-ledger li[data-state="pending"] { border-color: #cdc6b6; background: #f7f4ec; }
+.evidence-label { color: var(--muted); }
+.evidence-state { margin-left: auto; font-family: var(--mono); font-size: .75rem; font-weight: 650; }
+.evidence-retry-one { min-height: 1.7rem; padding: .12rem .5rem; font-size: .72rem; }
+.evidence-error, .evidence-material { flex-basis: 100%; color: var(--muted); font-size: .72rem; }
+.evidence-error { color: var(--ember-dark); }
+.evidence-note { margin-top: .5rem; color: var(--muted); font-size: .74rem; min-height: 1.1rem; }
 .compare-result { display: block; margin-top: .55rem; color: var(--muted); font-size: .8rem; }
 .compare-result:empty { display: none; }
 .compare-result p { margin-top: .2rem; }

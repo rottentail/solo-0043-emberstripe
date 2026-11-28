@@ -1,7 +1,8 @@
 import { benchURL, compactNumber } from './client.js';
+import { PICTURE, PENDING, FAILED, STALE, VERIFIED, ABSENT } from './evidence.js';
 import { context, fraction, vertical } from './canvas.js';
 
-export function film(root, onPosition) {
+export function film(root, onPosition, ledger) {
   const rail = root.querySelector('#film-rail');
   const picture = root.querySelector('#scan-picture');
   const marker = root.querySelector('#strip-marker');
@@ -9,6 +10,7 @@ export function film(root, onPosition) {
   const summary = root.querySelector('#frame-summary');
   let data, selected, row;
   let buttons = new Map();
+  let loadedKey = null;
 
   function draw() {
     const { paint, width, height } = context(marker);
@@ -23,10 +25,50 @@ export function film(root, onPosition) {
   });
   new ResizeObserver(draw).observe(marker);
 
+  // The ledger owns picture fetching and its context key. The strip only mirrors
+  // the picture piece so a failed projection never erases recoverable sound.
+  function renderPicture() {
+    if (!ledger || selected === undefined) return;
+    const piece = ledger.piece(PICTURE);
+    const key = `${data.reel}|picture|${selected}`;
+    if (piece.key !== key) return;
+    const entry = data.frames[selected - data.window.start];
+    if (piece.state === ABSENT || !entry.depth) {
+      picture.hidden = true;
+      picture.removeAttribute('src');
+      loadedKey = null;
+      placeholder.hidden = false;
+      placeholder.textContent = '此画格没有画面扫描页；声槽按偏移后的位置仍可单独读取。';
+      return;
+    }
+    if (piece.state === PENDING || piece.state === STALE) {
+      picture.hidden = true;
+      placeholder.hidden = false;
+      placeholder.textContent = '正在读取扫描页…';
+      return;
+    }
+    if (piece.state === FAILED) {
+      picture.hidden = true;
+      placeholder.hidden = false;
+      placeholder.textContent = `扫描页暂时读不回来（${piece.error ?? '可在证据恢复中重取'}）。声槽证据不受影响。`;
+      return;
+    }
+    if (piece.state === VERIFIED) {
+      if (loadedKey !== key) {
+        picture.src = benchURL(data.reel, 'strip', { frame: selected });
+        loadedKey = key;
+      }
+      picture.hidden = false;
+      placeholder.hidden = true;
+    }
+  }
+  ledger?.subscribe(renderPicture);
+
   return {
     setWindow(windowData) {
       data = windowData;
       selected = undefined;
+      loadedKey = null;
       buttons = new Map();
       const elements = data.frames.map((frame) => {
         const button = document.createElement('button');
@@ -54,18 +96,12 @@ export function film(root, onPosition) {
         picture.hidden = true;
         picture.onload = null;
         picture.onerror = null;
+        loadedKey = null;
         placeholder.hidden = false;
-        if (entry.depth) {
-          placeholder.textContent = '正在读取扫描页…';
-          picture.onload = () => { picture.hidden = false; placeholder.hidden = true; };
-          picture.onerror = () => { placeholder.textContent = '暂时无法显示扫描页。'; };
-          picture.src = benchURL(data.reel, 'strip', { frame });
-        } else {
-          picture.removeAttribute('src');
-          placeholder.textContent = '此画格没有画面扫描页';
-        }
+        placeholder.textContent = entry.depth ? '正在读取扫描页…' : '此画格没有画面扫描页；声槽按偏移后的位置仍可单独读取。';
       }
       draw();
+      renderPicture();
     },
   };
 }
