@@ -31,6 +31,7 @@ func New(s *station.Station) http.Handler {
 	mux.HandleFunc("GET /{$}", b.home)
 	mux.HandleFunc("GET /lightbench/{reel}", b.reelPage)
 	mux.HandleFunc("GET /lightbench/{reel}/window", b.drawing(b.window))
+	mux.HandleFunc("GET /lightbench/{reel}/review", b.drawing(b.review))
 	mux.HandleFunc("GET /lightbench/{reel}/strip", b.drawing(b.strip))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")

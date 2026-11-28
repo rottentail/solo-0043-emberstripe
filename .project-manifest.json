@@ -319,6 +319,27 @@
         "register",
         "station"
       ]
+    },
+    {
+      "id": "review-boundaries",
+      "name": "键盘复查声画边界",
+      "entry": "GET /lightbench/{reel}/review",
+      "steps": [
+        "按覆盖区间合并声音状态分界，按扫描页接缝计算画面分界",
+        "同一行的两类边界合并为带双口径标记的单一停点",
+        "浏览器在只听声音与声画同查两种口径间跳转，换口径保留已确认原位",
+        "按住跳转键掠过停点，松手才就当前停点向延迟探针取证"
+      ],
+      "success": "停点与覆盖区间、画面缺页接缝一致，最终读数与停点相同",
+      "failure": "非法窗口 400，不可用标定 422，未知卷 404",
+      "verification": "python3 examples/walkthrough.py review-boundaries && node examples/review-demo.js",
+      "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "bench-page",
+        "register",
+        "station"
+      ]
     }
   ],
   "complexity": {

@@ -27,6 +27,16 @@ export function probe(root, onPosition) {
       form.elements.row.max = data.rows_per_frame - 1;
       form.querySelector('button').disabled = false;
     },
+    // mark follows a held jump and cancels any in-flight trace so a delayed
+    // answer can never overwrite a stop the restorer has already left.
+    mark(frame, row) {
+      pending?.abort();
+      pending = undefined;
+      form.elements.frame.value = frame;
+      form.elements.row.value = row;
+      clear();
+      badge.textContent = '掠过中，松手后取证';
+    },
     async select(frame, row) {
       pending?.abort();
       const controller = new AbortController();

@@ -39,6 +39,9 @@ export function audition(root, onTime) {
       button.disabled = false;
       message.textContent = '';
     },
+    mark(frame, row) {
+      selected = (frame - data.window.start) * data.rows_per_frame + row;
+    },
     select(frame, row) {
       selected = (frame - data.window.start) * data.rows_per_frame + row;
       if (!media.hidden && media.readyState >= 1) media.currentTime = selected / data.rate;

@@ -147,13 +147,35 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'review-boundaries':
+        path = '/lightbench/cinder-a/review?start=1&end=4&profile=bench'
+        data = request(path)
+        assert data['rows_per_frame'] == 2000 and data['window'] == {'start': 1, 'end': 4}
+        rows = [(b['row'], b['kinds']) for b in data['boundaries']]
+        assert rows == [(3770, 'sound'), (4000, 'picture'), (5770, 'sound'), (6000, 'picture')]
+        cuts = {b['row']: b for b in data['boundaries']}
+        assert cuts[3770]['from'] == 'readable' and cuts[3770]['to'] == 'missing_sheet'
+        assert cuts[4000]['from_depth'] == 16 and cuts[4000]['to_depth'] == 0
+        # Sound cuts line up exactly with the merged coverage runs.
+        runs = get('coverage?start=1&end=4')
+        sound_rows = [r['picture_row_start'] for r in runs][1:]
+        assert [b['row'] for b in data['boundaries'] if b['kinds'] == 'sound'] == sound_rows
+        # The second reel exercises a negative lead; every boundary still
+        # carries a sound or picture kind and an absolute, in-window row.
+        shared = request('/lightbench/vireo-b/review?start=2&end=6&profile=bench')
+        bounds = shared['boundaries']
+        assert bounds and all(b['kinds'] in ('sound', 'picture', 'sound,picture') for b in bounds)
+        assert all(2 * 1920 <= b['row'] < 6 * 1920 for b in bounds)
+        request(path.replace('profile=bench', 'profile=absent'), 422)
+        request(path.replace('end=4', 'end=1'), 400)
+        return {'boundaries': len(data['boundaries']), 'sound_cuts': len(sound_rows)}
     raise ValueError(name)
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection review-boundaries'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

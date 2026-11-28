@@ -13,4 +13,12 @@
 .handoff-actions { display: flex; flex-wrap: wrap; gap: .42rem; }
 .parcel-status { grid-column: 1 / -1; color: var(--ember-dark); overflow-wrap: anywhere; }
 .parcel-status:empty { display: none; }
+.review-panel { border-color: #e1c4b7; }
+.review-lenses { display: flex; gap: .8rem; margin: .6rem 0 0; padding: 0; border: 0; }
+.review-lenses label { display: flex; grid-template-columns: none; align-items: center; gap: .32rem; font-size: .85rem; color: var(--ink); }
+.review-lenses input { width: auto; min-height: 0; }
+.review-actions { display: flex; gap: .45rem; margin-top: .55rem; }
+.review-actions button { flex: 1; }
+.review-readout dd { max-width: 100%; }
+.review-hint { margin-top: .45rem; color: var(--muted); font-size: .76rem; }
 @media (max-width: 700px) { .handoff { grid-template-columns: minmax(0, 1fr); } }

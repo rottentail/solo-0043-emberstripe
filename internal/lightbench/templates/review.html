@@ -1,0 +1,18 @@
+{{define "review"}}
+<section class="detail review-panel" id="review-panel" aria-labelledby="review-title" hidden>
+  <div class="section-head"><h2 id="review-title">键盘复查</h2><span class="section-note">← → 跳转 · 按住掠过 · M 换口径</span></div>
+  <fieldset class="review-lenses" aria-label="复查口径">
+    <label><input type="radio" name="review-lens" value="sound-picture" checked>声画同查</label>
+    <label><input type="radio" name="review-lens" value="sound">只听声音</label>
+  </fieldset>
+  <div class="review-actions">
+    <button type="button" id="review-back" class="secondary">← 上一停点</button>
+    <button type="button" id="review-forward" class="secondary">下一停点 →</button>
+  </div>
+  <dl class="readings review-readout">
+    <div><dt>当前停点</dt><dd id="review-position">—</dd></div>
+    <div><dt>边界证据</dt><dd id="review-kind">—</dd></div>
+  </dl>
+  <p id="review-hint" class="review-hint" role="status"></p>
+</section>
+{{end}}

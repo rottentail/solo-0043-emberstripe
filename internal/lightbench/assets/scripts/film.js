@@ -67,5 +67,23 @@ export function film(root, onPosition) {
       }
       draw();
     },
+    // mark tracks a skimmed cursor without issuing a new strip fetch; the
+    // strip image and detailed evidence wait for the release settle.
+    mark(frame, nextRow) {
+      row = nextRow;
+      if (selected !== frame) {
+        buttons.get(selected)?.setAttribute('aria-pressed', 'false');
+        selected = frame;
+        buttons.get(frame)?.setAttribute('aria-pressed', 'true');
+        const entry = data.frames[frame - data.window.start];
+        summary.textContent = `第 ${frame} 格 · ${compactNumber(entry.readable)} 行声槽可读`;
+        picture.hidden = true;
+        picture.onload = null;
+        picture.onerror = null;
+        placeholder.hidden = false;
+        placeholder.textContent = entry.depth ? '松手后读取扫描页…' : '此画格没有画面扫描页';
+      }
+      draw();
+    },
   };
 }
