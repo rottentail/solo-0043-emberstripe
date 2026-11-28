@@ -114,6 +114,32 @@ def workflow(base, name, parcels):
         request(path, 409)
         request('/parcels/'+'f'*64+'/verify', 404)
         return {'verified_frames': receipt['wave']['sample_frames'], 'tamper_status': 409}
+    if name == 'release-confirm':
+        query = 'start=0&end=2&profile=bench'
+        pending = get('release?'+query)
+        assert pending['stored'] is False
+        assert pending['index']['source_sha256'] == get('header')['sha256']
+        assert pending['index']['window'] == {'start': 0, 'end': 2}
+        assert pending['wave']['sample_frames'] == 4000
+        request('/parcels/'+pending['id'], 404)
+        receipt = request(capture+'release?'+query, 201, 'POST')
+        assert receipt['id'] == pending['id']
+        landed = get('release?'+query)
+        assert landed['stored'] is True and landed['id'] == receipt['id'] and landed['index'] == receipt['index']
+        assert request(capture+'release?'+query, 201, 'POST')['id'] == receipt['id']
+        get('release?start=0&end=2&profile=absent', 400)
+        get('release?start=2&end=0', 400)
+        blob = parcels / (receipt['id']+'.zip')
+        original = blob.read_bytes()
+        try:
+            damaged = bytearray(original)
+            damaged[60] ^= 1
+            blob.write_bytes(damaged)
+            get('release?'+query, 409)
+        finally:
+            blob.write_bytes(original)
+        assert get('release?'+query)['stored'] is True
+        return {'parcel': receipt['id'], 'confirmed_before_write': True, 'tamper_status': 409}
     if name == 'workbench':
         first = request('/').decode()
         assert 'data-reel="cinder-a"' in first and '画格探针' in first
@@ -153,7 +179,7 @@ def workflow(base, name, parcels):
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'release-confirm workbench window-inspection strip-projection'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])

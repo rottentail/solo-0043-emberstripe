@@ -51,6 +51,10 @@
       "command": "python3 examples/walkthrough.py verify"
     },
     {
+      "workflow_id": "release-confirm",
+      "command": "python3 examples/walkthrough.py release-confirm"
+    },
+    {
       "workflow_id": "workbench",
       "command": "python3 examples/walkthrough.py workbench"
     },

@@ -7,10 +7,19 @@ export function benchURL(reel, action, params) {
 }
 
 export async function request(url, options) {
-  const response = await fetch(url, options);
+  let response;
+  try {
+    response = await fetch(url, options);
+  } catch (cause) {
+    const error = new Error('连接中断，请求结果未知。');
+    error.transport = true;
+    throw error;
+  }
   if (!response.ok) {
     const body = response.status === 503 ? { error: '工位繁忙，请稍后重试。' } : await response.json().catch(() => null);
-    throw new Error(/[\u3400-\u9fff]/.test(body?.error ?? '') ? body.error : '未能完成请求，请检查输入后重试。');
+    const error = new Error(/[\u3400-\u9fff]/.test(body?.error ?? '') ? body.error : '未能完成请求，请检查输入后重试。');
+    error.status = response.status;
+    throw error;
   }
   return response.json();
 }

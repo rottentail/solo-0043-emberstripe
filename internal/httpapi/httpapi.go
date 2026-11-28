@@ -20,15 +20,17 @@ import (
 func New(s *station.Station) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /captures", func(w http.ResponseWriter, r *http.Request) { write(w, 200, s.Names()) })
-	for action, method := range map[string]string{"header": "GET", "calibration": "GET", "register": "GET", "coverage": "GET", "trace": "GET", "audition": "GET", "compare": "GET", "overlay": "GET", "release": "POST"} {
-		mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
-			reel, ok := s.Reel(r.PathValue("name"))
-			if !ok {
-				write(w, 404, map[string]string{"error": "capture unavailable"})
-				return
-			}
-			serveCapture(w, r, s, reel, action)
-		})
+	for action, methods := range map[string][]string{"header": {"GET"}, "calibration": {"GET"}, "register": {"GET"}, "coverage": {"GET"}, "trace": {"GET"}, "audition": {"GET"}, "compare": {"GET"}, "overlay": {"GET"}, "release": {"GET", "POST"}} {
+		for _, method := range methods {
+			mux.HandleFunc(method+" /captures/{name}/"+action, func(w http.ResponseWriter, r *http.Request) {
+				reel, ok := s.Reel(r.PathValue("name"))
+				if !ok {
+					write(w, 404, map[string]string{"error": "capture unavailable"})
+					return
+				}
+				serveCapture(w, r, s, reel, action)
+			})
+		}
 	}
 	mux.HandleFunc("GET /parcels/{id}", func(w http.ResponseWriter, r *http.Request) {
 		b, err := s.Store.Read(r.PathValue("id"))
@@ -39,12 +41,7 @@ func New(s *station.Station) http.Handler {
 		binary(w, "application/zip", b)
 	})
 	mux.HandleFunc("GET /parcels/{id}/verify", func(w http.ResponseWriter, r *http.Request) {
-		b, err := s.Store.Read(r.PathValue("id"))
-		if err != nil {
-			parcelError(w, err)
-			return
-		}
-		v, err := parcel.Verify(b)
+		v, err := s.Store.Inspect(r.PathValue("id"))
 		if err != nil {
 			parcelError(w, err)
 			return
@@ -128,6 +125,25 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		w.Header().Set("Content-Type", "audio/wav")
 		http.ServeContent(w, r, "audition.wav", time.Time{}, bytes.NewReader(data))
 	case "release":
+		if r.Method == http.MethodGet {
+			receipt, stored, err := s.Confirm(reel, window, profile)
+			if err != nil {
+				var input *station.InvalidRenderingInput
+				if errors.As(err, &input) {
+					invalid(w, input.Error())
+					return
+				}
+				var integrity *station.StoredIntegrity
+				if errors.As(err, &integrity) {
+					write(w, 409, map[string]string{"error": "sound parcel failed integrity checks"})
+					return
+				}
+				write(w, 500, map[string]string{"error": "sound parcel unavailable"})
+				return
+			}
+			write(w, 200, confirmation{Receipt: receipt, Stored: stored})
+			return
+		}
 		receipt, err := s.Release(reel, window, profile)
 		if err != nil {
 			var input *station.InvalidRenderingInput
@@ -142,6 +158,14 @@ func serveCapture(w http.ResponseWriter, r *http.Request, s *station.Station, re
 		write(w, 201, receipt)
 	}
 }
+
+// confirmation reports the parcel a release would publish and whether that
+// exact parcel is already stored and verified.
+type confirmation struct {
+	parcel.Receipt
+	Stored bool `json:"stored"`
+}
+
 func write(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

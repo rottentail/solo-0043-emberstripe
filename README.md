@@ -18,7 +18,7 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 启动后打开 `http://127.0.0.1:7431`。选择扫描卷、画格区间和光学标定，然后应用区间。点击扫描条带、波形或覆盖区间，让画格探针定位到同一行；也可以直接输入画格和行号。画面缺页标记在画格带上，偏移后的声槽缺口显示在波形中。
 
-选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
+选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。冻结前先确认目标包是否已在盘上，连接中断后重试会沿同一标识续写或确认，不会产出第二份；若同名卷的扫描材料在重启后发生变化，工作台会拒绝显示不一致的包并提示重新装载窗口。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
 
 ## 从画格检查到交付
 
@@ -36,9 +36,10 @@ curl "$base/captures/cinder-a/compare?start=1&end=4&profile=bench&against=soft"
 curl "$base/captures/cinder-a/overlay?frame=2&profile=bench" -o var/check.png
 curl "$base/captures/cinder-a/audition?start=1&end=4&profile=soft" -o var/listen.wav
 curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"
+curl "$base/captures/cinder-a/release?start=1&end=4&profile=soft"
 ```
 
-发布返回的 `Location` 可下载 ZIP，追加 `/verify` 得到完整性、时钟和覆盖检查结果。包内 `sound.wav` 是交错 16 位立体声，`register.json` 包含画格到包内 PCM 帧的索引，以及以卷内画格行为单位的实际声槽覆盖、标定值和字节摘要。索引里的画面摘要取自登记的扫描页，原图可向扫描工位调取。相同卷、画格窗和标定重复发布会得到同一标识。
+发布返回的 `Location` 可下载 ZIP，追加 `/verify` 得到完整性、时钟和覆盖检查结果。同参数的 `GET .../release` 是只读确认：重算目标包并报告 `stored`，即该标识是否已完整落盘，可用于发布前预查和断线后的结果确认。包内 `sound.wav` 是交错 16 位立体声，`register.json` 包含画格到包内 PCM 帧的索引，以及以卷内画格行为单位的实际声槽覆盖、标定值和字节摘要。索引里的画面摘要取自登记的扫描页，原图可向扫描工位调取。相同卷、画格窗和标定重复发布会得到同一标识。
 
 `start` 包含起点、`end` 排除终点，二者都是零基画格号。`frame`、`row` 也是零基。以 `cinder-a` 为例，画格 1 的第 1770 行使用第 2 页的第 0 行声槽。第 2 页未扫描，试听 WAV 在相应位置保留双声道零值。区间有音频零值时，以 `coverage` 区分缺页、越出卷界和可读样本。`overlay` 左侧是该画格的画面灰度条带，右侧两个带分别表示映射到同一画格行的左／右声音。亮橙表示样本位置，亮红表示超出标定范围，暗红底表示该带没有输入材料。
 

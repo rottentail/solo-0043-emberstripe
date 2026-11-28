@@ -21,6 +21,12 @@ type InvalidRenderingInput struct{ Cause error }
 func (e *InvalidRenderingInput) Error() string { return e.Cause.Error() }
 func (e *InvalidRenderingInput) Unwrap() error { return e.Cause }
 
+// StoredIntegrity reports a stored parcel that fails verification.
+type StoredIntegrity struct{ Cause error }
+
+func (e *StoredIntegrity) Error() string { return e.Cause.Error() }
+func (e *StoredIntegrity) Unwrap() error { return e.Cause }
+
 type Station struct {
 	catalog map[string]*capture.Reel
 	Store   parcel.Store
@@ -133,18 +139,48 @@ func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 	}
 	return view.Overlay(reel, g, frame)
 }
-func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
+
+// Prepare renders a window and assembles the handoff index and audio without storing them.
+func Prepare(reel *capture.Reel, w register.Window, profile string) (parcel.Index, []byte, error) {
 	g, r, err := RenderWindow(reel, w, profile)
 	if err != nil {
-		return parcel.Receipt{}, &InvalidRenderingInput{Cause: err}
+		return parcel.Index{}, nil, err
 	}
 	index := parcel.Index{Capture: reel.Name, Source: reel.Digest, Window: w, Rows: reel.Rows, FPS: reel.FPS, Lead: reel.Lead, Gauge: g, Coverage: r.Coverage}
 	for frame := w.Start; frame < w.End; frame++ {
 		index.Pictures = append(index.Pictures, parcel.Picture{Frame: frame, Sample: (frame - w.Start) * reel.Rows, Sheet: reel.Sheets[frame].Digest})
 	}
-	receipt, err := s.Store.Publish(index, wave.Encode(register.Rate(reel.Header), r.Samples))
+	return index, wave.Encode(register.Rate(reel.Header), r.Samples), nil
+}
+func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
+	index, audio, err := Prepare(reel, w, profile)
+	if err != nil {
+		return parcel.Receipt{}, &InvalidRenderingInput{Cause: err}
+	}
+	receipt, err := s.Store.Publish(index, audio)
 	if err != nil {
 		return parcel.Receipt{}, fmt.Errorf("publish sound parcel: %w", err)
 	}
 	return receipt, nil
+}
+
+// Confirm recomputes the parcel the same release would publish and reports
+// whether that exact parcel is already stored and intact. It never writes,
+// so an interrupted or concurrent release can be confirmed before retrying.
+func (s *Station) Confirm(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, bool, error) {
+	index, audio, err := Prepare(reel, w, profile)
+	if err != nil {
+		return parcel.Receipt{}, false, &InvalidRenderingInput{Cause: err}
+	}
+	_, receipt, err := parcel.Build(index, audio)
+	if err != nil {
+		return parcel.Receipt{}, false, fmt.Errorf("build sound parcel: %w", err)
+	}
+	if _, err := s.Store.Inspect(receipt.ID); err != nil {
+		if os.IsNotExist(err) {
+			return receipt, false, nil
+		}
+		return parcel.Receipt{}, false, &StoredIntegrity{Cause: err}
+	}
+	return receipt, true, nil
 }

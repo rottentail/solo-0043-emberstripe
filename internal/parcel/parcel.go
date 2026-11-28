@@ -51,12 +51,15 @@ type Store struct{ Root string }
 
 func digest(b []byte) string { return fmt.Sprintf("%x", sha256.Sum256(b)) }
 
-func (s Store) Publish(index Index, audio []byte) (Receipt, error) {
+// Build assembles the frozen parcel bytes and verifies them before any write.
+// The bytes depend only on the index and audio, so identical approved material
+// always yields the same receipt ID.
+func Build(index Index, audio []byte) ([]byte, Receipt, error) {
 	index.Version = 1
 	index.Audio = digest(audio)
 	table, err := json.Marshal(index)
 	if err != nil {
-		return Receipt{}, err
+		return nil, Receipt{}, err
 	}
 	var out bytes.Buffer
 	archive := zip.NewWriter(&out)
@@ -66,17 +69,25 @@ func (s Store) Publish(index Index, audio []byte) (Receipt, error) {
 	}{{"register.json", table}, {"sound.wav", audio}} {
 		w, err := archive.CreateHeader(&zip.FileHeader{Name: entry.name, Method: zip.Store})
 		if err != nil {
-			return Receipt{}, err
+			return nil, Receipt{}, err
 		}
 		if _, err = w.Write(entry.data); err != nil {
-			return Receipt{}, err
+			return nil, Receipt{}, err
 		}
 	}
 	if err := archive.Close(); err != nil {
-		return Receipt{}, err
+		return nil, Receipt{}, err
 	}
 	data := out.Bytes()
 	receipt, err := Verify(data)
+	if err != nil {
+		return nil, Receipt{}, err
+	}
+	return data, receipt, nil
+}
+
+func (s Store) Publish(index Index, audio []byte) (Receipt, error) {
+	data, receipt, err := Build(index, audio)
 	if err != nil {
 		return Receipt{}, err
 	}
@@ -98,6 +109,15 @@ func (s Store) Publish(index Index, audio []byte) (Receipt, error) {
 		return Receipt{}, err
 	}
 	return receipt, nil
+}
+
+// Inspect reads a stored parcel and verifies its integrity.
+func (s Store) Inspect(id string) (Receipt, error) {
+	data, err := s.Read(id)
+	if err != nil {
+		return Receipt{}, err
+	}
+	return Verify(data)
 }
 
 func (s Store) Read(id string) ([]byte, error) {
