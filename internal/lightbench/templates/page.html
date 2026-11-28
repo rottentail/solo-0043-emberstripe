@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="/light-assets/styles/bench.css">
   <link rel="stylesheet" href="/light-assets/styles/scope.css">
   <link rel="stylesheet" href="/light-assets/styles/details.css">
+  <link rel="stylesheet" href="/light-assets/styles/handoff.css">
+  <script type="module" src="/light-assets/scripts/handoff_area.js"></script>
   {{if .Active}}<script type="module" src="/light-assets/scripts/main.js"></script>{{end}}
 </head>
 <body>
@@ -30,11 +32,13 @@
     {{else}}
     <p class="empty-line">此卷没有可用标定。请补齐参考页或调整扫描标定后重新载入工位。</p>
     {{end}}
+    {{template "handoff-area" .}}
   </main>
   {{else}}
   <main class="bench empty-bench">
     {{if .Names}}<h1>扫描卷不可用</h1><p>请从上方卷索引选择已登记的扫描卷。</p>
     {{else}}<h1>等待扫描卷</h1><p>将条带和卷描述放入扫描目录，重启服务后即可在此查看。</p>{{end}}
+    {{template "handoff-area" .}}
   </main>
   {{end}}
 </body>

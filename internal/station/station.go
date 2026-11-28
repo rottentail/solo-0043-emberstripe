@@ -9,6 +9,7 @@ import (
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
+	"github.com/rottentail/solo-0043-emberstripe/internal/handoff"
 	"github.com/rottentail/solo-0043-emberstripe/internal/parcel"
 	"github.com/rottentail/solo-0043-emberstripe/internal/readout"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
@@ -24,6 +25,7 @@ func (e *InvalidRenderingInput) Unwrap() error { return e.Cause }
 type Station struct {
 	catalog map[string]*capture.Reel
 	Store   parcel.Store
+	Handoff *handoff.Service
 }
 type CaptureInfo struct {
 	capture.Header
@@ -41,7 +43,12 @@ func Open(scans, releases string) (*Station, error) {
 	if err := os.MkdirAll(releases, 0750); err != nil {
 		return nil, err
 	}
-	return &Station{catalog: catalog, Store: parcel.Store{Root: releases}}, nil
+	store := parcel.Store{Root: releases}
+	return &Station{
+		catalog: catalog,
+		Store:   store,
+		Handoff: &handoff.Service{Store: store},
+	}, nil
 }
 func (s *Station) Names() []string {
 	names := make([]string, 0, len(s.catalog))

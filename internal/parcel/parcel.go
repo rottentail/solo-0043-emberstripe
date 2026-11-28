@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
+	"time"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
@@ -50,6 +52,116 @@ type Receipt struct {
 type Store struct{ Root string }
 
 func digest(b []byte) string { return fmt.Sprintf("%x", sha256.Sum256(b)) }
+
+var entryPattern = regexp.MustCompile(`^([a-f0-9]{64})\.zip$`)
+
+// List returns the content-addressed parcel identifiers currently on disk,
+// sorted lexicographically. Partial deposits and foreign files are ignored.
+func (s Store) List() ([]string, error) {
+	entries, err := os.ReadDir(s.Root)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		match := entryPattern.FindStringSubmatch(entry.Name())
+		if match != nil && entry.Type().IsRegular() {
+			ids = append(ids, match[1])
+		}
+	}
+	sort.Strings(ids)
+	return ids, nil
+}
+
+// Stat reports the current size and modification time of a parcel file.
+func (s Store) Stat(id string) (size int64, mtime time.Time, ok bool) {
+	if !digestPattern.MatchString(id) {
+		return 0, time.Time{}, false
+	}
+	info, err := os.Stat(filepath.Join(s.Root, id+".zip"))
+	if err != nil || !info.Mode().IsRegular() {
+		return 0, time.Time{}, false
+	}
+	return info.Size(), info.ModTime(), true
+}
+
+// OpenIndex unzips only the frozen register table. It never assumes the
+// parcel geometry of the live reel that produced the parcel.
+func OpenIndex(data []byte) (Index, error) {
+	r, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return Index{}, errors.New("invalid parcel archive")
+	}
+	var idx Index
+	found := false
+	for _, f := range r.File {
+		if f.Name != "register.json" || f.UncompressedSize64 > maxBytes {
+			continue
+		}
+		src, err := f.Open()
+		if err != nil {
+			return Index{}, err
+		}
+		content, readErr := io.ReadAll(io.LimitReader(src, maxBytes+1))
+		err = errors.Join(readErr, src.Close())
+		if err != nil {
+			return Index{}, err
+		}
+		if len(content) > maxBytes {
+			return Index{}, errors.New("oversized parcel entry")
+		}
+		if err := json.Unmarshal(content, &idx); err != nil {
+			return Index{}, err
+		}
+		found = true
+	}
+	if !found {
+		return Index{}, errors.New("parcel register missing")
+	}
+	return idx, nil
+}
+
+// SampleAt reads one interleaved stereo frame directly from a frozen WAV.
+// The 44-byte container header and 4-byte stereo blocks are part of the
+// station's fixed interchange contract.
+func SampleAt(pcm []byte, frame int) ([2]int16, bool) {
+	offset := wave.HeaderBytes + frame*wave.BlockBytes
+	if frame < 0 || offset+wave.BlockBytes > len(pcm) {
+		return [2]int16{}, false
+	}
+	le := binary.LittleEndian
+	return [2]int16{
+		int16(le.Uint16(pcm[offset:])),
+		int16(le.Uint16(pcm[offset+2:])),
+	}, true
+}
+
+// SoundWAV extracts the frozen PCM container from published parcel bytes.
+func SoundWAV(data []byte) ([]byte, error) {
+	r, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return nil, errors.New("invalid parcel archive")
+	}
+	for _, f := range r.File {
+		if f.Name != "sound.wav" || f.UncompressedSize64 > maxBytes {
+			continue
+		}
+		src, err := f.Open()
+		if err != nil {
+			return nil, err
+		}
+		content, readErr := io.ReadAll(io.LimitReader(src, maxBytes+1))
+		err = errors.Join(readErr, src.Close())
+		if err != nil {
+			return nil, err
+		}
+		if len(content) > maxBytes {
+			return nil, errors.New("oversized parcel entry")
+		}
+		return content, nil
+	}
+	return nil, errors.New("parcel sound missing")
+}
 
 func (s Store) Publish(index Index, audio []byte) (Receipt, error) {
 	index.Version = 1
@@ -127,9 +239,9 @@ func Verify(data []byte) (Receipt, error) {
 	if err != nil || len(r.File) != 2 {
 		return Receipt{}, errors.New("expected a two-entry sound parcel")
 	}
-	files := make(map[string][]byte, 2)
+	names := make(map[string]bool, 2)
 	for _, f := range r.File {
-		if (f.Name != "register.json" && f.Name != "sound.wav") || files[f.Name] != nil || f.UncompressedSize64 > maxBytes {
+		if (f.Name != "register.json" && f.Name != "sound.wav") || names[f.Name] || f.UncompressedSize64 > maxBytes {
 			return Receipt{}, errors.New("invalid parcel entry")
 		}
 		src, err := f.Open()
@@ -137,19 +249,23 @@ func Verify(data []byte) (Receipt, error) {
 			return Receipt{}, err
 		}
 		content, readErr := io.ReadAll(io.LimitReader(src, maxBytes+1))
-		if err = errors.Join(readErr, src.Close()); err != nil {
+		err = errors.Join(readErr, src.Close())
+		if err != nil {
 			return Receipt{}, err
 		}
 		if len(content) > maxBytes {
 			return Receipt{}, errors.New("oversized parcel entry")
 		}
-		files[f.Name] = content
+		names[f.Name] = true
 	}
 	var idx Index
-	if err := json.Unmarshal(files["register.json"], &idx); err != nil {
+	if idx, err = OpenIndex(data); err != nil {
 		return Receipt{}, err
 	}
-	pcm := files["sound.wav"]
+	pcm, err := SoundWAV(data)
+	if err != nil {
+		return Receipt{}, err
+	}
 	header, err := wave.Inspect(pcm)
 	if err != nil {
 		return Receipt{}, err

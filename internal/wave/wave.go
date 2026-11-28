@@ -9,6 +9,12 @@ import (
 const headerBytes = 44
 const blockBytes = 4
 
+// HeaderBytes is the fixed 44-byte RIFF/WAVE header of the interchange.
+const HeaderBytes = headerBytes
+
+// BlockBytes is one interleaved 16-bit stereo frame (two channels × two bytes).
+const BlockBytes = blockBytes
+
 type Header struct {
 	Rate     int `json:"rate"`
 	Frames   int `json:"sample_frames"`

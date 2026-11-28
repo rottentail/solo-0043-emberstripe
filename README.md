@@ -49,4 +49,27 @@ python3 examples/walkthrough.py all
 python3 examples/walkthrough.py release
 ```
 
+## 交接区：按两种地址找回可复听的包
+
+接班工位报点有时给画格行（画格 + 格内行），有时给扫描室报出的声槽页内行（源页 + 页内行）。交接区对每个冻结包按它自己的 `rows_per_frame` 与 `lead_rows` 解释地址，因此补扫前后同名、但偏移或每格行数不同的包不会被混为一谈。
+
+```sh
+base=http://127.0.0.1:7431
+# 画格行报点
+curl "$base/handoff/parcels?mode=picture&frame=1&row=1770"
+# 扫描室声槽页内行报点
+curl "$base/handoff/parcels?mode=source&frame=2&row=0"
+# 单包按当前字节重新复核，再复听该冻结 WAV
+curl "$base/handoff/parcels/<id>/locate?mode=source&frame=2&row=0"
+curl "$base/handoff/parcels/<id>/audition?mode=source&frame=2&row=0" -o listen.wav
+```
+
+每条结论取 `audible`（包覆盖声明可读，确有声音）、`time_range`（在窗内但缺页或卷外，仅补零占位）或 `unverifiable`（地址在该包时钟窗外或行号越界，材料不足）。首次查找返回 `snapshot_token`，翻页带上它即可在同一冻结标识集内推进，中途发布的同名包不会插入；卡片复核和复听都重新做摘要校验，被替换的文件返回 409，不沿用旧的通过结果。浏览器首页和卷页面底部都有“交接区查找”面板，无可用标定的卷也能查。
+
+服务在跑样例卷时可用演示程序核对同一报点在两种偏移包内的不同归宿：
+
+```sh
+go run ./cmd/handoff-demo -base http://127.0.0.1:7431
+```
+
 独立单元与浏览器回归测试套件延后至后续任务。上面的复走检查使用同一个 Go 服务，通过 HTTP 观察页面、WAV、PNG、JSON、ZIP 和失败状态。

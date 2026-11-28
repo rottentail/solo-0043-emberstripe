@@ -1,0 +1,26 @@
+{{define "handoff-area"}}
+<section class="detail handoff-area" aria-labelledby="handoff-area-title">
+  <div class="handoff-area-head">
+    <h2 id="handoff-area-title">交接区查找</h2>
+    <p class="muted">按画格行或扫描室声槽页内行，查找可复听的冻结交接包。每个包按自己冻结的采样时钟与覆盖判定。</p>
+  </div>
+  <form id="handoff-search-form" class="handoff-search-form" aria-label="交接包查找">
+    <label>地址类型
+      <select name="mode">
+        <option value="picture" selected>画格行（画格 + 格内行）</option>
+        <option value="source">声槽页内行（源页 + 页内行）</option>
+      </select>
+    </label>
+    <label>页/画格<input name="frame" type="number" min="0" value="0" required></label>
+    <label>行<input name="row" type="number" min="0" value="0" required></label>
+    <label>只看卷（可选）<input name="capture" type="text" placeholder="卷名，留空查全部"></label>
+    <button type="submit">查找交接包</button>
+  </form>
+  <p id="handoff-search-status" class="handoff-search-status" role="status"></p>
+  <div id="handoff-results" class="handoff-results" aria-live="polite"></div>
+  <div class="handoff-pager">
+    <button id="handoff-next" type="button" class="secondary" hidden>翻下一页（沿用本次快照）</button>
+    <span id="handoff-page-note" class="muted"></span>
+  </div>
+</section>
+{{end}}
