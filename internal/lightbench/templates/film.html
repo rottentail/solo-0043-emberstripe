@@ -1,7 +1,10 @@
 {{define "film"}}
 <section class="film-section" aria-labelledby="film-title">
   <div class="section-head"><h2 id="film-title">扫描条带</h2><span id="frame-summary" class="section-note">等待载入画格</span></div>
-  <div id="film-rail" class="film-rail" aria-label="窗口内画格"></div>
+  <div class="card-strip">
+    <div id="film-rail" class="film-rail" aria-label="窗口内画格诊断图"></div>
+    <p id="card-status" class="card-status" role="status"></p>
+  </div>
   <div class="strip">
     <img id="scan-picture" alt="所选画格的扫描灰阶条带" hidden>
     <p id="strip-status" class="strip-status">选择画格查看扫描</p>

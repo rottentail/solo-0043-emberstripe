@@ -133,6 +133,19 @@ func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 	}
 	return view.Overlay(reel, g, frame)
 }
+
+// Contact renders the window as small per-frame diagnostic cards on one clock.
+func Contact(reel *capture.Reel, w register.Window, profile string) ([]byte, view.CardSheet, gauge.Gauge, error) {
+	if err := register.Validate(reel.Header, w); err != nil {
+		return nil, view.CardSheet{}, gauge.Gauge{}, err
+	}
+	g, err := gauge.Measure(reel, profile)
+	if err != nil {
+		return nil, view.CardSheet{}, gauge.Gauge{}, err
+	}
+	cards, layout, err := view.Contact(reel, g, w)
+	return cards, layout, g, err
+}
 func (s *Station) Release(reel *capture.Reel, w register.Window, profile string) (parcel.Receipt, error) {
 	g, r, err := RenderWindow(reel, w, profile)
 	if err != nil {

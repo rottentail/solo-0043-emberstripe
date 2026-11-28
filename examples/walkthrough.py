@@ -147,13 +147,63 @@ def workflow(base, name, parcels):
         request(prefix+'2', 404)
         request(prefix+'7', 400)
         return {'projection': '768×64', 'missing_status': 404}
+    if name == 'diagnostic-cards':
+        window = request('/lightbench/cinder-a/window?start=1&end=4&profile=bench')
+        layout = window['cards']
+        assert (layout['columns'], layout['rows'], layout['frames']) == (3, 1, 3)
+        assert (layout['width'], layout['height']) == (144, 60)
+        cards = '/lightbench/cinder-a/cards?start=1&end=4&profile='
+        first = request(cards+'bench')
+        second = request(cards+'soft')
+        assert first[:8] == b'\x89PNG\r\n\x1a\n' and second[:8] == b'\x89PNG\r\n\x1a\n'
+        assert struct.unpack('>II', first[16:24]) == (layout['width'], layout['height'])
+        # Switching calibration yields a sheet drawn from that calibration only.
+        assert first != second
+        request(cards+'absent', 422)
+        request('/lightbench/cinder-a/cards?start=4&end=4&profile=bench', 400)
+        request('/lightbench/cinder-a/cards?start=0&end=49&profile=bench', 400)
+        request('/lightbench/nope/cards?start=0&end=1', 404)
+        return {'layout': [layout['width'], layout['height']], 'profiles_differ': True}
     raise ValueError(name)
+
+
+def card_slot_guard(base):
+    """A near-48-frame window must not consume the interactive drawing slots."""
+    import threading
+    outcomes = {}
+
+    def audition_and_freeze():
+        for _ in range(3):
+            with urlopen(base + '/captures/cinder-a/audition?start=0&end=6', timeout=8) as r:
+                r.read()
+            response = None
+            try:
+                response = urlopen(Request(base + '/captures/cinder-a/release?start=0&end=6&profile=bench', method='POST'), timeout=8)
+            except HTTPError as error:
+                response = error
+            with response:
+                outcomes.setdefault('release', set()).add(response.status)
+                response.read()
+
+    def cards():
+        with urlopen(base + '/lightbench/cinder-a/cards?start=0&end=7&profile=bench', timeout=8) as r:
+            outcomes['cards'] = r.status
+            outcomes['bytes'] = len(r.read())
+
+    threads = [threading.Thread(target=audition_and_freeze) for _ in range(2)]
+    threads.append(threading.Thread(target=cards))
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert outcomes['cards'] == 200 and outcomes['bytes'] > 0
+    return {'card_status': outcomes['cards'], 'sheet_bytes': outcomes['bytes']}
 
 
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection diagnostic-cards'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
@@ -173,6 +223,8 @@ def main():
                 assert endpoint, line
                 for name in names if args.workflow == 'all' else [args.workflow]:
                     print(json.dumps({'workflow': name, 'observed': workflow('http://'+endpoint[1], name, parcels)}, ensure_ascii=False))
+                if args.workflow in ('all', 'diagnostic-cards'):
+                    print(json.dumps({'workflow': 'card-slot-guard', 'observed': card_slot_guard('http://'+endpoint[1])}, ensure_ascii=False))
             finally:
                 server.terminate()
                 try:

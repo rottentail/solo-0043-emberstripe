@@ -6,6 +6,7 @@ import (
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
+	"github.com/rottentail/solo-0043-emberstripe/internal/view"
 )
 
 type frameCoverage struct {
@@ -25,6 +26,7 @@ type windowReadout struct {
 	Frames   []frameCoverage `json:"frames"`
 	Coverage []register.Run  `json:"coverage"`
 	Envelope []amplitudeBin  `json:"envelope"`
+	Cards    view.CardSheet  `json:"cards"`
 }
 
 func (b *bench) window(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +47,7 @@ func (b *bench) window(w http.ResponseWriter, r *http.Request) {
 	result := windowReadout{
 		Window: window, Rate: register.Rate(reel.Header), Rows: reel.Rows, Profile: calibration,
 		Coverage: render.Coverage, Envelope: summarize(render, window.Start*reel.Rows),
+		Cards: view.CardLayout(window.End - window.Start),
 	}
 	for frame := window.Start; frame < window.End; frame++ {
 		sheet := reel.Sheets[frame]

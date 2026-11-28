@@ -16,9 +16,9 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 ## 浏览器操作
 
-启动后打开 `http://127.0.0.1:7431`。选择扫描卷、画格区间和光学标定，然后应用区间。点击扫描条带、波形或覆盖区间，让画格探针定位到同一行；也可以直接输入画格和行号。画面缺页标记在画格带上，偏移后的声槽缺口显示在波形中。
+启动后打开 `http://127.0.0.1:7431`。选择扫描卷、画格区间和光学标定，然后应用区间。画格带为窗口内每一格显示一张诊断小图：上半是该格的画面投影，下半是左右声槽在同一画格行时钟上的极值。缺画面的格子仍保留可读声槽证据，可先比较相邻画格再决定点哪一格。点击画格带、扫描条带、波形或覆盖区间，让画格探针定位到同一行；也可以直接输入画格和行号。画面缺页标记在画格带上，偏移后的声槽缺口显示在波形中。
 
-选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
+选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。画格诊断图由服务端按当前窗口和标定绘成一张联系表，单独占用一个绘制槽位：正在生成时只让新的联系表请求返回 503，试听、探针和冻结仍走各自的通道。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
 
 ## 从画格检查到交付
 
@@ -34,6 +34,7 @@ curl "$base/captures/cinder-a/coverage?start=1&end=4"
 curl "$base/captures/cinder-a/trace?frame=0&row=400"
 curl "$base/captures/cinder-a/compare?start=1&end=4&profile=bench&against=soft"
 curl "$base/captures/cinder-a/overlay?frame=2&profile=bench" -o var/check.png
+curl "$base/lightbench/cinder-a/cards?start=1&end=4&profile=bench" -o var/cards.png
 curl "$base/captures/cinder-a/audition?start=1&end=4&profile=soft" -o var/listen.wav
 curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"
 ```

@@ -31,7 +31,7 @@
     {
       "id": "view",
       "path": "internal/view/view.go",
-      "responsibility": "画面灰度与取样诊断的同位置布局"
+      "responsibility": "画面灰度、取样诊断与画格联系表的同位置布局"
     },
     {
       "id": "parcel",
@@ -51,7 +51,7 @@
     {
       "id": "lightbench",
       "path": "internal/lightbench",
-      "responsibility": "浏览器入口、画格投影、限流与画格时钟上的包络响应"
+      "responsibility": "浏览器入口、画格投影、画格联系表、限流与画格时钟上的包络响应"
     },
     {
       "id": "bench-page",
@@ -318,6 +318,31 @@
         "capture",
         "register",
         "station"
+      ]
+    },
+    {
+      "id": "diagnostic-cards",
+      "name": "展开窗口内画格诊断联系表",
+      "entry": "GET /lightbench/{reel}/cards",
+      "steps": [
+        "按已应用窗口与标定验证并定位每格",
+        "在同一画格行时钟上绘制画面投影与左右声道极值",
+        "缺画面格保留缺失状态，声槽带仍取可读行",
+        "以窗口和标定限定缓存，标定改变后只显示新结果",
+        "联系表占用独立绘制槽位，繁忙时不阻塞试听与冻结"
+      ],
+      "success": "相邻画格可在同尺寸诊断卡上比较后再选择探针位置",
+      "failure": "空窗或超限 400，不可用标定 422，未知卷 404，槽位繁忙 503",
+      "verification": "python3 examples/walkthrough.py diagnostic-cards",
+      "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "bench-page",
+        "view",
+        "station",
+        "gauge",
+        "register",
+        "readout"
       ]
     }
   ],

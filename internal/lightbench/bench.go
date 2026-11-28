@@ -18,10 +18,15 @@ var pages = template.Must(template.ParseFS(files, "templates/*.html"))
 type bench struct {
 	station *station.Station
 	renders chan struct{}
+	// Card sheets are generated after a window is already usable. They get
+	// their own single slot so a near-48-frame burst can never take the
+	// drawing capacity used by the strip and the rest of the workbench.
+	sheets chan struct{}
+	cards  *cardCache
 }
 
 func New(s *station.Station) http.Handler {
-	b := &bench{station: s, renders: make(chan struct{}, 2)}
+	b := &bench{station: s, renders: make(chan struct{}, 2), sheets: make(chan struct{}, 1), cards: &cardCache{entries: make(map[string]cardSheet)}}
 	mux := http.NewServeMux()
 	assets, err := fs.Sub(files, "assets")
 	if err != nil {
@@ -32,6 +37,7 @@ func New(s *station.Station) http.Handler {
 	mux.HandleFunc("GET /lightbench/{reel}", b.reelPage)
 	mux.HandleFunc("GET /lightbench/{reel}/window", b.drawing(b.window))
 	mux.HandleFunc("GET /lightbench/{reel}/strip", b.drawing(b.strip))
+	mux.HandleFunc("GET /lightbench/{reel}/cards", b.contactSheet)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
