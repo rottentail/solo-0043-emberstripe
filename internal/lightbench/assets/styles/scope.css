@@ -19,6 +19,10 @@
 .scope-legend .readable::before { background: #8fba9b; }
 .scope-legend .missing::before { background: #be7166; }
 .scope-legend .outside::before { background: #93918d; }
+.scope-legend.resume-legend [data-verdict="intact"]::before { background: #8fba9b; }
+.scope-legend.resume-legend [data-verdict="changed"]::before { background: #e08a7d; }
+.scope-legend.resume-legend [data-verdict="new"]::before { background: var(--signal); }
+.scope-legend.resume-legend [data-verdict="blocked"]::before { background: #93918d; }
 .coverage-list { display: flex; gap: .35rem; overflow-x: auto; padding: .16rem .12rem .35rem; }
 .coverage-list button { min-height: 1.72rem; padding: .14rem .4rem; color: #e9e3d0; background: #333832; border-color: #67685d; font-size: .71rem; font-weight: 500; }
 .coverage-list button:hover { border-color: var(--signal); }

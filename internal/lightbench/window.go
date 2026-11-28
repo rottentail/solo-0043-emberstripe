@@ -3,6 +3,7 @@ package lightbench
 import (
 	"net/http"
 
+	"github.com/rottentail/solo-0043-emberstripe/internal/capture"
 	"github.com/rottentail/solo-0043-emberstripe/internal/gauge"
 	"github.com/rottentail/solo-0043-emberstripe/internal/register"
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
@@ -17,14 +18,22 @@ type frameCoverage struct {
 	Source   string `json:"source_sha256,omitempty"`
 }
 
+type runSource struct {
+	Frame  int    `json:"frame"`
+	Status string `json:"status"`
+	Digest string `json:"sha256,omitempty"`
+}
+
 type windowReadout struct {
-	Window   register.Window `json:"window"`
-	Rate     int             `json:"rate"`
-	Rows     int             `json:"rows_per_frame"`
-	Profile  gauge.Gauge     `json:"profile"`
-	Frames   []frameCoverage `json:"frames"`
-	Coverage []register.Run  `json:"coverage"`
-	Envelope []amplitudeBin  `json:"envelope"`
+	Window     register.Window `json:"window"`
+	Rate       int             `json:"rate"`
+	Rows       int             `json:"rows_per_frame"`
+	ReelDigest string          `json:"reel_digest"`
+	Profile    gauge.Gauge     `json:"profile"`
+	Frames     []frameCoverage `json:"frames"`
+	Coverage   []register.Run  `json:"coverage"`
+	Sources    [][]runSource   `json:"sources"`
+	Envelope   []amplitudeBin  `json:"envelope"`
 }
 
 func (b *bench) window(w http.ResponseWriter, r *http.Request) {
@@ -43,8 +52,13 @@ func (b *bench) window(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result := windowReadout{
-		Window: window, Rate: register.Rate(reel.Header), Rows: reel.Rows, Profile: calibration,
-		Coverage: render.Coverage, Envelope: summarize(render, window.Start*reel.Rows),
+		Window: window, Rate: register.Rate(reel.Header), Rows: reel.Rows, ReelDigest: reel.Digest,
+		Profile: calibration, Coverage: render.Coverage,
+		Envelope: summarize(render, window.Start*reel.Rows),
+		Sources:  make([][]runSource, len(render.Coverage)),
+	}
+	for index, run := range render.Coverage {
+		result.Sources[index] = runSources(reel, run)
 	}
 	for frame := window.Start; frame < window.End; frame++ {
 		sheet := reel.Sheets[frame]
@@ -64,4 +78,25 @@ func (b *bench) window(w http.ResponseWriter, r *http.Request) {
 		result.Frames = append(result.Frames, coverage)
 	}
 	writeJSON(w, http.StatusOK, result)
+}
+
+// runSources splits one coverage run into the source frames it touches. A single
+// run can cross a source page boundary after the lead-row shift, so each segment
+// carries its own frame status and exact sheet digest.
+func runSources(reel *capture.Reel, run register.Run) []runSource {
+	if run.Status == register.Outside {
+		return []runSource{{Frame: -1, Status: register.Outside}}
+	}
+	segments := make([]runSource, 0, 1)
+	for row := run.Start; row < run.End; {
+		address, status := register.Locate(reel, row)
+		end := min(run.End, (address.Frame+1)*reel.Rows-reel.Lead)
+		segment := runSource{Frame: address.Frame, Status: status}
+		if sheet, ok := reel.Sheets[address.Frame]; ok {
+			segment.Digest = sheet.Digest
+		}
+		segments = append(segments, segment)
+		row = end
+	}
+	return segments
 }

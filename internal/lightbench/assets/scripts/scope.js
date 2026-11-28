@@ -2,8 +2,14 @@ import { compactNumber, position, statusName } from './client.js';
 import { context, fraction, vertical } from './canvas.js';
 
 const fills = { readable: '#29392f', missing_sheet: '#58352e', outside_capture: '#484741' };
+const verdictFills = {
+  intact: 'rgba(143, 186, 155, .92)',
+  changed: 'rgba(190, 113, 102, .95)',
+  new: 'rgba(246, 160, 105, .95)',
+  blocked: 'rgba(147, 145, 141, .85)',
+};
 
-export function scope(root, onPosition) {
+export function scope(root, onPosition, verdictLookup) {
   const canvas = root.querySelector('#waveform');
   const clock = root.querySelector('#scope-clock');
   const list = root.querySelector('#coverage-list');
@@ -22,6 +28,17 @@ export function scope(root, onPosition) {
     for (const run of data.coverage) {
       paint.fillStyle = fills[run.status];
       paint.fillRect(x(run.picture_row_start), 0, x(run.picture_row_end) - x(run.picture_row_start), height);
+    }
+    const verdicts = verdictLookup?.() ?? [];
+    if (verdicts.length) {
+      const bandHeight = Math.max(4, Math.round(height * .09));
+      data.coverage.forEach((run, index) => {
+        const verdict = verdicts[index];
+        if (!verdict || !verdictFills[verdict]) return;
+        paint.fillStyle = verdictFills[verdict];
+        paint.fillRect(x(run.picture_row_start), height - bandHeight,
+          x(run.picture_row_end) - x(run.picture_row_start), bandHeight);
+      });
     }
     for (let frame = data.window.start + 1; frame < data.window.end; frame++) {
       vertical(paint, x(frame * data.rows_per_frame), height, '#858477', true);
@@ -74,5 +91,6 @@ export function scope(root, onPosition) {
     },
     select(frame, row) { cursor = frame * data.rows_per_frame + row; draw(); },
     playback(absolute) { playhead = absolute; draw(); },
+    refresh() { if (data) draw(); },
   };
 }

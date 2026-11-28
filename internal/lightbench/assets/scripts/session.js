@@ -7,6 +7,16 @@ export function windowController(root, onWindow) {
   const submit = form.querySelector('button');
   let current;
 
+  function prefill(values) {
+    if (!values) return;
+    for (const [name, value] of Object.entries(values)) {
+      const field = form.elements[name];
+      if (!field) continue;
+      if (field.options && ![...field.options].some((option) => option.value === String(value) && !option.disabled)) continue;
+      field.value = String(value);
+    }
+  }
+
   async function update(event) {
     event?.preventDefault();
     if (submit.disabled) return;
@@ -29,5 +39,14 @@ export function windowController(root, onWindow) {
   }
 
   form.addEventListener('submit', update);
-  return { start: update };
+  return {
+    start(autoload) {
+      if (autoload) {
+        prefill(autoload);
+        update();
+        return;
+      }
+      update();
+    },
+  };
 }

@@ -1,0 +1,17 @@
+{{define "resume"}}
+<section class="detail resume" id="resume-panel" aria-labelledby="resume-title" hidden>
+  <div class="section-head"><h2 id="resume-title">重开恢复</h2><span class="section-note">配对按标定身份（参考框与参考页摘要）核对，不按名称猜测</span></div>
+  <div id="resume-summary" class="resume-summary"></div>
+  <div id="resume-detail" class="resume-detail"></div>
+  <h3 class="resume-subhead">原配对在当前窗的可用范围</h3>
+  <div class="resume-legend" data-resume-legend hidden>
+    <span data-verdict="intact">原比较可继续</span>
+    <span data-verdict="changed">源页已变，原比较失效</span>
+    <span data-verdict="new">超出复听范围的新区</span>
+    <span data-verdict="blocked">暂不可比较</span>
+  </div>
+  <div id="resume-ranges" class="resume-ranges"></div>
+  <div id="resume-actions" class="resume-actions"></div>
+  <div id="resume-probe" class="resume-probe" aria-live="polite"></div>
+</section>
+{{end}}

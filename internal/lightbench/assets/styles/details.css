@@ -13,4 +13,29 @@
 .handoff-actions { display: flex; flex-wrap: wrap; gap: .42rem; }
 .parcel-status { grid-column: 1 / -1; color: var(--ember-dark); overflow-wrap: anywhere; }
 .parcel-status:empty { display: none; }
+.resume .resume-subhead { margin-top: .7rem; font-size: .82rem; color: var(--muted); }
+.resume-summary p, .resume-detail p, .resume-probe p { margin-top: .3rem; font-size: .8rem; }
+.resume-detail span[data-state] { font-weight: 700; }
+.resume-detail span[data-state="exact"] { color: #2f6b46; }
+.resume-detail span[data-state="renamed"] { color: #8a5a18; }
+.resume-detail span[data-state="swapped"], .resume-detail span[data-state="ambiguous"], .resume-detail span[data-state="unusable"], .resume-detail span[data-state="missing"] { color: var(--ember-dark); }
+.resume-candidate { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; border-top: 1px solid #ede8db; padding: .38rem 0; font-size: .79rem; }
+.resume-candidate button { min-height: 1.9rem; padding: .2rem .55rem; font-size: .75rem; }
+.resume-ranges { display: grid; gap: .32rem; margin-top: .4rem; }
+.resume-ranges button { min-height: auto; padding: .32rem .5rem; background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-size: .74rem; font-weight: 500; text-align: left; }
+.resume-ranges button::before { display: inline-block; width: .55rem; height: .55rem; margin-right: .4rem; border-radius: .12rem; content: ''; background: var(--line); }
+.resume-ranges button[data-verdict="intact"]::before { background: #4f8a63; }
+.resume-ranges button[data-verdict="changed"]::before { background: #be7166; }
+.resume-ranges button[data-verdict="new"]::before { background: var(--signal); }
+.resume-ranges button[data-verdict="blocked"]::before { background: #93918d; }
+.resume-legend { display: flex; flex-wrap: wrap; gap: .35rem .8rem; margin-top: .4rem; color: var(--muted); font-size: .72rem; }
+.resume-legend span::before { display: inline-block; width: .55rem; height: .55rem; margin-right: .28rem; border-radius: .12rem; content: ''; background: var(--line); }
+.resume-legend [data-verdict="intact"]::before { background: #4f8a63; }
+.resume-legend [data-verdict="changed"]::before { background: #be7166; }
+.resume-legend [data-verdict="new"]::before { background: var(--signal); }
+.resume-legend [data-verdict="blocked"]::before { background: #93918d; }
+.resume-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+.resume-actions button { min-height: 2.1rem; font-size: .78rem; }
+.resume-probe { margin-top: .5rem; padding-top: .5rem; border-top: 1px dashed var(--line); color: var(--muted); }
+.resume-probe:empty { display: none; }
 @media (max-width: 700px) { .handoff { grid-template-columns: minmax(0, 1fr); } }

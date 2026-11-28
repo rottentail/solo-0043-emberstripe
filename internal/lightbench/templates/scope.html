@@ -8,6 +8,12 @@
   <div class="scope-legend" aria-label="取样覆盖图例">
     <span class="readable">可读</span><span class="missing">声槽缺页</span><span class="outside">移出卷界</span>
   </div>
+  <div class="scope-legend resume-legend" data-resume-legend aria-label="原配对恢复图例" hidden>
+    <span data-verdict="intact">原比较可继续</span>
+    <span data-verdict="changed">源页已变</span>
+    <span data-verdict="new">复听范围外新区</span>
+    <span data-verdict="blocked">暂不可比较</span>
+  </div>
   <div id="coverage-list" class="coverage-list" aria-label="声槽覆盖区间"></div>
   <div class="audition"><button type="button" id="audition-button" disabled>载入试听</button><audio id="audition-media" controls preload="none" aria-label="当前区间的双声道试听" hidden></audio><span id="audition-status" role="status"></span></div>
 </section>

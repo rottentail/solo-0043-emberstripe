@@ -1,6 +1,6 @@
 import { captureURL, compactNumber, request } from './client.js';
 
-export function comparison(root) {
+export function comparison(root, onPair) {
   const form = root.querySelector('#compare-form');
   const output = root.querySelector('#compare-result');
   const label = root.querySelector('#active-profile');
@@ -31,6 +31,9 @@ export function comparison(root) {
         paragraph.textContent = line;
         return paragraph;
       }));
+      // Only an actual successful two-profile compare becomes the saved pairing;
+      // probe checks in the recovery panel never reach here.
+      onPair?.(active, against);
     } catch (error) {
       if (!controller.signal.aborted) output.textContent = error.message;
     } finally {
