@@ -83,8 +83,29 @@ def workflow(base, name, parcels):
         assert result['difference']['compared_frames'] == 4000
         assert min(result['difference']['changed_samples']) > 0
         assert result['right_clipped'] != result['left_clipped']
+        segments = result['difference']['segments']
+        runs = result['coverage']
+        assert segments and all(segment['compared_rows'] > 0 for segment in segments)
+        assert all(segments[i]['picture_row_end'] <= segments[i+1]['picture_row_start'] for i in range(len(segments)-1))
+        for segment in segments:
+            assert any(item['status'] == 'readable'
+                       and item['picture_row_start'] <= segment['picture_row_start']
+                       and segment['picture_row_end'] <= item['picture_row_end'] for item in runs), segment
+        assert sum(segment['compared_rows'] for segment in segments) == result['difference']['compared_frames']
+        assert abs(sum(segment['energy_share'] for segment in segments) - 1) < 1e-9
+        for contribution in result['difference']['contributions']:
+            assert contribution['kind'] in ('burst', 'moderate', 'background')
+            assert 0 < contribution['energy_share'] <= 1
+        full = get('compare?start=0&end=7&profile=bench&against=soft')
+        transient = [segment for segment in full['difference']['segments'] if segment['kind'] == 'burst']
+        assert transient, 'planted 36-row crest should be a locatable burst segment'
+        assert all(segment['compared_rows'] < 2000 // 4 for segment in transient)
+        missing = [run for run in full['coverage'] if run['status'] != 'readable']
+        assert missing and not any(segment['picture_row_start'] < run['picture_row_end']
+                                   and segment['picture_row_end'] > run['picture_row_start']
+                                   for segment in full['difference']['segments'] for run in missing)
         get('compare?start=1&end=4&against=bench', 400)
-        return result['difference']
+        return {'segments': len(segments), 'bursts': len(transient), 'gap_rows': missing[0]['picture_row_end'] - missing[0]['picture_row_start']}
     if name == 'overlay':
         a = get('overlay?frame=2')
         b = get('overlay?frame=2&profile=soft')

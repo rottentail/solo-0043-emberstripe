@@ -11,6 +11,11 @@
     <button type="submit" class="secondary" disabled>比较</button>
   </form>
   <output id="compare-result" class="compare-result" aria-live="polite"></output>
+  <div id="compare-detail" class="compare-detail" hidden>
+    <p class="compare-note">区间按可读行连续展开，缺口不合并；点击区段定位到本次对照的画格行。</p>
+    <ul id="compare-contributions" class="compare-contributions" aria-label="各类偏差贡献"></ul>
+    <ol id="compare-segments" class="compare-segments" aria-label="对照区段，按能量贡献排序"></ol>
+  </div>
   {{else}}<p class="muted small">此卷仅有一种可用标定。</p>{{end}}
 </section>
 {{end}}

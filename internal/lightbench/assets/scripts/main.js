@@ -11,7 +11,7 @@ const rail = film(root, select);
 const waveform = scope(root, select);
 const inspector = probe(root, select);
 const audio = audition(root, waveform.playback);
-const compare = comparison(root);
+const compare = comparison(root, select);
 const parcel = handoff(root);
 
 function select(frame, row) {

@@ -124,7 +124,7 @@ func Compare(reel *capture.Reel, w register.Window, a, b string) (map[string]any
 	if first.Profile == second.Profile {
 		return nil, errors.New("two distinct profiles are required")
 	}
-	return map[string]any{"left": first, "right": second, "left_clipped": ar.Clipped, "right_clipped": br.Clipped, "difference": readout.Compare(ar, br, w.Start*reel.Rows), "coverage": ar.Coverage}, nil
+	return map[string]any{"left": first, "right": second, "left_clipped": ar.Clipped, "right_clipped": br.Clipped, "difference": readout.Compare(ar, br, w.Start*reel.Rows, reel.Rows), "coverage": ar.Coverage}, nil
 }
 func Overlay(reel *capture.Reel, profile string, frame int) ([]byte, error) {
 	g, err := gauge.Measure(reel, profile)

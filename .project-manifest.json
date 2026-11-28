@@ -182,12 +182,13 @@
       "id": "compare",
       "name": "比较标定试听差异",
       "entry": "GET /captures/{name}/compare",
-      "success": "返回共同可读窗口的左右声道差分",
+      "success": "返回共同可读窗口的左右声道差分及可定位的连续区段与分类贡献",
       "failure": "相同标定 400",
       "verification": "python3 examples/walkthrough.py compare",
       "steps": [
         "按同卷同窗分别量测与解释 PCM",
-        "只比较可读样本并输出削顶与差分统计"
+        "只比较可读样本并输出削顶与差分统计",
+        "按覆盖缺口切分并展开可定位区段，汇总短促与持续偏差贡献"
       ],
       "module_ids": [
         "httpapi",
