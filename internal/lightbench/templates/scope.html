@@ -3,7 +3,30 @@
   <div class="section-head"><h2 id="scope-title">双声道光学读数</h2><span id="scope-clock" class="section-note"></span></div>
   <div class="scope-plot">
     <div class="lane-labels" aria-hidden="true"><span>左</span><span>右</span></div>
-    <canvas id="waveform" aria-label="双声道波形，点击定位画格行"></canvas>
+    <div class="plot-stack">
+      <canvas id="waveform" aria-label="双声道波形，点击定位画格行，拖动设定复听范围"></canvas>
+      <canvas id="ruler" aria-label="读尺刻度，随画格尺或声槽尺切换"></canvas>
+    </div>
+  </div>
+  <div class="range-editor">
+    <div class="ruler-bar">
+      <div class="ruler-toggle" role="group" aria-label="读尺选择">
+        <button type="button" data-ruler="frames" aria-pressed="true">画格尺</button>
+        <button type="button" data-ruler="sound" aria-pressed="false">声槽尺</button>
+      </div>
+      <p class="range-hint">拖动波形框选复听范围，再拖动端点或填表精确到行；终点不含所指行，缺口仍占时长。</p>
+    </div>
+    <form id="range-form" class="range-form" aria-label="复听范围端点">
+      <span class="end-name">起点</span>
+      <label><span data-axis="a">画格</span><input name="start-a" type="number" step="1"></label>
+      <label><span data-axis="b">格内行</span><input name="start-b" type="number" step="1"></label>
+      <span class="end-name">终点（不含）</span>
+      <label><span data-axis="a">画格</span><input name="end-a" type="number" step="1"></label>
+      <label><span data-axis="b">格内行</span><input name="end-b" type="number" step="1"></label>
+      <button type="submit">设定端点</button>
+      <button type="button" id="range-reset">整窗</button>
+    </form>
+    <p id="range-status" class="range-status" role="status">载入窗口后可拖动波形设定复听范围。</p>
   </div>
   <div class="scope-legend" aria-label="取样覆盖图例">
     <span class="readable">可读</span><span class="missing">声槽缺页</span><span class="outside">移出卷界</span>

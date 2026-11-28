@@ -11,6 +11,7 @@ const rail = film(root, select);
 const waveform = scope(root, select);
 const inspector = probe(root, select);
 const audio = audition(root, waveform.playback);
+waveform.onRange((start, end) => audio.setRange(start, end));
 const compare = comparison(root);
 const parcel = handoff(root);
 

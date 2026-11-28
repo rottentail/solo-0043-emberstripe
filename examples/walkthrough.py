@@ -117,6 +117,7 @@ def workflow(base, name, parcels):
     if name == 'workbench':
         first = request('/').decode()
         assert 'data-reel="cinder-a"' in first and '画格探针' in first
+        assert '声槽尺' in first and 'range-form' in first and 'id="ruler"' in first
         second = request('/lightbench/vireo-b').decode()
         assert 'data-reel="vireo-b"' in second and '声画偏移 -135 行' in second
         assert '不可用' in second and '/light-assets/scripts/main.js' in second
@@ -127,6 +128,7 @@ def workflow(base, name, parcels):
         data = request(path)
         assert data['coverage'] == get('coverage?start=1&end=4')
         assert data['rate'] == 48000 and data['rows_per_frame'] == 2000
+        assert data['lead_rows'] == 230
         assert [(frame['depth'], frame['readable'], frame['missing']) for frame in data['frames']] == [
             (16, 1770, 230), (0, 230, 1770), (16, 2000, 0)]
         bins = data['envelope']
