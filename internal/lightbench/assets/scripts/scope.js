@@ -7,7 +7,7 @@ export function scope(root, onPosition) {
   const canvas = root.querySelector('#waveform');
   const clock = root.querySelector('#scope-clock');
   const list = root.querySelector('#coverage-list');
-  let data, cursor, playhead;
+  let data, cursor, playhead, range;
   const first = () => data.window.start * data.rows_per_frame;
   const length = () => (data.window.end - data.window.start) * data.rows_per_frame;
 
@@ -22,6 +22,18 @@ export function scope(root, onPosition) {
     for (const run of data.coverage) {
       paint.fillStyle = fills[run.status];
       paint.fillRect(x(run.picture_row_start), 0, x(run.picture_row_end) - x(run.picture_row_start), height);
+    }
+    // The chosen check range is a fixed inclusive band. It is only drawn from
+    // the stored end points and is never extended to fit the play head.
+    if (range) {
+      paint.fillStyle = 'rgba(246, 160, 105, .16)';
+      const left = x(Math.max(first(), range.start));
+      const right = x(Math.min(first() + length(), (range.end ?? range.start) + 1));
+      paint.fillRect(left, 0, Math.max(0, right - left), height);
+      for (const edge of [range.start, (range.end ?? range.start) + 1]) {
+        const edgeX = x(Math.max(first(), Math.min(first() + length(), edge)));
+        vertical(paint, edgeX, height, '#f6a069', true);
+      }
     }
     for (let frame = data.window.start + 1; frame < data.window.end; frame++) {
       vertical(paint, x(frame * data.rows_per_frame), height, '#858477', true);
@@ -60,7 +72,7 @@ export function scope(root, onPosition) {
   return {
     setWindow(windowData) {
       data = windowData;
-      cursor = playhead = undefined;
+      cursor = playhead = range = undefined;
       clock.textContent = `${compactNumber(length())} 个采样位置 · ${compactNumber(length() * 1000 / data.rate)} 毫秒`;
       const runs = data.coverage.map((run) => {
         const button = document.createElement('button');
@@ -70,6 +82,10 @@ export function scope(root, onPosition) {
         return button;
       });
       list.replaceChildren(...runs);
+      draw();
+    },
+    setRange(next) {
+      range = next ?? undefined;
       draw();
     },
     select(frame, row) { cursor = frame * data.rows_per_frame + row; draw(); },

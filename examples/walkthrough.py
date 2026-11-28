@@ -120,8 +120,13 @@ def workflow(base, name, parcels):
         second = request('/lightbench/vireo-b').decode()
         assert 'data-reel="vireo-b"' in second and '声画偏移 -135 行' in second
         assert '不可用' in second and '/light-assets/scripts/main.js' in second
+        for control in ('check-start', 'check-end', 'check-clear', 'check-button'):
+            assert f'id="{control}"' in second, control
+        assert '连续检查' in second
+        script = request('/light-assets/scripts/selection.js').decode()
+        assert '末行不能早于起点' in script and '含末行' in script
         request('/lightbench/unknown', 404)
-        return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True}
+        return {'reels': ['cinder-a', 'vireo-b'], 'unusable_profiles_visible': True, 'check_controls': 4}
     if name == 'window-inspection':
         path = '/lightbench/cinder-a/window?start=1&end=4&profile=bench'
         data = request(path)

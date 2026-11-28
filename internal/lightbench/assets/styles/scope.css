@@ -5,6 +5,8 @@
 .film-rail button span { color: #ddd5be; font: .66rem/1.15 system-ui, sans-serif; }
 .film-rail button[data-gap] { background: repeating-linear-gradient(135deg,#3c3030 0 5px,#443333 5px 9px); }
 .film-rail button[aria-pressed="true"] { border-color: var(--signal); background: #654630; color: #fff7e7; }
+.film-rail button[data-range] { box-shadow: inset 0 0 0 1px #b98a5f; }
+.film-rail button[data-playing] { outline: 2px solid #fbf5e6; outline-offset: -2px; }
 .strip { position: relative; height: 8rem; overflow: hidden; border-radius: .25rem; background: repeating-linear-gradient(135deg,#2f3130 0 8px,#343633 8px 16px); }
 .strip img, #strip-marker { position: absolute; inset: 0; width: 100%; height: 100%; }
 .strip img { object-fit: fill; }
@@ -19,6 +21,8 @@
 .scope-legend .readable::before { background: #8fba9b; }
 .scope-legend .missing::before { background: #be7166; }
 .scope-legend .outside::before { background: #93918d; }
+.scope-legend .playing::before { box-shadow: inset 0 0 0 2px #fbf5e6; background: transparent; }
+.scope-legend .selected-range::before { box-shadow: inset 0 0 0 1px #b98a5f; background: rgba(246,160,105,.25); }
 .coverage-list { display: flex; gap: .35rem; overflow-x: auto; padding: .16rem .12rem .35rem; }
 .coverage-list button { min-height: 1.72rem; padding: .14rem .4rem; color: #e9e3d0; background: #333832; border-color: #67685d; font-size: .71rem; font-weight: 500; }
 .coverage-list button:hover { border-color: var(--signal); }

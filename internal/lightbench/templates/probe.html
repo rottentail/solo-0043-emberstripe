@@ -6,6 +6,12 @@
     <label>画格行<input name="row" type="number" min="0" value="0" required></label>
     <button type="submit" class="secondary" disabled>定位</button>
   </form>
+  <div class="check-selection" aria-label="连续检查选区">
+    <button id="check-start" type="button" class="secondary" disabled>设为起点</button>
+    <button id="check-end" type="button" class="secondary" disabled>设为末行</button>
+    <button id="check-clear" type="button" class="secondary" disabled>清除选区</button>
+    <p id="check-summary" class="check-summary" aria-live="polite">在探针定位后，设定连续检查的起点与末行（含末行）。</p>
+  </div>
   <dl class="readings" id="probe-values">
     <div><dt>画格时钟</dt><dd data-value="position">—</dd></div>
     <div><dt>源声槽</dt><dd data-value="source">—</dd></div>

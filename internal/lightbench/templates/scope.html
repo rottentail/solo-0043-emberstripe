@@ -6,9 +6,9 @@
     <canvas id="waveform" aria-label="双声道波形，点击定位画格行"></canvas>
   </div>
   <div class="scope-legend" aria-label="取样覆盖图例">
-    <span class="readable">可读</span><span class="missing">声槽缺页</span><span class="outside">移出卷界</span>
+    <span class="readable">可读</span><span class="missing">声槽缺页</span><span class="outside">移出卷界</span><span class="playing">播放经过</span><span class="selected-range">连续检查选区</span>
   </div>
   <div id="coverage-list" class="coverage-list" aria-label="声槽覆盖区间"></div>
-  <div class="audition"><button type="button" id="audition-button" disabled>载入试听</button><audio id="audition-media" controls preload="none" aria-label="当前区间的双声道试听" hidden></audio><span id="audition-status" role="status"></span></div>
+  <div class="audition"><button type="button" id="audition-button" title="载入并自由播放整窗试听" disabled>载入试听</button><button type="button" id="check-button" class="secondary" title="从选区起点播放，经过缺口仍按原画格时钟计时，播完末行即停" disabled>连续检查</button><audio id="audition-media" controls preload="none" aria-label="当前区间的双声道试听" hidden></audio><span id="audition-status" role="status"></span></div>
 </section>
 {{end}}
