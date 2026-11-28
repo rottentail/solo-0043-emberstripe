@@ -61,6 +61,14 @@
     {
       "workflow_id": "strip-projection",
       "command": "python3 examples/walkthrough.py strip-projection"
+    },
+    {
+      "workflow_id": "trail",
+      "command": "python3 examples/walkthrough.py trail"
+    },
+    {
+      "workflow_id": "supplement",
+      "command": "python3 examples/walkthrough.py supplement"
     }
   ]
 }

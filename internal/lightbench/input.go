@@ -18,11 +18,14 @@ func (b *bench) reel(w http.ResponseWriter, r *http.Request) (*capture.Reel, boo
 }
 
 func requestedWindow(r *http.Request, h capture.Header) (register.Window, bool) {
-	query := r.URL.Query()
-	start, startErr := strconv.Atoi(query.Get("start"))
-	end, endErr := strconv.Atoi(query.Get("end"))
+	start, startErr := intQuery(r, "start")
+	end, endErr := intQuery(r, "end")
 	window := register.Window{Start: start, End: end}
 	return window, startErr == nil && endErr == nil && register.Validate(h, window) == nil
+}
+
+func intQuery(r *http.Request, key string) (int, error) {
+	return strconv.Atoi(r.URL.Query().Get(key))
 }
 
 func problem(w http.ResponseWriter, status int, message string) {

@@ -35,6 +35,7 @@ export function film(root, onPosition) {
         button.setAttribute('aria-pressed', 'false');
         const state = document.createElement('span');
         state.textContent = frame.depth ? `${frame.depth} 位灰阶` : '画面缺页';
+        if (!data.live) state.textContent = frame.depth ? '旧记录有画面' : '旧记录缺页';
         button.toggleAttribute('data-gap', !frame.depth);
         button.append(state);
         button.addEventListener('click', () => onPosition(frame.frame, 0));
@@ -55,11 +56,14 @@ export function film(root, onPosition) {
         picture.onload = null;
         picture.onerror = null;
         placeholder.hidden = false;
-        if (entry.depth) {
+        if (entry.depth && data.live) {
           placeholder.textContent = '正在读取扫描页…';
           picture.onload = () => { picture.hidden = false; placeholder.hidden = true; };
           picture.onerror = () => { placeholder.textContent = '暂时无法显示扫描页。'; };
           picture.src = benchURL(data.reel, 'strip', { frame });
+        } else if (entry.depth) {
+          picture.removeAttribute('src');
+          placeholder.textContent = '此步骤只能按旧记录查，当前扫描页不是当时供声的页';
         } else {
           picture.removeAttribute('src');
           placeholder.textContent = '此画格没有画面扫描页';

@@ -18,7 +18,8 @@ export function comparison(root) {
     output.textContent = '正在对照两个标定…';
     try {
       const against = form.elements.against.value;
-      const result = await request(captureURL(active.reel, 'compare', { ...active.params, against }), { signal: controller.signal });
+      const params = { start: active.window.start, end: active.window.end, profile: active.profile.profile, against };
+      const result = await request(captureURL(active.reel, 'compare', params), { signal: controller.signal });
       if (active !== current) return;
       const { difference } = result;
       const lines = [
@@ -52,8 +53,8 @@ export function comparison(root) {
       const select = form.elements.against;
       for (const option of select.options) option.disabled = option.value === data.profile.profile;
       if (select.options[select.selectedIndex]?.disabled) select.value = [...select.options].find((option) => !option.disabled).value;
-      output.textContent = '';
-      button.disabled = false;
+      output.textContent = data.live ? '' : '此步骤只能按旧记录查，不能按当前扫描重做对照。';
+      button.disabled = !data.live;
     },
   };
 }

@@ -7,8 +7,10 @@ export function audition(root, onTime) {
   let data, selected = 0;
 
   button.addEventListener('click', () => {
-    if (!data) return;
-    const src = captureURL(data.reel, 'audition', data.params);
+    if (!data || !data.live) return;
+    const src = captureURL(data.reel, 'audition', {
+      start: data.window.start, end: data.window.end, profile: data.profile.profile,
+    });
     media.hidden = false;
     message.textContent = '正在载入当前区间…';
     button.disabled = true;
@@ -36,8 +38,8 @@ export function audition(root, onTime) {
       media.hidden = true;
       media.removeAttribute('src');
       media.load();
-      button.disabled = false;
-      message.textContent = '';
+      button.disabled = !data.live;
+      message.textContent = data.live ? '' : '此步骤只能按旧记录查，不能按当前扫描重放试听。';
     },
     select(frame, row) {
       selected = (frame - data.window.start) * data.rows_per_frame + row;

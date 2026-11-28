@@ -150,10 +150,197 @@ def workflow(base, name, parcels):
     raise ValueError(name)
 
 
+def start(binary, scans, parcels):
+    server = subprocess.Popen([binary, '-addr', '127.0.0.1:0', '-scans', scans, '-parcels', parcels], stderr=subprocess.PIPE, text=True)
+    readable, _, _ = select.select([server.stderr], [], [], 8)
+    assert readable, 'station did not start'
+    line = server.stderr.readline()
+    endpoint = re.search(r'listening on (127\.0\.0\.1:[0-9]+)$', line)
+    assert endpoint, line
+    return server, 'http://' + endpoint[1]
+
+
+def stop(server):
+    server.terminate()
+    try:
+        server.wait(timeout=7)
+    except subprocess.TimeoutExpired:
+        server.kill()
+        server.wait()
+
+
+def trail(base):
+    """Exercise undo/redo, both routes, and a supplementary-scan restart."""
+    bench = base + '/lightbench/cinder-a'
+
+    def call(path, expected=200, method='GET'):
+        try:
+            response = urlopen(Request(bench + path, method=method), timeout=8)
+        except HTTPError as error:
+            response = error
+        with response:
+            assert response.status == expected, (path, response.status, expected)
+            data = response.read()
+            return json.loads(data) if response.headers.get_content_type() == 'application/json' else data
+
+    first = call('/window?start=1&end=4&profile=bench&frame=1&row=500')
+    window_step = first['step']['id']
+    assert first['live'] and first['step']['probe'] == {'frame': 1, 'row': 500}
+    second = call('/window?start=3&end=6&profile=bench&frame=4&row=100')
+    second_step = second['step']['id']
+    lineage = {entry['id']: entry for entry in second['trail']['entries']}
+    assert lineage[second_step]['parent'] == window_step
+    assert second['step']['probe'] == {'frame': 4, 'row': 100}
+    third = call('/window?start=0&end=3&profile=bench&frame=0&row=0')
+    third_step = third['step']['id']
+    assert {entry['id']: entry for entry in third['trail']['entries']}[third_step]['parent'] == second_step
+
+    # The night shift withdraws two steps, landing back on the old window, then
+    # tries another calibration from there. Both routes must survive the trial.
+    back_one = call('/undo', method='POST')
+    assert back_one['step']['id'] == second_step
+    back_two = call('/undo', method='POST')
+    assert back_two['step']['id'] == window_step and back_two['trail']['current'] == window_step
+    # A window that does not validate is refused before touching the trail.
+    assert call('/window?start=4&end=4&profile=bench', 400)
+    # A failed calibration is refused the same way and nothing is recorded.
+    assert call('/window?start=1&end=4&profile=absent', 422)
+    after_failure = call('/applied')
+    assert after_failure['step']['id'] == window_step
+    # The alternative calibration is usable, so the trial line becomes a new
+    # branch under the old window and the original follow-up stays redoable.
+    trial = call('/window?start=1&end=4&profile=soft&frame=2&row=200')
+    trial_step = trial['step']['id']
+    recorded = trial['trail']
+    routes = sorted(sorted(route) for route in recorded['routes'])
+    assert sorted([window_step, second_step, third_step]) in routes and sorted([window_step, trial_step]) in routes, routes
+    # The trial does not pan out, so the operator steps back off it onto the old
+    # window and redoes the original follow-up exactly as it was.
+    off_trial = call('/undo', method='POST')
+    assert off_trial['step']['id'] == window_step and off_trial['trail']['current'] == window_step
+    redo = call('/redo', method='POST')
+    assert redo['step']['id'] == second_step, redo['step']['id']
+    back = call('/redo', method='POST')
+    assert back['step']['id'] == third_step
+
+    # The abandoned trial is still listed so the lead can review it too.
+    left = {entry['id']: entry for entry in back['trail']['entries']}
+    assert left[trial_step]['origin']['status'] == 'reapplicable'
+    assert left[trial_step]['probe'] == {'frame': 2, 'row': 200}
+
+    # Focus moves onto the trial without deleting the original route.
+    focused = call('/focus?entry=' + trial_step, method='POST')
+    assert focused['step']['id'] == trial_step and focused['trail']['current'] == trial_step
+    assert sorted([window_step, second_step, third_step]) in [sorted(r) for r in focused['trail']['routes']]
+
+    # A frozen parcel pins the step's window and calibration even after another
+    # window is applied.
+    call('/focus?entry=' + second_step, method='POST')
+    frozen = call('/freeze', 201, 'POST')
+    parcel = frozen['receipt']['id']
+    assert frozen['step']['parcel'] == parcel and frozen['step']['id'] == second_step
+    call('/window?start=0&end=2&profile=bench')
+    assert call('/history')['entries']
+    again = call('/freeze', 201, 'POST')
+    assert again['step']['parcel'] != parcel
+
+    # Steps recorded against the current bytes can be re-applied; the page and
+    # the probe survive a browser reload through the applied endpoint.
+    call('/focus?entry=' + second_step, method='POST')
+    reopened = call('/applied')
+    assert reopened['step']['id'] == second_step and reopened['step']['probe'] == {'frame': 4, 'row': 100}
+    assert reopened['live'] is True
+    return {'steps': [entry['id'] for entry in recorded['entries']], 'routes': routes, 'parcel': parcel, 'reopened': reopened['step']['id']}
+
+
+def supplement(scans, parcels, binary):
+    """Register a page that was missing at apply time and review the old step."""
+    server, base = start(binary, scans, parcels)
+    try:
+        return _supplement(scans, parcels, binary, base)
+    finally:
+        stop(server)
+
+
+def _requestor(base, reel):
+    def call(path, expected=200, method='GET'):
+        try:
+            response = urlopen(Request(base + '/lightbench/' + reel + path, method=method), timeout=8)
+        except HTTPError as error:
+            response = error
+        with response:
+            assert response.status == expected, (path, response.status, expected)
+            data = response.read()
+            return json.loads(data) if response.headers.get_content_type() == 'application/json' else data
+    return call
+
+
+def _supplement(scans, parcels, binary, base):
+    call = _requestor(base, 'cinder-a')
+    # Step 0-2 draws sound from page 2 through the lane lead, and page 2 is
+    # missing, so its sound status is missing_sheet and its sheet digest is
+    # empty in the footprint.
+    applied = call('/window?start=0&end=2&profile=bench&frame=0&row=100')
+    step_id = applied['step']['id']
+    sources = {source['frame']: source['sheet_sha256'] for source in applied['step']['sources']}
+    assert sources.get(2) == '', sources
+
+    # Supply the missing page, then restart the station on the same trail. The
+    # step in force is now record-only, which is exactly what a browser reopened
+    # after a supplementary scan must show.
+    produce_sheet(scans/'cinder-a'/'emulsion-0002.png')
+    server, base = start(binary, scans, parcels)
+    try:
+        call = _requestor(base, 'cinder-a')
+        reopened = call('/applied')
+        assert reopened['live'] is False
+        assert reopened['step']['id'] == step_id and reopened['step']['probe'] == {'frame': 0, 'row': 100}
+        # The frozen snapshot, not the supplemented page, is what is shown.
+        assert reopened['step']['sources'] == applied['step']['sources']
+        assert reopened['coverage'] == applied['coverage'] and reopened['envelope'] == applied['envelope']
+        # A page supplied into the sound path turns the step record-only: it
+        # cannot be brought back into force onto the new bytes.
+        call('/focus?entry=' + step_id, 409, 'POST')
+
+        # A separate window that draws no sound from page 2 stays applicable,
+        # and a new step is recorded on top of the fresh pages.
+        safe = call('/window?start=4&end=6&profile=bench')
+        safe_id = safe['step']['id']
+        entries = {entry['id']: entry for entry in call('/history')['entries']}
+        assert entries[step_id]['origin']['status'] == 'record_only', entries[step_id]
+        assert entries[safe_id]['origin']['status'] == 'reapplicable', entries[safe_id]
+
+        # Continuing from the applicable step records a new child; the older
+        # step's window, calibration and source digests stay exactly as applied.
+        grown = call('/window?start=5&end=6&profile=soft&frame=5&row=10')
+        grown_id = grown['step']['id']
+        lineage = {entry['id']: entry for entry in grown['trail']['entries']}
+        assert lineage[grown_id]['parent'] == safe_id
+        untouched = lineage[step_id]
+        assert untouched['origin']['status'] == 'record_only'
+        assert untouched['window'] == applied['step']['window'] and untouched['gauge'] == applied['step']['gauge']
+        assert untouched['sources'] == applied['step']['sources']
+        return {'record_only': step_id, 'reapplicable': safe_id, 'continued': grown_id}
+    finally:
+        stop(server)
+
+
+def produce_sheet(path):
+    """Supply a missing sample page with a byte-valid page of the same geometry.
+
+    The sample generator deliberately omits one page per reel, so a
+    supplementary scan is simulated by copying a present sheet of identical
+    dimensions. Its bytes differ from anything recorded before.
+    """
+    donor = path.parent/'emulsion-0003.png'
+    assert donor.exists(), donor
+    path.write_bytes(donor.read_bytes())
+
+
 def main():
     names = (
         'intake calibration register coverage trace audition compare overlay release verify '
-        'workbench window-inspection strip-projection'
+        'workbench window-inspection strip-projection trail supplement'
     ).split()
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument('workflow', choices=['all', *names])
@@ -164,22 +351,29 @@ def main():
         scans, parcels = root/'scans', root/'parcels'
         subprocess.run(['go', 'build', '-o', binary, './cmd/emberstripe'], check=True, timeout=35)
         subprocess.run(['go', 'run', './cmd/samples', '-out', scans], check=True, timeout=35)
-        with subprocess.Popen([binary, '-addr', '127.0.0.1:0', '-scans', scans, '-parcels', parcels], stderr=subprocess.PIPE, text=True) as server:
+        for name in names if args.workflow == 'all' else [args.workflow]:
+            if name in ('trail', 'supplement'):
+                # These record history and one supplies a page, so each needs a
+                # private catalog that cannot leak into the other workflows.
+                with tempfile.TemporaryDirectory(prefix='emberstripe-' + name + '-') as extra:
+                    alone = Path(extra)/'scans'
+                    subprocess.run(['go', 'run', './cmd/samples', '-out', alone], check=True, timeout=35)
+                    if name == 'supplement':
+                        observed = supplement(alone, Path(extra)/'parcels', binary)
+                    else:
+                        server, base = start(binary, alone, Path(extra)/'parcels')
+                        try:
+                            observed = trail(base)
+                        finally:
+                            stop(server)
+                print(json.dumps({'workflow': name, 'observed': observed}, ensure_ascii=False))
+                continue
+            server, base = start(binary, scans, parcels)
             try:
-                readable, _, _ = select.select([server.stderr], [], [], 8)
-                assert readable, 'station did not start'
-                line = server.stderr.readline()
-                endpoint = re.search(r'listening on (127\.0\.0\.1:[0-9]+)$', line)
-                assert endpoint, line
-                for name in names if args.workflow == 'all' else [args.workflow]:
-                    print(json.dumps({'workflow': name, 'observed': workflow('http://'+endpoint[1], name, parcels)}, ensure_ascii=False))
+                observed = workflow(base, name, parcels)
+                print(json.dumps({'workflow': name, 'observed': observed}, ensure_ascii=False))
             finally:
-                server.terminate()
-                try:
-                    server.wait(timeout=7)
-                except subprocess.TimeoutExpired:
-                    server.kill()
-                    server.wait()
+                stop(server)
 
 
 if __name__ == '__main__':

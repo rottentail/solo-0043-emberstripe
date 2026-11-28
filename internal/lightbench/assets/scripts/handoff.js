@@ -1,6 +1,9 @@
-import { captureURL, compactNumber, request } from './client.js';
+import { benchURL, compactNumber, request } from './client.js';
 
-export function handoff(root) {
+// handoff freezes the window currently in force. After a freeze the button
+// stays bound to the recorded parcel even if the operator applies another
+// window, so the lead can still download exactly what was frozen.
+export function handoff(root, onStep) {
   const release = root.querySelector('#release-button');
   const verify = root.querySelector('#verify-button');
   const download = root.querySelector('#parcel-download');
@@ -8,20 +11,21 @@ export function handoff(root) {
   const status = root.querySelector('#parcel-status');
   let current, receipt, busy = false;
   const address = (id) => `/parcels/${encodeURIComponent(id)}`;
-  const stamp = ({ window, gauge }) => `${window.start}–${window.end - 1} 格 · ${gauge.profile}`;
+  const stamp = (step) => `${step.window.start}–${step.window.end - 1} 格 · 标定 ${step.profile}`;
 
   release.addEventListener('click', async () => {
     if (!current || busy) return;
-    const context = current;
     busy = release.disabled = true;
     verify.hidden = download.hidden = true;
     status.textContent = '正在冻结声轨与画格索引…';
     try {
-      receipt = await request(captureURL(context.reel, 'release', context.params), { method: 'POST' });
-      status.textContent = `已冻结 ${stamp(receipt.index)} · ${receipt.id}`;
+      const frozen = await request(benchURL(current.reel, 'freeze', {}), { method: 'POST' });
+      receipt = frozen.receipt;
+      status.textContent = `已冻结 ${stamp(frozen.step)} · ${receipt.id}`;
       download.href = address(receipt.id);
       download.download = `${receipt.id}.zip`;
       verify.hidden = download.hidden = false;
+      onStep?.(frozen.step, frozen.trail);
     } catch (error) {
       receipt = undefined;
       status.textContent = `冻结失败。${error.message}`;
@@ -49,8 +53,22 @@ export function handoff(root) {
   return {
     setWindow(data) {
       current = data;
-      scope.textContent = `将冻结 ${data.window.start}–${data.window.end - 1} 格 · 标定 ${data.profile.profile}`;
-      release.disabled = busy;
+      const recorded = data.step?.parcel;
+      if (recorded) {
+        receipt = undefined;
+        download.href = address(recorded);
+        download.download = `${recorded}.zip`;
+        verify.hidden = download.hidden = false;
+        status.textContent = `此步骤已冻结为 ${recorded}。`;
+      } else {
+        receipt = undefined;
+        verify.hidden = download.hidden = true;
+        status.textContent = '';
+      }
+      scope.textContent = data.live
+        ? `将冻结 ${data.window.start}–${data.window.end - 1} 格 · 标定 ${data.profile.profile}`
+        : `该步骤只能按旧记录查，不能重新冻结。`;
+      release.disabled = busy || !data.live;
     },
   };
 }

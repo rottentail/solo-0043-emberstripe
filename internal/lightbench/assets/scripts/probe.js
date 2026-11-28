@@ -27,6 +27,11 @@ export function probe(root, onPosition) {
       form.elements.row.max = data.rows_per_frame - 1;
       form.querySelector('button').disabled = false;
     },
+    // position reports the picture coordinates currently in the probe form so
+    // an applied window can record them as its witness.
+    position() {
+      return { frame: form.elements.frame.valueAsNumber, row: form.elements.row.valueAsNumber };
+    },
     async select(frame, row) {
       pending?.abort();
       const controller = new AbortController();

@@ -14,3 +14,18 @@
 .parcel-status { grid-column: 1 / -1; color: var(--ember-dark); overflow-wrap: anywhere; }
 .parcel-status:empty { display: none; }
 @media (max-width: 700px) { .handoff { grid-template-columns: minmax(0, 1fr); } }
+.trail { margin-top: .8rem; }
+.trail-nav { display: flex; gap: .42rem; margin-top: .55rem; }
+.trail-list, .trail-routes ol { list-style: none; margin: .55rem 0 0; padding: 0; display: grid; gap: .42rem; }
+.trail-entry { border: 1px solid #ede8db; border-radius: .3rem; padding: .42rem .5rem; }
+.trail-entry[aria-current="step"] { border-color: var(--ember); background: #fbf0e8; }
+.trail-entry[data-origin="record_only"] { border-style: dashed; }
+.trail-select { width: 100%; min-height: 0; justify-content: start; white-space: normal; text-align: start; background: transparent; color: var(--ink); padding: 0; font: .78rem/1.35 var(--mono); }
+.trail-select:hover { background: transparent; color: var(--ember-dark); text-decoration: underline; }
+.trail-select:disabled { opacity: 1; color: var(--muted); text-decoration: none; cursor: default; }
+.trail-origin { margin-top: .3rem; color: var(--muted); font-size: .74rem; overflow-wrap: anywhere; }
+.trail-entry[data-origin="record_only"] .trail-origin { color: var(--ember-dark); }
+.trail-routes { margin-top: .7rem; border-top: 1px solid #ede8db; padding-top: .55rem; }
+.trail-routes h3 { margin: 0; color: var(--muted); font-size: .78rem; font-weight: 650; }
+.trail-routes li { font: .74rem/1.35 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+.trail-routes li[data-current] { color: var(--ember-dark); font-weight: 650; }

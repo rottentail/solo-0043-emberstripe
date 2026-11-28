@@ -62,6 +62,11 @@
       "id": "bench-controls",
       "path": "internal/lightbench/assets/scripts",
       "responsibility": "编排浏览器工作窗、探针、双声道绘图、试听和冻结结果"
+    },
+    {
+      "id": "bench-history",
+      "path": "internal/lightbench/assets/scripts/history.js",
+      "responsibility": "呈现已应用步骤的双路线历史、原点分类与撤回/重做"
     }
   ],
   "workflows": [
@@ -318,6 +323,47 @@
         "capture",
         "register",
         "station"
+      ]
+    },
+    {
+      "id": "trail",
+      "name": "撤回重做并复核双路线",
+      "entry": "POST /lightbench/{reel}/undo",
+      "steps": [
+        "每次应用记录窗口、标定、探针与供声页摘要",
+        "撤回保留被离开的后续为可重做路线",
+        "试验标定作为旧窗的新分支且不覆盖原路线"
+      ],
+      "success": "两条路线及其原窗、探针都可在班末列出",
+      "failure": "空历史撤回或非法窗 409/400",
+      "verification": "python3 examples/walkthrough.py trail",
+      "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "station",
+        "gauge",
+        "register"
+      ]
+    },
+    {
+      "id": "supplement",
+      "name": "补拍后的旧步溯源",
+      "entry": "GET /lightbench/{reel}/history",
+      "steps": [
+        "按供声页摘要与标定重新量测判定可重新应用或仅按旧记录查",
+        "重启后同名卷补拍的页若供声则旧步转为记录态",
+        "从可应用旧步继续不重写其祖先出处"
+      ],
+      "success": "原窗与探针在两种状态下都可复核",
+      "failure": "记录态步骤不可重新应用或冻结",
+      "verification": "python3 examples/walkthrough.py supplement",
+      "module_ids": [
+        "lightbench",
+        "bench-controls",
+        "bench-page",
+        "capture",
+        "gauge",
+        "register"
       ]
     }
   ],

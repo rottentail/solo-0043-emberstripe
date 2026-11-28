@@ -1,4 +1,3 @@
-// Package lightbench serves the browser workstation for optical-sound inspection.
 package lightbench
 
 import (
@@ -6,6 +5,7 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"regexp"
 
 	"github.com/rottentail/solo-0043-emberstripe/internal/station"
 )
@@ -15,13 +15,16 @@ var files embed.FS
 
 var pages = template.Must(template.ParseFS(files, "templates/*.html"))
 
+var entryPattern = regexp.MustCompile(`^e[0-9]{1,9}$`)
+
 type bench struct {
 	station *station.Station
+	history *historyStore
 	renders chan struct{}
 }
 
-func New(s *station.Station) http.Handler {
-	b := &bench{station: s, renders: make(chan struct{}, 2)}
+func New(s *station.Station, releases string) http.Handler {
+	b := &bench{station: s, history: newHistory(releases), renders: make(chan struct{}, 2)}
 	mux := http.NewServeMux()
 	assets, err := fs.Sub(files, "assets")
 	if err != nil {
@@ -32,6 +35,12 @@ func New(s *station.Station) http.Handler {
 	mux.HandleFunc("GET /lightbench/{reel}", b.reelPage)
 	mux.HandleFunc("GET /lightbench/{reel}/window", b.drawing(b.window))
 	mux.HandleFunc("GET /lightbench/{reel}/strip", b.drawing(b.strip))
+	mux.HandleFunc("GET /lightbench/{reel}/history", b.drawing(b.historyView))
+	mux.HandleFunc("GET /lightbench/{reel}/applied", b.drawing(b.applied))
+	mux.HandleFunc("POST /lightbench/{reel}/undo", b.drawing(b.undo))
+	mux.HandleFunc("POST /lightbench/{reel}/redo", b.drawing(b.redo))
+	mux.HandleFunc("POST /lightbench/{reel}/focus", b.drawing(b.focus))
+	mux.HandleFunc("POST /lightbench/{reel}/freeze", b.drawing(b.freeze))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")

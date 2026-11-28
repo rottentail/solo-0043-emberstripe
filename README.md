@@ -20,6 +20,10 @@ go run ./cmd/emberstripe -addr 127.0.0.1:7431 -scans var/scans -parcels var/parc
 
 选择另一个可用标定后点击「比较」，可看到共同可读位置的左右声道差值。「载入试听」获取应用窗口的 WAV，试听控件与探针共享原生采样时钟。「冻结交接包」生成含 WAV 和画格索引的 ZIP，支持下载和再次校验。工作台静态资源随 Go 程序内嵌，无需前端构建或在线资源。
 
+「应用历史」列出每次实际应用过的窗口、标定和探针。「撤回一步」回到上一步但保留被离开的后续；在该旧窗上换标定试用会记为新分支，原后续仍可用「重做一步」取回。两个分支都保留到班末，领班可点选任一步查看其原窗和当时选中的探针。浏览器关闭后重新打开会按已应用步骤恢复原窗与探针，不会因重新应用而改写历史。
+
+历史按当前登记的扫描字节判定每一步。仅供声页与标定都仍可重新量测时标为「可重新应用」；同名卷补拍改变了该窗供声页、或该标定已不可用时标为「仅按旧记录查」，此态仍显示原窗、原标定、原探针和当时画面存在状态，但不能重新应用、试听、对照或冻结。从仍可应用的旧步继续会新建后续步骤，不把该步之前的出处改成当前标定。
+
 ## 从画格检查到交付
 
 在另一个终端运行以下命令。
@@ -47,6 +51,8 @@ curl -X POST "$base/captures/cinder-a/release?start=1&end=4&profile=soft"
 ```sh
 python3 examples/walkthrough.py all
 python3 examples/walkthrough.py release
+python3 examples/walkthrough.py trail
+python3 examples/walkthrough.py supplement
 ```
 
-独立单元与浏览器回归测试套件延后至后续任务。上面的复走检查使用同一个 Go 服务，通过 HTTP 观察页面、WAV、PNG、JSON、ZIP 和失败状态。
+独立单元与浏览器回归测试套件延后至后续任务。上面的复走检查使用同一个 Go 服务，通过 HTTP 观察页面、WAV、PNG、JSON、ZIP 和失败状态。`trail` 复走撤回、重做、双分支与冻结；`supplement` 复走同名卷补拍后重启，验证旧步转为记录态而其余步骤仍可重新应用。

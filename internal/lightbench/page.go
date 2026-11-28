@@ -23,6 +23,7 @@ type pageData struct {
 	InitialEnd  int
 	SampleRate  int
 	Available   int
+	Trail       trailView
 }
 
 func (b *bench) home(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +57,7 @@ func (b *bench) reelPage(w http.ResponseWriter, r *http.Request) {
 		}
 		data.Profiles = append(data.Profiles, profileOption{ID: profile.ID, Usable: err == nil, Selected: profile.ID == data.Active})
 	}
+	data.Trail = b.trail(reel)
 	renderPage(w, http.StatusOK, data)
 }
 

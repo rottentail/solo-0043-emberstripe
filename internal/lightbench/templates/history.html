@@ -1,0 +1,23 @@
+{{define "history"}}
+<section class="detail trail" aria-labelledby="trail-title">
+  <div class="section-head"><h2 id="trail-title">应用历史</h2><span id="trail-note" class="section-note">{{if .Trail.Current}}当前步骤 {{.Trail.Current}}{{else}}尚未应用画格窗{{end}}</span></div>
+  <div class="trail-nav">
+    <button id="undo-button" type="button" class="secondary" {{if not .Trail.CanUndo}}disabled{{end}}>撤回一步</button>
+    <button id="redo-button" type="button" class="secondary" {{if not .Trail.CanRedo}}disabled{{end}}>重做一步</button>
+  </div>
+  <ol id="trail-list" class="trail-list" aria-label="已应用窗口与标定">
+    {{range .Trail.Entries}}
+    <li class="trail-entry" data-origin="{{.Origin.Status}}" {{if eq .ID $.Trail.Current}}aria-current="step"{{end}}>
+      <button type="button" class="trail-select" data-entry="{{.ID}}" {{if ne .Origin.Status "reapplicable"}}disabled{{end}}>{{.ID}} · {{.Window.Start}}–{{.Window.End}} 格 · 标定 {{.Profile}} · 探针 {{.Probe.Frame}} 格 {{.Probe.Row}} 行</button>
+      <p class="trail-origin">{{if eq .Origin.Status "reapplicable"}}可重新应用{{else}}仅按旧记录查{{end}}：{{.Origin.Reason}}{{if .Parcel}} · {{if .ParcelOnDisk}}冻结件 {{.Parcel}}{{else}}冻结件已不可读{{end}}{{end}}</p>
+    </li>
+    {{end}}
+  </ol>
+  <div class="trail-routes">
+    <h3>班末复核路线</h3>
+    <ol id="trail-routes" aria-label="应用路线，按步骤标识列出">
+      {{range .Trail.Routes}}<li>{{range $i, $id := .}}{{if $i}} → {{end}}{{$id}}{{end}}</li>{{end}}
+    </ol>
+  </div>
+</section>
+{{end}}
